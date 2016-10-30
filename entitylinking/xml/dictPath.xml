@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Paths>
+	<!-- 同义歧义词典路径 -->
+	<dictPath>
+		<synonyms>./dict/synonymsDict.txt</synonyms>
+		<ambiguation>./dict/ambiguationDict.txt</ambiguation>
+		
+		<!--  <synonyms>./dict/test.txt</synonyms>
+		<ambiguation>./dict/test.txt</ambiguation>-->
+	</dictPath>
+</Paths>
