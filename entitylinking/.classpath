@@ -38,5 +38,14 @@
 	<classpathentry kind="lib" path="lib/stanford-english-corenlp-2016-01-10-models.jar"/>
 	<classpathentry kind="lib" path="lib/xom-1.2.10-src.jar"/>
 	<classpathentry kind="lib" path="lib/xom.jar"/>
+	<classpathentry kind="lib" path="C:/Users/HP/.m2/repository/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="dom4j"/>
+			<attribute name="maven.artifactId" value="dom4j"/>
+			<attribute name="maven.version" value="1.6.1"/>
+			<attribute name="maven.scope" value="compile"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

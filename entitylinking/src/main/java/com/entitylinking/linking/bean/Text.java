@@ -1,4 +1,4 @@
-package com.entitylinking.candidate.bean;
+package com.entitylinking.linking.bean;
 
 /**
  * 文本的数据结构
@@ -6,9 +6,12 @@ package com.entitylinking.candidate.bean;
  *
  */
 public class Text {
-	
+	/**文档名称*/
 	private String textName;
+	/**文档内容*/
 	private String content;
+	/**文档对应的实体图*/
+	private EntityGraph entityGraph;
 	
 	public String getTextName() {
 		return textName;
@@ -21,6 +24,12 @@ public class Text {
 	}
 	public void setContent(String content) {
 		this.content = content;
+	}
+	public EntityGraph getEntityGraph() {
+		return entityGraph;
+	}
+	public void setEntityGraph(EntityGraph entityGraph) {
+		this.entityGraph = entityGraph;
 	}
 	
 	

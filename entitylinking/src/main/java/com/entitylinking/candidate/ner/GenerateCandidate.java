@@ -5,8 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-import com.entitylinking.candidate.bean.DictBean;
+import com.entitylinking.linking.bean.DictBean;
 
 /**
  * 生成候选实体
@@ -15,7 +14,7 @@ import com.entitylinking.candidate.bean.DictBean;
  */
 public class GenerateCandidate {
 	
-	private static Logger logger = Logger.getLogger(GenerateCandidate.class);
+//	private static Logger logger = Logger.getLogger(GenerateCandidate.class);
 	private static String disambiguationStr = "(disambiguation)";
 	public static void main(String args[]){
 		
@@ -42,7 +41,6 @@ public class GenerateCandidate {
 					candidateSet.remove(candidate);
 			}
 		}
-		logger.info("候选实体个数为:"+candidateSet.size());
 		return new ArrayList<>(candidateSet);
 	}
 }

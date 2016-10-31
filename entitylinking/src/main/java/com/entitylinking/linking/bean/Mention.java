@@ -1,4 +1,4 @@
-package com.entitylinking.candidate.bean;
+package com.entitylinking.linking.bean;
 
 import java.util.List;
 

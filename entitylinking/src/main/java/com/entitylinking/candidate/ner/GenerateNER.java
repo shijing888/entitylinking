@@ -26,7 +26,7 @@ public class GenerateNER {
 	private static String[] nerCategory = new String[]{"PERSON","LOCATION","ORGANIZATION","DATE"};
 	
 	public static void main(String args[]){
-		String path = "E:\\EclipseWorkspace\\entitylinking\\data\\ace2004\\RawTexts\\chtb_165.eng";
+		String path = "./data\\ace2004\\RawTexts\\chtb_165.eng";
 		try {
 			BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(path)), "utf-8"));
 			StringBuilder text = new StringBuilder();

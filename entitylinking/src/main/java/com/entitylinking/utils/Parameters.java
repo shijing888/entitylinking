@@ -20,7 +20,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import com.entitylinking.candidate.bean.DictBean;
+import com.entitylinking.linking.bean.DictBean;
 
 /**
  * 加载配置文件的参数
