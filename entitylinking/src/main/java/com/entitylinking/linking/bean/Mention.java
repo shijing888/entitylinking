@@ -9,10 +9,27 @@ import java.util.List;
  */
 public class Mention {
 
+	/**mention名称*/
 	private String mentionName;
+	/**mention在文档集中的tfidf值*/
 	private double tfidfValue;
-	private List<String> candidateEntity;
+	/**mention的候选实体集*/
+	private List<Entity> candidateEntity;
+	/**mention在文档中出现的位置记录*/
+	private List<Integer> mentionIndex;
 	
+	public Mention(String mention){
+		this.mentionName = mention;
+	}
+	
+	public List<Integer> getMentionIndex() {
+		return mentionIndex;
+	}
+
+	public void setMentionIndex(List<Integer> mentionIndex) {
+		this.mentionIndex = mentionIndex;
+	}
+
 	public String getMentionName() {
 		return mentionName;
 	}
@@ -25,12 +42,16 @@ public class Mention {
 	public void setTfidfValue(double tfidfValue) {
 		this.tfidfValue = tfidfValue;
 	}
-	public List<String> getCandidateEntity() {
+
+	public List<Entity> getCandidateEntity() {
 		return candidateEntity;
 	}
-	public void setCandidateEntity(List<String> candidateEntity) {
+
+	public void setCandidateEntity(List<Entity> candidateEntity) {
 		this.candidateEntity = candidateEntity;
 	}
+	
+	
 	
 	
 }

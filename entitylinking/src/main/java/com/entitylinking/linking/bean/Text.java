@@ -12,7 +12,8 @@ public class Text {
 	private String content;
 	/**文档对应的实体图*/
 	private EntityGraph entityGraph;
-	
+	/**文档中上下文*/
+	private TextContext textContext;
 	public String getTextName() {
 		return textName;
 	}
@@ -30,6 +31,12 @@ public class Text {
 	}
 	public void setEntityGraph(EntityGraph entityGraph) {
 		this.entityGraph = entityGraph;
+	}
+	public TextContext getTextContext() {
+		return textContext;
+	}
+	public void setTextContext(TextContext textContext) {
+		this.textContext = textContext;
 	}
 	
 	

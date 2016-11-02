@@ -1,6 +1,6 @@
 package com.entitylinking.linking.bean;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * 实体的数据结构
@@ -14,7 +14,13 @@ public class Entity {
 	/**实体流行度*/
 	private double popularity;
 	/**实体的语义签名*/
-	private List<Double> semanticSignature;
+	private double[] semanticSignature;
+	/**实体的上下文*/
+	private Set<String> entityContext;
+	
+	public Entity(String name){
+		this.entityName = name;
+	}
 	
 	public String getEntityName() {
 		return entityName;
@@ -28,12 +34,19 @@ public class Entity {
 	public void setPopularity(double popularity) {
 		this.popularity = popularity;
 	}
-	public List<Double> getSemanticSignature() {
+	public double[] getSemanticSignature() {
 		return semanticSignature;
 	}
-	public void setSemanticSignature(List<Double> semanticSignature) {
+	public void setSemanticSignature(double[] semanticSignature) {
 		this.semanticSignature = semanticSignature;
 	}
+	public Set<String> getEntityContext() {
+		return entityContext;
+	}
+	public void setEntityContext(Set<String> entityContext) {
+		this.entityContext = entityContext;
+	}
+	
 	
 	
 }

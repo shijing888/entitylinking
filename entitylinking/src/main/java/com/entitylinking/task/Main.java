@@ -1,14 +1,12 @@
 package com.entitylinking.task;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import com.entitylinking.candidate.ner.CandidateMain;
 import com.entitylinking.linking.LinkingKB;
 import com.entitylinking.linking.bean.EntityGraph;
 import com.entitylinking.linking.bean.RELRWParameterBean;
@@ -26,7 +24,7 @@ public class Main {
 	static{
 		PropertyConfigurator.configure("./log4j.properties");
 	}
-	private CandidateMain candidateMain;
+	
 	public static void main(String args[]) {
 		/**
 		 *1.加载文件
@@ -49,15 +47,15 @@ public class Main {
 		File fileDir = new File(RELRWParameterBean.getSourceFileDirPath());
 		if(fileDir.isDirectory()){
 			File[] fileList = fileDir.listFiles();
+			String textContent;
 			for(File file:fileList){
 				String filePath = file.getAbsolutePath();
 				Text text = new Text();
 				text.setTextName(file.getName());
-				text.setContent(FileUtils.readFileContent(filePath));
-				//生成候选过程
-				Map<String, List<String>> candidateMap = candidateMain.candidatesOfText(filePath); 
-				EntityGraph entityGraph = new EntityGraph(candidateMap);
-				entityGraph = entityGraph.generateDensityGraph(text);
+				textContent = FileUtils.readFileContent(filePath);
+				text.setContent(textContent);
+				//生成所有实体的密度子图
+				EntityGraph entityGraph = new EntityGraph(text);
 				text.setEntityGraph(entityGraph);
 				//链接知识库过程
 				LinkingKB linkingKB = new LinkingKB();
@@ -74,6 +72,6 @@ public class Main {
 	}
 	
 	public void init(){
-		candidateMain = new CandidateMain();
+		
 	}
 }
