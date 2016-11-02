@@ -31,10 +31,6 @@
 	<classpathentry kind="lib" path="lib/protobuf.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-api.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-simple.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-javadoc.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-models.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-sources.jar"/>
-	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/stanford-english-corenlp-2016-01-10-models.jar"/>
 	<classpathentry kind="lib" path="lib/xom-1.2.10-src.jar"/>
 	<classpathentry kind="lib" path="lib/xom.jar"/>
@@ -47,5 +43,9 @@
 			<attribute name="maven.scope" value="compile"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-models.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0-sources.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-corenlp-3.6.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
