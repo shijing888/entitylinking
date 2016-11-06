@@ -16,6 +16,11 @@ public class PageBean {
 		this.name = name;
 		this.text = text;
 	}
+	
+	public PageBean(String name){
+		this.name = name;
+	}
+	
 	public Long getId() {
 		return id;
 	}

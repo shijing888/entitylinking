@@ -1,19 +1,24 @@
 package com.entitylinking.utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -54,6 +59,9 @@ public class Parameters {
 				if(element.getName().equals("dictPath")){
 					DictBean.setSynonymsDictPath(element.elementText("synonyms"));
 					DictBean.setAmbiguationDictPath(element.elementText("ambiguation"));
+					DictBean.setPosDictPath(element.elementText("pos"));
+					DictBean.setStopWordDictPath(element.elementText("stopwords"));
+					DictBean.setDfDictPath(element.elementText("df"));
 				}
 			}
 			
@@ -70,11 +78,17 @@ public class Parameters {
 		}
 		
 		if(DictBean.getSynonymsDictPath()!=null && DictBean.getAmbiguationDictPath()!=null){
-			logger.info("加载词典路径 已完成！");
+			logger.info("加载词典开始！");
+			long time1 = System.currentTimeMillis();
 			DictBean.setSynonymsDict(loadSynonymsDict(DictBean.getSynonymsDictPath()));
 			DictBean.setAmbiguationDict(loadDisambiguationDict(DictBean.getAmbiguationDictPath()));
-			logger.info("MJ:"+StringUtils.join(DictBean.getAmbiguationDict().get("MJ"),"\t"));
+			long time2 = System.currentTimeMillis();
+			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
 		}
+		
+		DictBean.setPosDict(loadSetDict(DictBean.getPosDictPath()));
+		DictBean.setStopWordDict(loadSetDict(DictBean.getStopWordDictPath()));
+		DictBean.setDfDict(loadDfDict(DictBean.getDfDictPath()));
 	}
 	
 	/**
@@ -85,7 +99,8 @@ public class Parameters {
 	public Map<String, String> loadSynonymsDict(String path){
 		Map<String, String> synonymsDict = new HashMap<String, String>();
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(path)),"UTF-8"));
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
 			String line;
 			while((line = br.readLine())!=null){
 				String[] lineArray = line.split("\t\\|\\|\t");
@@ -103,10 +118,80 @@ public class Parameters {
 		return synonymsDict;
 	}
 	
+	/**
+	 * 加载常规词典，如词性、停用词
+	 * @param path
+	 * @return
+	 */
+	public Set<String> loadSetDict(String path){
+		Set<String> dictSet = new HashSet<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				dictSet.add(line);
+			}
+			
+			br.close();
+			return dictSet;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return dictSet;
+	}
+	
+	/**
+	 * 加载文档频率df
+	 * @param path
+	 * @return
+	 */
+	public Map<String, Integer> loadDfDict(String path){
+		Map<String, Integer> dfMap = new HashMap<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				String[] lineArray = line.split("\t");
+				if(lineArray.length==2){
+					dfMap.put(lineArray[0], Integer.parseInt(lineArray[1]));
+				}
+			}
+			
+			br.close();
+			return dfMap;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return dfMap;
+	}
+	
+	//将df持久化到本地
+	public void pickleDf(String path){
+		try {
+			BufferedWriter bWriter = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(new File(path)),"utf-8"));
+			StringBuilder sBuilder = new StringBuilder();
+			for(Entry<String, Integer>entry:DictBean.getDfDict().entrySet()){
+				sBuilder.delete(0, sBuilder.length());
+				bWriter.write(sBuilder.append(entry.getKey()).append("\t")
+						.append(entry.getValue()).append("\n").toString());
+			}
+			bWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public Map<String, HashSet<String>> loadDisambiguationDict(String path){
 		Map<String, HashSet<String>> disambiguationDict = new HashMap<String, HashSet<String>>();
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(path)),"UTF-8"));
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
 			String line;
 			while((line = br.readLine())!=null){
 				String[] lineArray = line.split("\t\\|\\|\t");

@@ -3,8 +3,6 @@ package com.entitylinking.linking.bean;
 import java.util.List;
 import java.util.Map;
 
-import com.entitylinking.linking.GenerateEntityGraph;
-
 /**
  * 一篇文档生成一个实体子图
  * @author HP
@@ -13,13 +11,13 @@ import com.entitylinking.linking.GenerateEntityGraph;
 public class EntityGraph {
 
 	/*实体list的size*/
-	private int entityLen;
+	private int entityLen;/////////////////////////////
 	/*该图中所有的实体*/
-	private List<Entity> entities;
+	private List<Entity> entities;/////////////////////////////
 	/*该图中所有的mention*/
-	private List<Mention> mentions;
+	private List<Mention> mentions;/////////////////////////////
 	/*用于记录每个mention对应的实体在entities中的起始位置，特殊mention(OTHER)标注的是扩展实体的起始位置*/
-	private Map<String, Integer> entityIndex;
+	private Map<String, Integer> entityIndex;////////////////////
 	/*mention-候选实体map*/
 	private Map<Mention, List<String>> entityMap ;
 	/*文档的语义签名向量*/
@@ -36,12 +34,6 @@ public class EntityGraph {
 	private double[][] edgesWeights;
 	/*实体图对象*/
 	private EntityGraph entityGraph;
-	
-	public EntityGraph(Text text){
-		GenerateEntityGraph generateEntityGraph = new GenerateEntityGraph();
-		this.entityGraph = generateEntityGraph.generateDensityGraph(text);
-	}
-	public EntityGraph(){}
 	
 	public EntityGraph getEntityGraph() {
 		return entityGraph;
@@ -67,8 +59,8 @@ public class EntityGraph {
 		return entityLen;
 	}
 
-	public void setEntityLen(int entityLen) {
-		this.entityLen = entityLen;
+	public void setEntityLen() {
+		this.entityLen = this.entities.size();
 	}
 
 	public void setEntityIndex(Map<String, Integer> entityIndex) {

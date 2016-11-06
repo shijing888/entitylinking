@@ -1,5 +1,6 @@
 package com.entitylinking.linking.bean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,6 +21,8 @@ public class Mention {
 	
 	public Mention(String mention){
 		this.mentionName = mention;
+		candidateEntity = new ArrayList<Entity>();
+		mentionIndex = new ArrayList<>();
 	}
 	
 	public List<Integer> getMentionIndex() {

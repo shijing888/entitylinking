@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.entitylinking.linking.GenerateEntityGraph;
 import com.entitylinking.linking.LinkingKB;
-import com.entitylinking.linking.bean.EntityGraph;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
 import com.entitylinking.utils.FileUtils;
@@ -24,7 +24,7 @@ public class Main {
 	static{
 		PropertyConfigurator.configure("./log4j.properties");
 	}
-	
+	private GenerateEntityGraph generateEntityGraph;
 	public static void main(String args[]) {
 		/**
 		 *1.加载文件
@@ -55,8 +55,7 @@ public class Main {
 				textContent = FileUtils.readFileContent(filePath);
 				text.setContent(textContent);
 				//生成所有实体的密度子图
-				EntityGraph entityGraph = new EntityGraph(text);
-				text.setEntityGraph(entityGraph);
+				generateEntityGraph.generateDensityGraph(text);
 				//链接知识库过程
 				LinkingKB linkingKB = new LinkingKB();
 				Map<String, String> mentionEntityPairs = linkingKB.obtainmentionEntityPairs(text);
@@ -72,6 +71,6 @@ public class Main {
 	}
 	
 	public void init(){
-		
+		generateEntityGraph = new GenerateEntityGraph();
 	}
 }

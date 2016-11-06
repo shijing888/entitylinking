@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.entitylinking.candidate.GenerateMentions;
 import com.entitylinking.linking.bean.Entity;
-import com.entitylinking.linking.bean.EntityGraph;
 import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.Text;
 
@@ -22,22 +21,22 @@ public class GenerateEntityGraph {
 	 * 构造关于该篇文档的密度子图
 	 * @return
 	 */
-	public EntityGraph generateDensityGraph(Text text){
-		//生成候选过程
-		List<Mention> mentionList = GenerateMentions.obtainTextMention(text.getContent());
-		EntityGraph entityGraph = new EntityGraph();
+	public void generateDensityGraph(Text text){
+		//生成mention过程
+		GenerateMentions.obtainTextMention(text);
 		/*该图中所有的实体*/
 		List<Entity> entities = new ArrayList<Entity>();
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
-		for(Mention mention:mentionList){
+		for(Mention mention:text.getEntityGraph().getMentions()){
 			entityIndex.put(mention.getMentionName(), entities.size());
 			entities.addAll(mention.getCandidateEntity());
 		}
+		//初始化实体图
+		text.getEntityGraph().setEntities(entities);
+		text.getEntityGraph().setEntityIndex(entityIndex);
+		text.getEntityGraph().setEntityLen();
 		
-		entityGraph.setEntities(entities);
-		entityGraph.setEntityIndex(entityIndex);
 		
-		return entityGraph;
 	}
 	
 	/**

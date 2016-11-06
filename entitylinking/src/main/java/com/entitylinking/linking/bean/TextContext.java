@@ -1,6 +1,9 @@
 package com.entitylinking.linking.bean;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 文档上下文
@@ -9,21 +12,25 @@ import java.util.List;
  */
 public class TextContext {
 
-	/**保存一篇文档中的有效词*/
-	private static List<String> contextWords;
-	/**保存词在文档中的位置*/
-	private static List<Integer>contextWordsIndex;
-	public static List<String> getContextWords() {
-		return contextWords;
+	/**上下文map*/
+	Map<Integer, String> context;
+	Map<String, Double> wordTfidf;
+	
+	public TextContext(){
+		context = new HashMap<Integer, String>();
+		wordTfidf = new HashMap<>();
 	}
-	public static void setContextWords(List<String> contextWords) {
-		TextContext.contextWords = contextWords;
+	public Map<Integer, String> getContext() {
+		return context;
 	}
-	public static List<Integer> getContextWordsIndex() {
-		return contextWordsIndex;
+	public Map<String, Double> getWordTfidf() {
+		return wordTfidf;
 	}
-	public static void setContextWordsIndex(List<Integer> contextWordsIndex) {
-		TextContext.contextWordsIndex = contextWordsIndex;
+	public void setWordTfidf(Map<String, Double> wordTfidf) {
+		this.wordTfidf = wordTfidf;
+	}
+	public void setContext(Map<Integer, String> context) {
+		this.context = context;
 	}
 	
 }

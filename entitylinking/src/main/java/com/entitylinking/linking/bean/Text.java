@@ -14,6 +14,18 @@ public class Text {
 	private EntityGraph entityGraph;
 	/**文档中上下文*/
 	private TextContext textContext;
+	
+	public Text(){
+		entityGraph = new EntityGraph();
+		textContext = new TextContext();
+	}
+	
+	public Text(String content){
+		this.content = content;
+		this.entityGraph = new EntityGraph();
+		this.textContext = new TextContext();
+	}
+	
 	public String getTextName() {
 		return textName;
 	}
