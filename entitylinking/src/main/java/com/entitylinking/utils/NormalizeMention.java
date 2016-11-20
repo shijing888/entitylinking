@@ -18,15 +18,21 @@ public class NormalizeMention {
 		System.out.println(NormalizeMention.getNormalizeMention("michael jeffy jordan ()",false));
 	}
 	
-	public static List<String> getNormalizeMentionList(String[] titleList){
+	public static List<String> getNormalizeMentionList(String[] titleList, boolean caseSensitive){
 		List<String> normalMentionSet = new ArrayList<String>();
 		for(String str:titleList){
-			str = getNormalizeMention(str, false);
+			str = getNormalizeMention(str, caseSensitive);
 			normalMentionSet.add(str);
 		}
 		return normalMentionSet;
 	}
 	
+	/**
+	 * 标准化
+	 * @param titleText
+	 * @param caseSensetive，若为true则全部小写
+	 * @return
+	 */
 	public static String getNormalizeMention(String titleText, boolean caseSensetive){
 		
 			String rawTitleText = "";

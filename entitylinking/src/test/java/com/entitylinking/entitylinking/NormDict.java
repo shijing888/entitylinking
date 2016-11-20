@@ -28,11 +28,14 @@ public class NormDict {
 	private static Map<String, HashSet<String>> ambiguationDict = new HashMap<>();
 	
 	public static void main(String args[]){
-		String rpath = "./dict/synonymsDict.txt";
-		String wpath = "./dict/synonymsDict2.txt";
-		String rpath2 = "./dict/ambiguationDict.txt";
-		String wpath2 = "./dict/ambiguationDict2.txt";
-		processDict(rpath, wpath, rpath2,wpath2);
+//		String rpath = "./dict/synonymsDict.txt";
+//		String wpath = "./dict/synonymsDict2.txt";
+//		String rpath2 = "./dict/ambiguationDict.txt";
+//		String wpath2 = "./dict/ambiguationDict2.txt";
+//		processDict(rpath, wpath, rpath2,wpath2);
+		String rpath = "./dict/entityRelation.txt";
+		String wpath = "./dict/entityRelation2.txt";
+		filterDict(rpath, wpath);
 	}
 	
 public static void processDict(String rpath,String wpath, String rpath2,String wpath2){
@@ -74,27 +77,28 @@ public static Map<String, HashSet<String>> loadDisambiguationDict(String path){
 }
 	
 	public static void filterDict(String rpath,String wpath){
-		
 		try {
-			BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rpath)), "UTF-8"));
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(wpath)),"UTF-8"));
+			BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rpath)), "utf-8"));
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(wpath)),"utf-8"));
 			String line;
 			int i=0;
 			while((line=bReader.readLine())!=null){
 				if(line.length()==0)
 					continue;
-				if(!isDelete(line)){
+				   
 					String[] lineArray = line.split("\t\\|\\|\t");
-					if(lineArray.length==2){
-						if(lineArray[0].length()>0 && lineArray[1].length()>0)
-							line = NormalizeMention.getNormalizeMention(lineArray[0],false) + "\t||\t" + StringUtills.join(NormalizeMention.getNormalizeMentionList(lineArray[1].split("\t\\|\t")), "\t|\t");
+					if(lineArray.length==3){
+						if(lineArray[0].length()>0 && lineArray[2].length()>0)
+							line = NormalizeMention.getNormalizeMention(lineArray[0],true) 
+							+ "\t||\t" + lineArray[1] + "\t||\t" 
+							+ StringUtills.join(NormalizeMention.getNormalizeMentionList(
+									lineArray[2].split("\t\\|\t"),true), "\t|\t");
 						if((i++)%10000==0)
 							System.out.println("i="+i);
 						writer.write(line);
 						writer.write("\n");
 					}
 					
-				}
 			}
 			bReader.close();
 			writer.close();

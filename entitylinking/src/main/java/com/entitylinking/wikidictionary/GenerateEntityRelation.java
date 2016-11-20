@@ -84,7 +84,7 @@ public class GenerateEntityRelation {
 		    	for(String str:entitySet){
 		    		sb.append(str).append("\t|\t");
 		    	}
-		    	sb.append("\t");
+		    	sb.append("\n");
 //		    	logger.info(sb);
 		    	entityRelationDict.add(sb.toString());
 		    	

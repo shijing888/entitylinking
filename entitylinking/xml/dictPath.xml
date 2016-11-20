@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Paths>
-	<!-- 同义歧义词典路径 -->
+	<!-- 词典路径 -->
 	<dictPath>
 		<synonyms>./dict/synonymsDict.txt</synonyms>
 		<ambiguation>./dict/ambiguationDict.txt</ambiguation>
+		<pos>./dict/pos.txt</pos>
+		<stopwords>./dict/stopword_en.txt</stopwords>
+		<df>./dict/df.txt</df>
 		
 		<!--  <synonyms>./dict/test.txt</synonyms>
 		<ambiguation>./dict/test.txt</ambiguation>-->
