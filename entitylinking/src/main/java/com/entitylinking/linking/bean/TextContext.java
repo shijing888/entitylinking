@@ -1,9 +1,6 @@
 package com.entitylinking.linking.bean;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 /**
  * 文档上下文
@@ -12,25 +9,22 @@ import java.util.Set;
  */
 public class TextContext {
 
-	/**上下文map*/
-	Map<Integer, String> context;
-	Map<String, Double> wordTfidf;
+	/**上下文*/
+	List<Integer> contextIndex;
+	List<String> contextMention;
+	public List<Integer> getContextIndex() {
+		return contextIndex;
+	}
+	public void setContextIndex(List<Integer> contextIndex) {
+		this.contextIndex = contextIndex;
+	}
+	public List<String> getContextMention() {
+		return contextMention;
+	}
+	public void setContextMention(List<String> contextMention) {
+		this.contextMention = contextMention;
+	}
 	
-	public TextContext(){
-		context = new HashMap<Integer, String>();
-		wordTfidf = new HashMap<>();
-	}
-	public Map<Integer, String> getContext() {
-		return context;
-	}
-	public Map<String, Double> getWordTfidf() {
-		return wordTfidf;
-	}
-	public void setWordTfidf(Map<String, Double> wordTfidf) {
-		this.wordTfidf = wordTfidf;
-	}
-	public void setContext(Map<Integer, String> context) {
-		this.context = context;
-	}
+	
 	
 }

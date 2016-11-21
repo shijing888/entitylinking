@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 
 import com.entitylinking.candidate.CandidateMain;
 import com.entitylinking.linking.bean.DictBean;
+import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.Text;
 import com.entitylinking.linking.bean.TextContext;
@@ -83,7 +84,8 @@ public class NLPUtils {
         Map<String, List<Integer>> wordsMap = new HashMap<String, List<Integer>>();
         Set<String> nerSet = new HashSet<>();
         List<Mention> mentions = new ArrayList<Mention>();
-        TextContext textContext = new TextContext();
+//        TextContext textContext = new TextContext();
+        
         // these are all the sentences in this document
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
         int lenCount = 0;
@@ -102,7 +104,7 @@ public class NLPUtils {
                 //用于记录mention与text的上下文
                 if(DictBean.getPosDict().contains(pos)){
                 	index = lenCount + token.index();
-                	textContext.getContext().put(index, lemma);
+                	text.getTextContext().put(index, lemma);
                 	if(wordsMap.containsKey(lemma)){
                 		wordsMap.get(lemma).add(index);
                 	}else{
@@ -118,21 +120,28 @@ public class NLPUtils {
             lenCount += sentence.size();
         }
        
-        //分别保存mention与上下文
+        int entityLen = 0;
+        //保存mention
         for(Entry<String, List<Integer>>entry:wordsMap.entrySet()){
         	if(nerSet.contains(entry.getKey())){
+        		//初始化mention name
         		Mention mention = new Mention(entry.getKey());
-        		mention.setTfidfValue(entry.getValue().size()
-        				/ (double)DictBean.getDfDict().get(entry.getKey()));
-            	mention.setMentionIndex(entry.getValue());
-            	mention.setCandidateEntity(candidateMain.candidatesOfMention(mention.getMentionName()));
+        		//初始化mention tfidf
+        		mention.setTfidfValue(CommonUtils.calTfidf(entry.getValue().size(), 
+        				DictBean.getDfDict().get(entry.getKey()), lenCount));
+            	//初始化mention在文中的位置信息
+        		mention.setMentionIndex(entry.getValue());
+            	//初始化mention的候选实体列表
+        		List<Entity> candidateEntity = candidateMain.candidatesOfMention(mention.getMentionName());
+        		mention.setCandidateEntity(candidateEntity);
+        		entityLen += candidateEntity.size();
+            	//初始化mention的上下文集合
+        		mention.initMentionContext(text.getTextContext(), text.getTextContextIndex());
             	mentions.add(mention);
         	}
         	
-        	textContext.getWordTfidf().put(entry.getKey(), 
-        			entry.getValue().size()/(double)DictBean.getDfDict().get(entry.getKey()));
         }
-        text.setTextContext(textContext);
+        text.getEntityGraph().setEntityLen(entityLen);
         text.getEntityGraph().setMentions(mentions);
 	}
 	

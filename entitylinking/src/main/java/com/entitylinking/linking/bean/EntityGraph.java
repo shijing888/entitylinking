@@ -1,7 +1,11 @@
 package com.entitylinking.linking.bean;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.entitylinking.utils.NLPUtils;
 
 /**
  * 一篇文档生成一个实体子图
@@ -59,8 +63,8 @@ public class EntityGraph {
 		return entityLen;
 	}
 
-	public void setEntityLen() {
-		this.entityLen = this.entities.size();
+	public void setEntityLen(int len) {
+		this.entityLen = len;
 	}
 
 	public void setEntityIndex(Map<String, Integer> entityIndex) {
@@ -128,6 +132,5 @@ public class EntityGraph {
 	public void setTransferMatrix(double[][] transferMatrix) {
 		this.transferMatrix = transferMatrix;
 	}
-	
 	
 }

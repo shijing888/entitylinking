@@ -1,5 +1,13 @@
 package com.entitylinking.linking.bean;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.entitylinking.utils.CommonUtils;
+import com.entitylinking.utils.NLPUtils;
+
 /**
  * 文本的数据结构
  * @author HP
@@ -13,17 +21,19 @@ public class Text {
 	/**文档对应的实体图*/
 	private EntityGraph entityGraph;
 	/**文档中上下文*/
-	private TextContext textContext;
+	private Map<Integer, String> textContext;
+	private List<Integer> textContextIndex;
 	
 	public Text(){
 		entityGraph = new EntityGraph();
-		textContext = new TextContext();
+		textContext = new HashMap<>();
 	}
 	
-	public Text(String content){
+	public Text(String textName, String content){
+		this.textName = textName;
 		this.content = content;
 		this.entityGraph = new EntityGraph();
-		this.textContext = new TextContext();
+		this.textContext = new HashMap<>();
 	}
 	
 	public String getTextName() {
@@ -44,12 +54,43 @@ public class Text {
 	public void setEntityGraph(EntityGraph entityGraph) {
 		this.entityGraph = entityGraph;
 	}
-	public TextContext getTextContext() {
+	
+	public Map<Integer, String> getTextContext() {
 		return textContext;
 	}
-	public void setTextContext(TextContext textContext) {
+
+	public void setTextContext(Map<Integer, String> textContext) {
 		this.textContext = textContext;
 	}
-	
+
+	public List<Integer> getTextContextIndex() {
+		return textContextIndex;
+	}
+
+	public void setTextContextIndex() {
+		this.textContextIndex = new ArrayList<>(this.textContext.keySet());
+		CommonUtils.sortList(this.textContextIndex, false);
+	}
+
+	/**
+	 * 构造关于该篇文档的密度子图
+	 * @return
+	 */
+	public void generateDensityGraph(){
+		//生成mention和上下文过程
+		NLPUtils.getTextMentionTask(this);
+		/*该图中所有的实体*/
+		List<Entity> entities = new ArrayList<Entity>();
+		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
+		for(Mention mention:this.entityGraph.getMentions()){
+			
+			entityIndex.put(mention.getMentionName(), entities.size());
+			entities.addAll(mention.getCandidateEntity());
+		}
+		//初始化实体图
+		this.entityGraph.setEntities(entities);
+		this.entityGraph.setEntityIndex(entityIndex);
+		
+	}
 	
 }
