@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,6 +25,8 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.entitylinking.linking.bean.DictBean;
+import com.entitylinking.linking.bean.PathBean;
+import com.entitylinking.linking.bean.RELRWParameterBean;
 
 /**
  * 加载配置文件的参数
@@ -41,9 +42,30 @@ public class Parameters {
 	 * @param path
 	 * @return
 	 */
-	public void loadDictFromXML(String path){
-
+	public void loadDictFromXML(){
+		if(PathBean.getSynonymsDictPath()!=null && PathBean.getAmbiguationDictPath()!=null){
+			logger.info("加载词典开始！");
+			long time1 = System.currentTimeMillis();
+			DictBean.setSynonymsDict(loadSynonymsDict(PathBean.getSynonymsDictPath()));
+			DictBean.setAmbiguationDict(loadDisambiguationDict(PathBean.getAmbiguationDictPath()));
+			long time2 = System.currentTimeMillis();
+			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
+		}
+		
+		DictBean.setPosDict(loadSetDict(PathBean.getPosDictPath()));
+		DictBean.setStopWordDict(loadSetDict(PathBean.getStopWordDictPath()));
+		DictBean.setDfDict(loadDfDict(PathBean.getDfDictPath()));
+	}
+	
+	/**
+	 * 获取xml文件的element列表
+	 * @param path
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Element> getElementsFromXML(String path){
 		InputStream input;
+		List<Element> elements = null;
 		try {
 			//1.创建reader
 			SAXReader reader = new SAXReader();
@@ -52,43 +74,35 @@ public class Parameters {
 			Document document = reader.read(input);
 			//获取xml的根节点
 			Element root = document.getRootElement();
-			@SuppressWarnings("unchecked")
-			List<Element> elements = root.elements();
-			
-			for(Element element:elements){
-				if(element.getName().equals("dictPath")){
-					DictBean.setSynonymsDictPath(element.elementText("synonyms"));
-					DictBean.setAmbiguationDictPath(element.elementText("ambiguation"));
-					DictBean.setPosDictPath(element.elementText("pos"));
-					DictBean.setStopWordDictPath(element.elementText("stopwords"));
-					DictBean.setDfDictPath(element.elementText("df"));
-				}
-			}
-			
-			input.close();
+			elements = root.elements();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (DocumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
-		if(DictBean.getSynonymsDictPath()!=null && DictBean.getAmbiguationDictPath()!=null){
-			logger.info("加载词典开始！");
-			long time1 = System.currentTimeMillis();
-			DictBean.setSynonymsDict(loadSynonymsDict(DictBean.getSynonymsDictPath()));
-			DictBean.setAmbiguationDict(loadDisambiguationDict(DictBean.getAmbiguationDictPath()));
-			long time2 = System.currentTimeMillis();
-			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
+		return elements;
+	}
+	
+	/**
+	 * 首先将配置文件的路径加载进来
+	 * @param path
+	 */
+	public void loadPath(String path){
+		List<Element> elements = getElementsFromXML(path);
+		for(Element element:elements){
+			if(element.getName().equals("dictPath")){
+				PathBean.setSynonymsDictPath(element.elementText("synonyms"));
+				PathBean.setAmbiguationDictPath(element.elementText("ambiguation"));
+				PathBean.setPosDictPath(element.elementText("pos"));
+				PathBean.setStopWordDictPath(element.elementText("stopwords"));
+				PathBean.setDfDictPath(element.elementText("df"));
+			}else if(element.getName().equals("relPath")){
+				PathBean.setRelParameterPath(element.elementText("relParameterPath"));
+			}
 		}
-		
-		DictBean.setPosDict(loadSetDict(DictBean.getPosDictPath()));
-		DictBean.setStopWordDict(loadSetDict(DictBean.getStopWordDictPath()));
-		DictBean.setDfDict(loadDfDict(DictBean.getDfDictPath()));
 	}
 	
 	/**
@@ -208,5 +222,26 @@ public class Parameters {
 			e.printStackTrace();
 		}
 		return disambiguationDict;
+	}
+
+	/**
+	 * 加载robust entity linking 参数
+	 * @param path
+	 */
+	public void loadRELParameters(String path){
+		List<Element> elements = getElementsFromXML(path);
+		try {
+			for(Element element:elements){
+				if(element.getName().equals("paramenter")){
+					RELRWParameterBean.setSourceFileDirPath(element.elementText("fileDirPath"));
+					RELRWParameterBean.setContextWindow(Integer.parseInt(
+							element.elementText("contextWindow")));
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			logger.info("parameters' format error!");
+		}
+		
 	}
 }

@@ -11,4 +11,8 @@
 		<!--  <synonyms>./dict/test.txt</synonyms>
 		<ambiguation>./dict/test.txt</ambiguation>-->
 	</dictPath>
+	<!-- 参数配置文件路径 -->
+	<relPath>
+		<relParameterPath>./xml/entitylinking_relrw.xml</relParameterPath>
+	</relPath>
 </Paths>

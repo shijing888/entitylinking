@@ -33,14 +33,15 @@ import org.apache.lucene.store.FSDirectory;
 public class IndexFile {
 
 	public static void main(String args[]){
+		//索引文件夹
 		String indexDir1 = "./index/synonymsIndex";
 		String indexDir2 = "./index/ambiguationIndex";
 		String indexDir3 = "./index/entityRelationIndex";
-		
+		//需要创建索引的文件
 		String filePath1 = "./dict/synonymsDict.txt";
 		String filePath2 = "./dict/ambiguationDict.txt";
 		String filePath3 = "./dict/entityRelation.txt";
-		
+		//索引的字段
 		String[] fields1 = new String[]{"synonymsDictKey","synonymsDictValue"}; 
 		String[] fields2 = new String[]{"ambiguationDictKey","ambiguationDictValue"}; 
 		String[] fields3 = new String[]{"entityRelationKey","entityCount","entityRelationValue"}; 

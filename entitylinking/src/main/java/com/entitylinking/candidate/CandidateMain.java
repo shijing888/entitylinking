@@ -8,7 +8,6 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.utils.NormalizeMention;
-import com.entitylinking.utils.Parameters;
 
 /**
  * 生成候选的main函数入口
@@ -23,13 +22,8 @@ public class CandidateMain {
 	}
 	private static CandidateMain candidateMain = null;
 	
-	private CandidateMain(){
-		initDict();
-	}
-	
 	public static void main(String args[]){
 		CandidateMain candidateMain = new CandidateMain();
-		candidateMain.initDict();
 		candidateMain.candidatesOfMention("MJ");
 		
 	}
@@ -45,14 +39,6 @@ public class CandidateMain {
 		logger.info(mention+" candidates size:"+ candidateList.size());
 		logger.info(mention+" candidates are:"+ StringUtils.join(candidateList, "\t"));
 		return candidateList;
-	}
-	
-	/**
-	 * 用于加载同义歧义词典
-	 */
-	public void initDict(){
-		Parameters parameters = new Parameters();
-		parameters.loadDictFromXML("./xml/dictPath.xml");
 	}
 	
 	/**

@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EL>
 	<paramenter>
+		<!-- 数据集文件夹路径 -->
 		<fileDirPath>./data/ace2004/RawTexts</fileDirPath>
+		<!-- 上下文窗口 -->
+		<contextWindow>10</contextWindow>
 	</paramenter>
+	
 </EL>

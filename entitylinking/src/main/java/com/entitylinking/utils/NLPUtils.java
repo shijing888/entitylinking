@@ -1,5 +1,6 @@
 package com.entitylinking.utils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ public class NLPUtils {
 
 	static Logger logger = Logger.getLogger(NLPUtils.class);
 	static StanfordCoreNLP pipeline;
+	static CandidateMain candidateMain;
 	static{
 		/** creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing,
 		 *  and coreference resolution
@@ -44,28 +46,34 @@ public class NLPUtils {
         Properties props = new Properties();
         props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
         pipeline = new StanfordCoreNLP(props);
-        
+//        candidateMain =CandidateMain.getCandidateMain();
 	}
 	
 	//存放用于发现实体的类别
 	private static Set<String> nerCategory = new HashSet<>(Arrays.asList(
 			new String[]{"PERSON","LOCATION","ORGANIZATION","DATE"}));
-	private static CandidateMain candidateMain =CandidateMain.getCandidateMain();
 	
 	public static void main(String args[]){
 		 // read some text in the text variable
-        String path = "./data/ace2004/RawTexts/chtb_171.eng";
-		String content = FileUtils.readFileContent(path);
-//		String content = " The eighth Andes parliament meeting was convened in Lima on the 13th. How are you?";
-        processTextTask(new Text(content));
-//		testNLP(content);
+//        String path = "./data/ace2004/RawTexts/chtb_171.eng";
+//		String content = FileUtils.readFileContent(path);
+//        processTextTask(new Text(content));
+		String dirPath = "./data/ace2004/RawTexts";
+		String savePath = "./dict/df.txt";
+		String stopPath = "./dict/stopword_en.txt";
+		String PosPath = "./dict/pos.txt";
+		Parameters parameters = new Parameters();
+		DictBean.setStopWordDict(parameters.loadSetDict(stopPath));
+		DictBean.setDfDict(parameters.loadDfDict(savePath));
+		DictBean.setPosDict(parameters.loadSetDict(PosPath));
+		countDF(dirPath, savePath);
 	}
 	
 	/**
 	 * 处理传入的文档，获得mention集及候选实体集
 	 * @param text
 	 */
-	public static void processTextTask(Text text){
+	public static void getTextMentionTask(Text text){
 		
 		 // create an empty Annotation just with the given text
         Annotation document = new Annotation(text.getContent());
@@ -93,11 +101,6 @@ public class NLPUtils {
                 
                 //用于记录mention与text的上下文
                 if(DictBean.getPosDict().contains(pos)){
-                	if(DictBean.getDfDict().containsKey(lemma)){
-                		DictBean.getDfDict().put(lemma, DictBean.getDfDict().get(lemma)+1);
-                	}else{
-                		DictBean.getDfDict().put(lemma, 1);
-                	}
                 	index = lenCount + token.index();
                 	textContext.getContext().put(index, lemma);
                 	if(wordsMap.containsKey(lemma)){
@@ -119,7 +122,8 @@ public class NLPUtils {
         for(Entry<String, List<Integer>>entry:wordsMap.entrySet()){
         	if(nerSet.contains(entry.getKey())){
         		Mention mention = new Mention(entry.getKey());
-        		mention.setTfidfValue(entry.getValue().size()/(double)DictBean.getDfDict().get(entry.getKey()));
+        		mention.setTfidfValue(entry.getValue().size()
+        				/ (double)DictBean.getDfDict().get(entry.getKey()));
             	mention.setMentionIndex(entry.getValue());
             	mention.setCandidateEntity(candidateMain.candidatesOfMention(mention.getMentionName()));
             	mentions.add(mention);
@@ -130,6 +134,49 @@ public class NLPUtils {
         }
         text.setTextContext(textContext);
         text.getEntityGraph().setMentions(mentions);
+	}
+	
+	/**
+	 * 统计数据集的文档频率
+	 * @param fileDir
+	 * @param savePath
+	 */
+	public static void countDF(String fileDir,String savePath){
+		File dir = new File(fileDir);
+		if(dir.isDirectory()){
+			File[] files = dir.listFiles();
+			for(File file:files){
+				 // create an empty Annotation just with the given text
+		        Annotation document = new Annotation(FileUtils.readFileContent(file.getAbsolutePath()));
+		        
+		        // run all Annotators on this text
+		        pipeline.annotate(document);
+		       
+		        // these are all the sentences in this document
+		        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+		        for(CoreMap sentence: sentences) {
+		            // a CoreLabel is a CoreMap with additional token-specific methods
+		            for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
+		                String pos = token.get(PartOfSpeechAnnotation.class);
+		                String lemma = token.get(LemmaAnnotation.class).toLowerCase();
+		                //去停用词
+		                if(DictBean.getStopWordDict().contains(lemma))
+		                	continue;
+		                //用于记录mention与text的上下文
+		                if(DictBean.getPosDict().contains(pos)){
+		                	if(DictBean.getDfDict().containsKey(lemma)){
+		                		DictBean.getDfDict().put(lemma, DictBean.getDfDict().get(lemma)+1);
+		                	}else{
+		                		DictBean.getDfDict().put(lemma, 1);
+		                	}
+		                	
+		                }
+		            }
+		        } 
+			}
+		}
+		
+		FileUtils.writeFileContent(savePath, DictBean.getDfDict());
 	}
 	
 	public static void testNLP(String content){

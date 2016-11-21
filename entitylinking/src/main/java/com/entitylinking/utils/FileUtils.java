@@ -1,10 +1,15 @@
 package com.entitylinking.utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * 文件读写
@@ -33,5 +38,27 @@ public class FileUtils {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	/**
+	 * 将map中的内容写入文件
+	 * @param path
+	 * @param map
+	 */
+	public static void writeFileContent(String path, Map<String, Integer> map){
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(path)), "utf-8"));
+			StringBuilder sBuilder = new StringBuilder();
+			for(Entry<String, Integer>entry:map.entrySet()){
+				sBuilder.append(entry.getKey()).append("\t||\t").append(entry.getValue()).append("\n");
+			}
+			writer.write(sBuilder.toString());
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

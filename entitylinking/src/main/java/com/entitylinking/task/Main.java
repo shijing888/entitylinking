@@ -9,9 +9,11 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.entitylinking.linking.GenerateEntityGraph;
 import com.entitylinking.linking.LinkingKB;
+import com.entitylinking.linking.bean.PathBean;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
 import com.entitylinking.utils.FileUtils;
+import com.entitylinking.utils.Parameters;
 
 /**
  * 实体链接主程序
@@ -70,7 +72,14 @@ public class Main {
 		return null;
 	}
 	
+	/**
+	 * 初始化工作
+	 */
 	public void init(){
 		generateEntityGraph = new GenerateEntityGraph();
+		Parameters parameters = new Parameters();
+		parameters.loadPath("./xml/path.xml");
+		parameters.loadRELParameters(PathBean.getRelParameterPath());
+		parameters.loadDictFromXML();
 	}
 }

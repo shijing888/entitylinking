@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.entitylinking.candidate.GenerateMentions;
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.Text;
+import com.entitylinking.utils.NLPUtils;
 
 /**
  * 用于生成一个密度子图
@@ -22,8 +22,8 @@ public class GenerateEntityGraph {
 	 * @return
 	 */
 	public void generateDensityGraph(Text text){
-		//生成mention过程
-		GenerateMentions.obtainTextMention(text);
+		//生成mention和上下文过程
+		NLPUtils.getTextMentionTask(text);
 		/*该图中所有的实体*/
 		List<Entity> entities = new ArrayList<Entity>();
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
