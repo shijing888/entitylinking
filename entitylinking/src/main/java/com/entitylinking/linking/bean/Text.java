@@ -80,12 +80,17 @@ public class Text {
 		//生成mention和上下文过程
 		NLPUtils.getTextMentionTask(this);
 		/*该图中所有的实体*/
-		List<Entity> entities = new ArrayList<Entity>();
+		int entityLen = this.getEntityGraph().getEntityLen(); 
+		Entity[] entities = new Entity[entityLen];
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
+		int index = 0;
+		List<Entity> candidateEntity;
 		for(Mention mention:this.entityGraph.getMentions()){
-			
-			entityIndex.put(mention.getMentionName(), entities.size());
-			entities.addAll(mention.getCandidateEntity());
+			candidateEntity = mention.candidatesOfMention(mention.getMentionName());
+			entityIndex.put(mention.getMentionName(), candidateEntity.size());
+			for(int i=0;i<candidateEntity.size() && index<entityLen;i++,index++){
+				entities[index] = candidateEntity.get(i);
+			}
 		}
 		//初始化实体图
 		this.entityGraph.setEntities(entities);

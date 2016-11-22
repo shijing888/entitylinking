@@ -14,7 +14,8 @@ public class PathBean {
 	private static String dfDictPath;
 	/**robust entity linking 参数xml路径*/
 	private static String relParameterPath;
-	
+	/**entityRelation 索引文件夹路径*/
+	private static String entityRelationPath;
 	public static String getSynonymsDictPath() {
 		return synonymsDictPath;
 	}
@@ -51,6 +52,11 @@ public class PathBean {
 	public static void setRelParameterPath(String relParameterPath) {
 		PathBean.relParameterPath = relParameterPath;
 	}
-	
+	public static String getEntityRelationPath() {
+		return entityRelationPath;
+	}
+	public static void setEntityRelationPath(String entityRelationPath) {
+		PathBean.entityRelationPath = entityRelationPath;
+	}
 	
 }

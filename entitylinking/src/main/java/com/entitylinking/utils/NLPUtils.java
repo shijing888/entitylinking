@@ -13,12 +13,11 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import com.entitylinking.candidate.CandidateMain;
 import com.entitylinking.linking.bean.DictBean;
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
+import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
-import com.entitylinking.linking.bean.TextContext;
 
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
@@ -39,7 +38,6 @@ public class NLPUtils {
 
 	static Logger logger = Logger.getLogger(NLPUtils.class);
 	static StanfordCoreNLP pipeline;
-	static CandidateMain candidateMain;
 	static{
 		/** creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing,
 		 *  and coreference resolution
@@ -132,7 +130,7 @@ public class NLPUtils {
             	//初始化mention在文中的位置信息
         		mention.setMentionIndex(entry.getValue());
             	//初始化mention的候选实体列表
-        		List<Entity> candidateEntity = candidateMain.candidatesOfMention(mention.getMentionName());
+        		List<Entity> candidateEntity = mention.candidatesOfMention(mention.getMentionName());
         		mention.setCandidateEntity(candidateEntity);
         		entityLen += candidateEntity.size();
             	//初始化mention的上下文集合
@@ -143,6 +141,42 @@ public class NLPUtils {
         }
         text.getEntityGraph().setEntityLen(entityLen);
         text.getEntityGraph().setMentions(mentions);
+	}
+	
+	public static Set<String> getEntityContext(String content){
+		
+		 // create an empty Annotation just with the given text
+       Annotation document = new Annotation(content);
+       // run all Annotators on this text
+       pipeline.annotate(document);
+       Set<String> nerContextSet = new HashSet<>();
+       int entityContextLen = RELRWParameterBean.getContextWindow();
+       // these are all the sentences in this document
+       List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+       int index = 0;
+       for(CoreMap sentence: sentences) {
+           // a CoreLabel is a CoreMap with additional token-specific methods
+           for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
+               // this is the text of the token
+               //String word = token.get(TextAnnotation.class);
+               // this is the POS tag of the token
+               String pos = token.get(PartOfSpeechAnnotation.class);
+               // this is the NER label of the token
+               String ne = token.get(NamedEntityTagAnnotation.class);
+               String lemma = token.get(LemmaAnnotation.class).toLowerCase();
+               
+               //用于记录mention与text的上下文
+               if(DictBean.getPosDict().contains(pos) && nerCategory.contains(ne)){
+            	  if(index < entityContextLen){
+            		 nerContextSet.add(lemma); 
+            	  }else {
+					return nerContextSet;
+				}
+               }
+           }
+       }
+      
+      return nerContextSet;
 	}
 	
 	/**

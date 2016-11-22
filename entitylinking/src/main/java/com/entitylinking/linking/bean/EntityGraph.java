@@ -1,11 +1,7 @@
 package com.entitylinking.linking.bean;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.entitylinking.utils.NLPUtils;
 
 /**
  * 一篇文档生成一个实体子图
@@ -14,14 +10,14 @@ import com.entitylinking.utils.NLPUtils;
  */
 public class EntityGraph {
 
-	/*实体list的size*/
-	private int entityLen;/////////////////////////////
+	/*所有实体的size*/
+	private int entityLen;
 	/*该图中所有的实体*/
-	private List<Entity> entities;/////////////////////////////
+	private Entity[] entities;
 	/*该图中所有的mention*/
-	private List<Mention> mentions;/////////////////////////////
+	private List<Mention> mentions;
 	/*用于记录每个mention对应的实体在entities中的起始位置，特殊mention(OTHER)标注的是扩展实体的起始位置*/
-	private Map<String, Integer> entityIndex;////////////////////
+	private Map<String, Integer> entityIndex;
 	/*mention-候选实体map*/
 	private Map<Mention, List<String>> entityMap ;
 	/*文档的语义签名向量*/
@@ -119,18 +115,18 @@ public class EntityGraph {
 		this.edgesWeights = edgesWeights;
 	}
 
-	public List<Entity> getEntities() {
+	public Entity[] getEntities() {
 		return entities;
 	}
-	public void setEntities(List<Entity> entities) {
+	public void setEntities(Entity[] entities) {
 		this.entities = entities;
 	}
 	
 	public double[][] getTransferMatrix() {
 		return transferMatrix;
 	}
-	public void setTransferMatrix(double[][] transferMatrix) {
-		this.transferMatrix = transferMatrix;
-	}
 	
+	public void calTransferMatrix(){
+		
+	}
 }

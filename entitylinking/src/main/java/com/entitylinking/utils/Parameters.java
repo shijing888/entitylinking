@@ -93,14 +93,16 @@ public class Parameters {
 	public void loadPath(String path){
 		List<Element> elements = getElementsFromXML(path);
 		for(Element element:elements){
-			if(element.getName().equals("dictPath")){
+			if(element.getName().equals("dictPath")){//字典路径
 				PathBean.setSynonymsDictPath(element.elementText("synonyms"));
 				PathBean.setAmbiguationDictPath(element.elementText("ambiguation"));
 				PathBean.setPosDictPath(element.elementText("pos"));
 				PathBean.setStopWordDictPath(element.elementText("stopwords"));
 				PathBean.setDfDictPath(element.elementText("df"));
-			}else if(element.getName().equals("relPath")){
+			}else if(element.getName().equals("relPath")){//robust 实体链接方法参数
 				PathBean.setRelParameterPath(element.elementText("relParameterPath"));
+			}else if(element.getName().equals("indexDirPath")){//索引文件路径
+				PathBean.setEntityRelationPath(element.elementText("entityRelationPath"));
 			}
 		}
 	}

@@ -5,7 +5,7 @@ package com.entitylinking.wikidictionary;
  * @author shijing
  *
  */
-public class Main {
+public class WikiMain {
 
 	public static void main(String args[]){
 		GenerateDictionary generateDictionary  = new GenerateDictionary();

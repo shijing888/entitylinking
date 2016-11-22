@@ -15,4 +15,8 @@
 	<relPath>
 		<relParameterPath>./xml/entitylinking_relrw.xml</relParameterPath>
 	</relPath>
+	<!-- 索引文件夹路径 -->
+	<indexDirPath>
+		<entityRelationPath>./index/entityRelationIndex</entityRelationPath>
+	</indexDirPath>
 </Paths>

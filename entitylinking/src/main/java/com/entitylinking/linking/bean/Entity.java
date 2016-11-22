@@ -2,13 +2,22 @@ package com.entitylinking.linking.bean;
 
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
+import com.entitylinking.config.WikiConfig;
+import com.entitylinking.utils.NLPUtils;
+
+import de.tudarmstadt.ukp.wikipedia.api.Page;
+import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
+import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
+
 /**
  * 实体的数据结构
  * @author HP
  *
  */
 public class Entity {
-
+	static Logger logger = Logger.getLogger(Entity.class);
 	/**实体名称*/
 	private String entityName;
 	/**实体流行度*/
@@ -21,6 +30,7 @@ public class Entity {
 	public Entity(String name){
 		this.entityName = name;
 	}
+	public Entity(){}
 	
 	public String getEntityName() {
 		return entityName;
@@ -47,6 +57,20 @@ public class Entity {
 		this.entityContext = entityContext;
 	}
 	
-	
-	
+	/**
+     * 获取实体信息，名称、上下文、流行度
+     * @param title
+     * @throws WikiApiException
+     */
+    public void getEntityPageInfo(String title) throws WikiApiException{
+    	Wikipedia wikipedia = WikiConfig.getWiki();
+        Page page = wikipedia.getPage(title);
+        logger.info(page.getTitle());
+        //初始化title
+        entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
+        //初始化上下文
+        entityContext = NLPUtils.getEntityContext(page.getPlainText());
+        //初始化流行度
+        popularity = page.getNumberOfInlinks();
+    }
 }
