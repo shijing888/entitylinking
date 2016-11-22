@@ -1,5 +1,6 @@
 package com.entitylinking.linking;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.entitylinking.linking.bean.Text;
@@ -17,6 +18,8 @@ public class LinkingKB {
 	 * @return，返回mention-entity对
 	 */
 	public Map<String, String> obtainmentionEntityPairs(Text text){
+		Map<String, String> mentionEntityMap = new HashMap<String, String>();
+		
 		return null;
 	}
 }

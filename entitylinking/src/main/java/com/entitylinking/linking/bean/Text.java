@@ -95,7 +95,8 @@ public class Text {
 		//初始化实体图
 		this.entityGraph.setEntities(entities);
 		this.entityGraph.setEntityIndex(entityIndex);
-		
+		//计算转移矩阵
+		this.entityGraph.calTransferMatrix();
 	}
 	
 }

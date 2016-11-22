@@ -17,6 +17,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -32,6 +33,7 @@ import org.apache.lucene.store.FSDirectory;
  */
 public class IndexFile {
 
+	private static final int MAXTOP = 999;
 	public static void main(String args[]){
 		//索引文件夹
 		String indexDir1 = "./index/synonymsIndex";
@@ -122,5 +124,38 @@ public class IndexFile {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * 通过查询共现次数来获取实体图中边的权重
+	 * @param querys
+	 * @param queryFields
+	 * @param indexDir
+	 * @return
+	 */
+	public static int countCooccurence(String[] querys,String[] queryFields,String indexDir){
+		int count = 0;
+		//1. 获取索引文件目录
+		Directory directory;
+		try {
+			directory = FSDirectory.open(Paths.get(indexDir));
+			//2. 创建IndexReader对象，读取索引文件
+			IndexReader indexReader = DirectoryReader.open(directory);
+			//3. 创建索引查询器，查询索引文件
+			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+			//4. 实例化分析器
+			Analyzer analyzer = new StandardAnalyzer();
+			//5. 创建查询解析器，解析query
+			Query query = MultiFieldQueryParser.parse(querys, queryFields, analyzer);
+			count = indexSearcher.search(query, MAXTOP).scoreDocs.length;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return count;
 	}
 }

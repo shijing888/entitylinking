@@ -230,6 +230,7 @@ public class Parameters {
 	 * 加载robust entity linking 参数
 	 * @param path
 	 */
+	@SuppressWarnings("unchecked")
 	public void loadRELParameters(String path){
 		List<Element> elements = getElementsFromXML(path);
 		try {
@@ -238,7 +239,20 @@ public class Parameters {
 					RELRWParameterBean.setSourceFileDirPath(element.elementText("fileDirPath"));
 					RELRWParameterBean.setContextWindow(Integer.parseInt(
 							element.elementText("contextWindow")));
+					RELRWParameterBean.setAlpha(Double.parseDouble(element.elementText("alpha")));
+					RELRWParameterBean.setConvergencePrecise(Double.parseDouble(
+							element.elementText("convergencePrecise")));
+				}else if(element.getName().equals("indexFields")){
+					List<Element> subElements = element.elements();
+					for(Element subElement:subElements){
+						if(subElement.getName().equals("entityRelationFields")){
+							RELRWParameterBean.setEntityRelationField1(subElement.elementText("field1"));
+							RELRWParameterBean.setEntityRelationField2(subElement.elementText("field2"));
+							RELRWParameterBean.setEntityRelationField3(subElement.elementText("field3"));
+						}
+					}
 				}
+				
 			}
 		} catch (Exception e) {
 			// TODO: handle exception

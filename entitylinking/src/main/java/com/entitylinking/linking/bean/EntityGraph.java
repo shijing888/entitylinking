@@ -3,6 +3,10 @@ package com.entitylinking.linking.bean;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.lucene.document.Document;
+
+import com.entitylinking.lucene.IndexFile;
+
 /**
  * 一篇文档生成一个实体子图
  * @author HP
@@ -126,7 +130,44 @@ public class EntityGraph {
 		return transferMatrix;
 	}
 	
+	/**
+	 * 计算转移矩阵
+	 */
 	public void calTransferMatrix(){
-		
+		double weight= 0;
+		for(int i=0;i<entityLen;i++){
+			for(int j=0;j<entityLen;j++){
+				weight = calEdgeWeight(entities[i].getEntityName(), entities[j].getEntityName(), 
+						RELRWParameterBean.getEntityRelationField2(),
+						RELRWParameterBean.getEntityRelationField3(), PathBean.getEntityRelationPath());
+				transferMatrix[i][j] = weight;
+			}
+		}
+	}
+	
+	/**
+	 * 计算实体图中边的权重与转移概率
+	 * @param entity1
+	 * @param entity2
+	 * @param queryField1,保存count的域
+	 * @param queryField2，保存实体页中共现的其他实体
+	 * @param indexDir
+	 * @return
+	 */
+	public double calEdgeWeight(String entity1,String entity2,String queryField1,
+			String queryField2,String indexDir){
+		String[] querys = new String[]{entity1,entity2};
+		String[] queryFields = new String[]{queryField2};
+		int count = IndexFile.countCooccurence(querys, queryFields, indexDir);
+		try {
+			Document document = IndexFile.queryDocument(entity1, queryField2, indexDir);
+			int entityOutCount = Integer.parseInt(document.get(queryField1));
+			if(entityOutCount > 0 && count > 0 && count <= entityOutCount){
+				return count / (double)entityOutCount;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return 0;
 	}
 }
