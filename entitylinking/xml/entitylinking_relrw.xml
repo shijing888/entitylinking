@@ -9,6 +9,8 @@
 		<alpha>0.85</alpha>
 		<!-- 收敛精度 -->
 		<convergencePrecise>0.01</convergencePrecise>
+		<!-- 散度gamma值 -->
+		<gamma>20</gamma>
 	</paramenter>
 	<indexFields>
 		<!-- 实体共现关系域 -->

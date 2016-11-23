@@ -161,6 +161,7 @@ public class Mention {
 			}
 			
 		});
+		
 		return entities;
 	}
 }

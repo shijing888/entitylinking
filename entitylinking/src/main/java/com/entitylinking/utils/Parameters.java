@@ -242,6 +242,7 @@ public class Parameters {
 					RELRWParameterBean.setAlpha(Double.parseDouble(element.elementText("alpha")));
 					RELRWParameterBean.setConvergencePrecise(Double.parseDouble(
 							element.elementText("convergencePrecise")));
+					RELRWParameterBean.setGamma(Double.parseDouble(element.elementText("gamma")));
 				}else if(element.getName().equals("indexFields")){
 					List<Element> subElements = element.elements();
 					for(Element subElement:subElements){

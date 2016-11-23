@@ -8,6 +8,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.entitylinking.linking.LinkingKB;
+import com.entitylinking.linking.bean.Entity;
+import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.PathBean;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
@@ -56,11 +58,13 @@ public class Main {
 				text.generateDensityGraph();
 				//链接知识库过程
 				LinkingKB linkingKB = new LinkingKB();
-				Map<String, String> mentionEntityPairs = linkingKB.obtainmentionEntityPairs(text);
+				linkingKB.obtainmentionEntityPairs(text);
 				StringBuilder sBuilder = new StringBuilder();
-				for(Entry<String, String> entry :mentionEntityPairs.entrySet()){
+				for(Entry<Mention, Entity> entry :text.getEntityGraph()
+						.getDisambiguationMap().entrySet()){
 					sBuilder.delete(0, sBuilder.length());
-					sBuilder.append(entry.getKey()).append("\t").append(entry.getValue());
+					sBuilder.append(entry.getKey().getMentionName()).append("\t")
+							.append(entry.getValue().getEntityName());
 					logger.info(sBuilder.toString());
 				}
 			}

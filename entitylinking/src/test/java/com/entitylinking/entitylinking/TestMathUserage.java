@@ -58,7 +58,7 @@ public class TestMathUserage {
       System.out.println("product: " + product.evaluate(values));  
       System.out.println("sum: " + sum.evaluate(values));  
       System.out.println("variance: " + variance.evaluate(values));  
-//
+
 //      Percentile percentile = new Percentile(); // 百分位数  
 //      GeometricMean geoMean = new GeometricMean(); // 几何平均数,n个正数的连乘积的n次算术根叫做这n个数的几何平均数  
 //      Skewness skewness = new Skewness(); // Skewness();  

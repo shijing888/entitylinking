@@ -87,8 +87,8 @@ public class Text {
 		List<Entity> candidateEntity;
 		for(Mention mention:this.entityGraph.getMentions()){
 			candidateEntity = mention.candidatesOfMention(mention.getMentionName());
-			entityIndex.put(mention.getMentionName(), candidateEntity.size());
 			for(int i=0;i<candidateEntity.size() && index<entityLen;i++,index++){
+				entityIndex.put(candidateEntity.get(i).getEntityName(), i);
 				entities[index] = candidateEntity.get(i);
 			}
 		}

@@ -3,6 +3,8 @@ package com.entitylinking.utils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -82,7 +84,6 @@ public class NLPUtils {
         Map<String, List<Integer>> wordsMap = new HashMap<String, List<Integer>>();
         Set<String> nerSet = new HashSet<>();
         List<Mention> mentions = new ArrayList<Mention>();
-//        TextContext textContext = new TextContext();
         
         // these are all the sentences in this document
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
@@ -139,6 +140,14 @@ public class NLPUtils {
         	}
         	
         }
+        //对mention按照歧义性排序，歧义性按照候选实体个数来定义
+        Collections.sort(mentions, new Comparator<Mention>() {
+			@Override
+			public int compare(Mention arg0, Mention arg1) {
+				// TODO Auto-generated method stub
+				return arg0.getCandidateEntity().size() - arg1.getCandidateEntity().size();
+			}
+		});
         text.getEntityGraph().setEntityLen(entityLen);
         text.getEntityGraph().setMentions(mentions);
 	}
