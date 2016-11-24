@@ -7,9 +7,6 @@
 		<pos>./dict/pos.txt</pos>
 		<stopwords>./dict/stopword_en.txt</stopwords>
 		<df>./dict/df.txt</df>
-		
-		<!--  <synonyms>./dict/test.txt</synonyms>
-		<ambiguation>./dict/test.txt</ambiguation>-->
 	</dictPath>
 	<!-- 参数配置文件路径 -->
 	<relPath>

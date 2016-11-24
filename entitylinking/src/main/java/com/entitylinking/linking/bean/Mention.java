@@ -83,12 +83,16 @@ public class Mention {
 		int size = RELRWParameterBean.getContextWindow();
 		int i = 0;
 		int mentionIndex = 0;
+		logger.info("this.mentionIndex:"+this.mentionIndex);
 		while(i < size){
+//			logger.info("i:"+i);
 			//对文中出现mention的所有地方收集上下文
 			for(Integer index:this.mentionIndex){
+//				logger.info("index:"+index);
 				if(textContextIndex.contains(index)){
 					//找到mention在集合中所处的位置
 					mentionIndex = textContextIndex.indexOf(index);
+//					logger.info("mentionIndex:"+mentionIndex);
 					//mention上文
 					if(mentionIndex >= i){
 						mentionContext.add(textContext.get(textContextIndex.get(mentionIndex - i)));

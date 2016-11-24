@@ -170,7 +170,7 @@ public class Parameters {
 					new FileInputStream(new File(path)),"UTF-8"));
 			String line;
 			while((line = br.readLine())!=null){
-				String[] lineArray = line.split("\t");
+				String[] lineArray = line.split("\t\\|\\|\t");
 				if(lineArray.length==2){
 					dfMap.put(lineArray[0], Integer.parseInt(lineArray[1]));
 				}

@@ -21,6 +21,7 @@ import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
 
+import difflib.StringUtills;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
@@ -99,18 +100,22 @@ public class NLPUtils {
                 // this is the NER label of the token
                 String ne = token.get(NamedEntityTagAnnotation.class);
                 String lemma = token.get(LemmaAnnotation.class).toLowerCase();
-                
+                //去停用词
+                if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
+                	continue;
                 //用于记录mention与text的上下文
                 if(DictBean.getPosDict().contains(pos)){
                 	index = lenCount + token.index();
+                	//将上下文信息存入text中
                 	text.getTextContext().put(index, lemma);
                 	if(wordsMap.containsKey(lemma)){
                 		wordsMap.get(lemma).add(index);
                 	}else{
-                		List<Integer> mentionIndexList = new ArrayList<>(index);
+                		List<Integer> mentionIndexList = new ArrayList<>();
+                		mentionIndexList.add(index);
                 		wordsMap.put(lemma, mentionIndexList);
                 	}
-                	
+//                	logger.info("token name:"+lemma+"\tindex:"+StringUtills.join(wordsMap.get(lemma), "\t"));
                 	if(nerCategory.contains(ne)){
                 		nerSet.add(lemma);
                 	}
@@ -118,7 +123,8 @@ public class NLPUtils {
             }
             lenCount += sentence.size();
         }
-       
+       //初始化text中上下文索引
+        text.setTextContextIndex();
         int entityLen = 0;
         //保存mention
         for(Entry<String, List<Integer>>entry:wordsMap.entrySet()){
@@ -126,17 +132,20 @@ public class NLPUtils {
         		//初始化mention name
         		Mention mention = new Mention(entry.getKey());
         		//初始化mention tfidf
+        		logger.info("entry key:"+entry.getKey());
+        		logger.info("df size:"+DictBean.getDfDict().get(entry.getKey()));
         		mention.setTfidfValue(CommonUtils.calTfidf(entry.getValue().size(), 
         				DictBean.getDfDict().get(entry.getKey()), lenCount));
             	//初始化mention在文中的位置信息
         		mention.setMentionIndex(entry.getValue());
+//        		logger.info("mentionIndex size:"+entry.getValue().size());
             	//初始化mention的候选实体列表
         		List<Entity> candidateEntity = mention.candidatesOfMention(mention.getMentionName());
         		mention.setCandidateEntity(candidateEntity);
         		entityLen += candidateEntity.size();
             	//初始化mention的上下文集合
         		mention.initMentionContext(text.getTextContext(), text.getTextContextIndex());
-            	mentions.add(mention);
+        		mentions.add(mention);
         	}
         	
         }
@@ -173,7 +182,9 @@ public class NLPUtils {
                // this is the NER label of the token
                String ne = token.get(NamedEntityTagAnnotation.class);
                String lemma = token.get(LemmaAnnotation.class).toLowerCase();
-               
+               //去停用词
+               if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
+               	continue;
                //用于记录mention与text的上下文
                if(DictBean.getPosDict().contains(pos) && nerCategory.contains(ne)){
             	  if(index < entityContextLen){
@@ -212,9 +223,9 @@ public class NLPUtils {
 		                String pos = token.get(PartOfSpeechAnnotation.class);
 		                String lemma = token.get(LemmaAnnotation.class).toLowerCase();
 		                //去停用词
-		                if(DictBean.getStopWordDict().contains(lemma))
+		                if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
 		                	continue;
-		                //用于记录mention与text的上下文
+		                
 		                if(DictBean.getPosDict().contains(pos)){
 		                	if(DictBean.getDfDict().containsKey(lemma)){
 		                		DictBean.getDfDict().put(lemma, DictBean.getDfDict().get(lemma)+1);

@@ -19,9 +19,10 @@ public class FilterDict {
 //		String rpath = "H:\\MysqlData\\ambiguationDict2.txt";
 //		String wpath = "H:\\MysqlData\\ambiguationDict3.txt";
 //		filterCategory(rpath, wpath);
-		String rpath = "./dict/synonymsDict.txt";
-		String wpath = "./dict/synonymsDict2.txt";
-		filterBracket(rpath, wpath);
+		String rpath = "./dict/ambiguationDict.txt";
+		String wpath = "./dict/ambiguationDict2.txt";
+//		filterBracket(rpath, wpath);
+		filterSingleWord(rpath, wpath);
 	}
 	
 	public static void filterCategory(String rpath, String wpath){
@@ -65,12 +66,33 @@ public class FilterDict {
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(wpath)),"utf-8"));
 			String line;
 			StringBuilder sBuilder = new StringBuilder();
-			int count = 0;
 			while((line=br.readLine())!=null){
 				sBuilder.delete(0, sBuilder.length());
 				line = line.replaceAll("[\\[\\]]", "");
 				sBuilder.append(line).append("\n");
 				bw.write(sBuilder.toString());
+			}
+			bw.close();
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void filterSingleWord(String rpath, String wpath){
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rpath))));
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(wpath)),"utf-8"));
+			String line;
+			while((line=br.readLine())!=null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length > 0){
+					if(lineArray[0].length() < 2)
+						continue;
+				}
+				bw.write(line+"\n");
 			}
 			bw.close();
 			br.close();

@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.entitylinking.linking.LinkingKB;
+import com.entitylinking.linking.bean.DictBean;
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.PathBean;
@@ -56,17 +57,19 @@ public class Main {
 				Text text = new Text(file.getName(), textContent);
 				//生成该文档的密度子图
 				text.generateDensityGraph();
+				logger.info("entity graph finish!");
 				//链接知识库过程
 				LinkingKB linkingKB = new LinkingKB();
 				linkingKB.obtainmentionEntityPairs(text);
-				StringBuilder sBuilder = new StringBuilder();
-				for(Entry<Mention, Entity> entry :text.getEntityGraph()
-						.getDisambiguationMap().entrySet()){
-					sBuilder.delete(0, sBuilder.length());
-					sBuilder.append(entry.getKey().getMentionName()).append("\t")
-							.append(entry.getValue().getEntityName());
-					logger.info(sBuilder.toString());
-				}
+				logger.info("mention-entity found!");
+//				StringBuilder sBuilder = new StringBuilder();
+//				for(Entry<Mention, Entity> entry :text.getEntityGraph()
+//						.getDisambiguationMap().entrySet()){
+//					sBuilder.delete(0, sBuilder.length());
+//					sBuilder.append(entry.getKey().getMentionName()).append("\t")
+//							.append(entry.getValue().getEntityName());
+//					logger.info(sBuilder.toString());
+//				}
 			}
 		}
 		return null;
@@ -80,5 +83,6 @@ public class Main {
 		parameters.loadPath("./xml/path.xml");
 		parameters.loadRELParameters(PathBean.getRelParameterPath());
 		parameters.loadDictFromXML();
+//		logger.info("alabama candidate:"+DictBean.getAmbiguationDict().get("alabama"));
 	}
 }
