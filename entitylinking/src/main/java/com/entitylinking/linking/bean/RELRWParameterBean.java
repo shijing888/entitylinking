@@ -17,6 +17,8 @@ public class RELRWParameterBean {
 	private static double convergencePrecise;
 	/**散度gamma值*/
 	private static double gamma;
+	/**限制实体正文字符长度*/
+	private static int entityContentLen;
 	/**实体关系域*/
 	private static String entityRelationField1;
 	private static String entityRelationField2;
@@ -51,6 +53,12 @@ public class RELRWParameterBean {
 	}
 	public static void setGamma(double gamma) {
 		RELRWParameterBean.gamma = gamma;
+	}
+	public static int getEntityContentLen() {
+		return entityContentLen;
+	}
+	public static void setEntityContentLen(int entityContentLen) {
+		RELRWParameterBean.entityContentLen = entityContentLen;
 	}
 	public static String getEntityRelationField1() {
 		return entityRelationField1;

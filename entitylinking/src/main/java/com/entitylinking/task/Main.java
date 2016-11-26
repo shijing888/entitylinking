@@ -1,20 +1,22 @@
 package com.entitylinking.task;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.entitylinking.linking.LinkingKB;
-import com.entitylinking.linking.bean.DictBean;
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.PathBean;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
 import com.entitylinking.utils.FileUtils;
+import com.entitylinking.utils.NormalizeMention;
 import com.entitylinking.utils.Parameters;
 
 /**
@@ -39,6 +41,8 @@ public class Main {
 		Main main = new Main();
 		main.init();
 		main.linkingMainProcess();
+//		String mention = "mexico";
+//		main.testEntity(mention);
 		
 	}
 	
@@ -62,14 +66,19 @@ public class Main {
 				LinkingKB linkingKB = new LinkingKB();
 				linkingKB.obtainmentionEntityPairs(text);
 				logger.info("mention-entity found!");
-//				StringBuilder sBuilder = new StringBuilder();
-//				for(Entry<Mention, Entity> entry :text.getEntityGraph()
-//						.getDisambiguationMap().entrySet()){
-//					sBuilder.delete(0, sBuilder.length());
-//					sBuilder.append(entry.getKey().getMentionName()).append("\t")
-//							.append(entry.getValue().getEntityName());
-//					logger.info(sBuilder.toString());
-//				}
+				StringBuilder sBuilder = new StringBuilder();
+				for(Entry<Mention, Entity> entry :text.getEntityGraph()
+						.getDisambiguationMap().entrySet()){
+					sBuilder.delete(0, sBuilder.length());
+					sBuilder.append(entry.getKey().getMentionName()).append("\t");
+					if(entry.getValue() == null){
+						sBuilder.append("null");
+					}else{
+						sBuilder.append(entry.getValue().getEntityName());
+					}
+							
+					logger.info(sBuilder.toString());
+				}
 			}
 		}
 		return null;
@@ -84,5 +93,17 @@ public class Main {
 		parameters.loadRELParameters(PathBean.getRelParameterPath());
 		parameters.loadDictFromXML();
 //		logger.info("alabama candidate:"+DictBean.getAmbiguationDict().get("alabama"));
+	}
+	
+	public void testEntity(String mention){
+		mention = NormalizeMention.getNormalizeMention(mention,true);
+		logger.info("mention:"+mention);
+		Mention mention2 = new Mention(mention);
+		List<Entity> candidateList = mention2.obtainCandidate(mention);
+		logger.info(mention+" candidates size:"+ candidateList.size());
+		logger.info(mention+" candidates are:"+ StringUtils.join(candidateList, "\t"));
+		for(Entity entity:candidateList){
+			logger.info("candidate entity:"+entity.getEntityName());
+		}
 	}
 }

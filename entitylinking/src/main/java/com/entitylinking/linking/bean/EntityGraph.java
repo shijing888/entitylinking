@@ -158,12 +158,12 @@ public class EntityGraph {
 		}
 	}
 	
-	
 	/**
 	 * 计算转移矩阵
 	 */
 	public void calTransferMatrix(){
 		double weight= 0;
+		this.transferMatrix = new double[entityLen][entityLen];
 		for(int i=0;i<entityLen;i++){
 			for(int j=0;j<entityLen;j++){
 				weight = calEdgeWeight(entities[i].getEntityName(), entities[j].getEntityName(), 
@@ -186,7 +186,7 @@ public class EntityGraph {
 	public double calEdgeWeight(String entity1,String entity2,String queryField1,
 			String queryField2,String indexDir){
 		String[] querys = new String[]{entity1,entity2};
-		String[] queryFields = new String[]{queryField2};
+		String[] queryFields = new String[]{queryField2,queryField2};
 		int count = IndexFile.countCooccurence(querys, queryFields, indexDir);
 		try {
 			Document document = IndexFile.queryDocument(entity1, queryField2, indexDir);

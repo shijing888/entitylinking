@@ -11,6 +11,8 @@
 		<convergencePrecise>0.01</convergencePrecise>
 		<!-- 散度gamma值 -->
 		<gamma>20</gamma>
+		<!-- 限制实体正文字符长度 -->
+		<entityContentLen>3000</entityContentLen>
 	</paramenter>
 	<indexFields>
 		<!-- 实体共现关系域 -->

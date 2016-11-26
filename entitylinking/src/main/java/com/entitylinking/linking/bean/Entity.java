@@ -69,8 +69,13 @@ public class Entity {
         //初始化title
         entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
         //初始化上下文
-        entityContext = NLPUtils.getEntityContext(page.getPlainText());
+        String content = page.getPlainText();
+        if(content.length() > RELRWParameterBean.getEntityContentLen()){
+        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());
+        }
+        entityContext = NLPUtils.getEntityContext(content);
         //初始化流行度
         popularity = page.getNumberOfInlinks();
     }
+    
 }

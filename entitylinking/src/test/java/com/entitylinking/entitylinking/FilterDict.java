@@ -19,8 +19,8 @@ public class FilterDict {
 //		String rpath = "H:\\MysqlData\\ambiguationDict2.txt";
 //		String wpath = "H:\\MysqlData\\ambiguationDict3.txt";
 //		filterCategory(rpath, wpath);
-		String rpath = "./dict/ambiguationDict.txt";
-		String wpath = "./dict/ambiguationDict2.txt";
+		String rpath = "./dict/synonymsDict2.txt";
+		String wpath = "./dict/synonymsDict.txt";
 //		filterBracket(rpath, wpath);
 		filterSingleWord(rpath, wpath);
 	}

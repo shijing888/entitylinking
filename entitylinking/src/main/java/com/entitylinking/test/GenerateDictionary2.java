@@ -1,4 +1,4 @@
-package com.entitylinking.entitylinking;
+package com.entitylinking.test;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

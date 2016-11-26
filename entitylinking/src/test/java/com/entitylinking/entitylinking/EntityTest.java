@@ -2,6 +2,8 @@ package com.entitylinking.entitylinking;
 
 import java.util.HashSet;
 
+import org.junit.Test;
+
 import com.entitylinking.config.WikiConfig;
 import com.entitylinking.wikidictionary.ExtractPageEntity;
 import com.entitylinking.wikidictionary.GenerateDictionary;
@@ -36,4 +38,5 @@ public class EntityTest {
 		}  
       
 	}
+	
 }

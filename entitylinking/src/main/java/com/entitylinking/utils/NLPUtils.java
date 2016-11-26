@@ -21,7 +21,6 @@ import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
 
-import difflib.StringUtills;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
@@ -172,6 +171,7 @@ public class NLPUtils {
        // these are all the sentences in this document
        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
        int index = 0;
+       //定义实体sentence只考虑前二十行
        for(CoreMap sentence: sentences) {
            // a CoreLabel is a CoreMap with additional token-specific methods
            for (CoreLabel token: sentence.get(TokensAnnotation.class)) {

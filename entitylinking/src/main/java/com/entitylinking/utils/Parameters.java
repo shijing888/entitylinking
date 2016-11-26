@@ -43,11 +43,14 @@ public class Parameters {
 	 * @return
 	 */
 	public void loadDictFromXML(){
-		if(PathBean.getSynonymsDictPath()!=null && PathBean.getAmbiguationDictPath()!=null){
+		if(PathBean.getSynonymsDictPath()!=null 
+				&& PathBean.getAmbiguationDictPath()!=null){
 			logger.info("加载词典开始！");
 			long time1 = System.currentTimeMillis();
+			logger.info("synonymsDict path:"+PathBean.getSynonymsDictPath());
 			DictBean.setSynonymsDict(loadSynonymsDict(PathBean.getSynonymsDictPath()));
-			DictBean.setAmbiguationDict(loadDisambiguationDict(PathBean.getAmbiguationDictPath()));
+			DictBean.setAmbiguationDict(loadDisambiguationDict(
+					PathBean.getAmbiguationDictPath()));
 			long time2 = System.currentTimeMillis();
 			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
 		}
@@ -204,7 +207,8 @@ public class Parameters {
 	}
 	
 	public Map<String, HashSet<String>> loadDisambiguationDict(String path){
-		Map<String, HashSet<String>> disambiguationDict = new HashMap<String, HashSet<String>>();
+		Map<String, HashSet<String>> disambiguationDict 
+								= new HashMap<String, HashSet<String>>();
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					new FileInputStream(new File(path)),"UTF-8"));
@@ -212,7 +216,8 @@ public class Parameters {
 			while((line = br.readLine())!=null){
 				String[] lineArray = line.split("\t\\|\\|\t");
 				if(lineArray.length == 2){
-					HashSet<String> itemSet = new HashSet<>(Arrays.asList(lineArray[1].split("\t\\|\t")));
+					HashSet<String> itemSet 
+							= new HashSet<>(Arrays.asList(lineArray[1].split("\t\\|\t")));
 					disambiguationDict.put(lineArray[0], itemSet);
 				}
 			}
@@ -236,20 +241,28 @@ public class Parameters {
 		try {
 			for(Element element:elements){
 				if(element.getName().equals("paramenter")){
-					RELRWParameterBean.setSourceFileDirPath(element.elementText("fileDirPath"));
+					RELRWParameterBean.setSourceFileDirPath(
+							element.elementText("fileDirPath"));
 					RELRWParameterBean.setContextWindow(Integer.parseInt(
 							element.elementText("contextWindow")));
-					RELRWParameterBean.setAlpha(Double.parseDouble(element.elementText("alpha")));
+					RELRWParameterBean.setAlpha(Double.parseDouble(
+							element.elementText("alpha")));
 					RELRWParameterBean.setConvergencePrecise(Double.parseDouble(
 							element.elementText("convergencePrecise")));
-					RELRWParameterBean.setGamma(Double.parseDouble(element.elementText("gamma")));
+					RELRWParameterBean.setGamma(Double.parseDouble(
+							element.elementText("gamma")));
+					RELRWParameterBean.setEntityContentLen(Integer.parseInt(
+							element.elementText("entityContentLen")));
 				}else if(element.getName().equals("indexFields")){
 					List<Element> subElements = element.elements();
 					for(Element subElement:subElements){
 						if(subElement.getName().equals("entityRelationFields")){
-							RELRWParameterBean.setEntityRelationField1(subElement.elementText("field1"));
-							RELRWParameterBean.setEntityRelationField2(subElement.elementText("field2"));
-							RELRWParameterBean.setEntityRelationField3(subElement.elementText("field3"));
+							RELRWParameterBean.setEntityRelationField1(
+									subElement.elementText("field1"));
+							RELRWParameterBean.setEntityRelationField2(
+									subElement.elementText("field2"));
+							RELRWParameterBean.setEntityRelationField3(
+									subElement.elementText("field3"));
 						}
 					}
 				}

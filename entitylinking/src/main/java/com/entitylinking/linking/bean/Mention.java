@@ -136,7 +136,7 @@ public class Mention {
 		if(DictBean.getAmbiguationDict().containsKey(mention))
 			candidateSet.addAll(DictBean.getAmbiguationDict().get(mention));
 		//若候选本身为歧义，则将其歧义项加进来
-		
+		logger.info("candidateSet:"+ StringUtils.join(candidateSet, "\t"));
 		for(String candidate : new ArrayList<>(candidateSet)){
 			if(DictBean.getAmbiguationDict().containsKey(candidate)){
 				candidateSet.addAll(DictBean.getAmbiguationDict().get(candidate));
