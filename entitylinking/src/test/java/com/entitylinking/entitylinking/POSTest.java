@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.junit.Test;
+
 import com.entitylinking.utils.FileUtils;
 
 import edu.stanford.nlp.dcoref.CorefChain;
@@ -71,4 +73,5 @@ public class POSTest {
         // Both sentence and token offsets start at 1!
         Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
     }
+    
 }

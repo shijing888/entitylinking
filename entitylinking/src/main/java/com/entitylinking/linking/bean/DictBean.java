@@ -1,6 +1,7 @@
 package com.entitylinking.linking.bean;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,7 +17,7 @@ public class DictBean {
 	private static Set<String> posDict;
 	private static Set<String> stopWordDict;
 	private static Map<String, Integer> dfDict;
-	
+	private static Map<String, List<Mention>> mentionDict;
 	
 	public static Map<String, String> getSynonymsDict() {
 		return synonymsDict;
@@ -47,6 +48,12 @@ public class DictBean {
 	}
 	public static void setDfDict(Map<String, Integer> dfDict) {
 		DictBean.dfDict = dfDict;
+	}
+	public static Map<String, List<Mention>> getMentionDict() {
+		return mentionDict;
+	}
+	public static void setMentionDict(Map<String, List<Mention>> mentionDict) {
+		DictBean.mentionDict = mentionDict;
 	}
 
 	

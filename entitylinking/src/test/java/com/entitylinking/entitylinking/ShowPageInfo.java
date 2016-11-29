@@ -30,7 +30,7 @@ public class ShowPageInfo {
 		PropertyConfigurator.configure("log4j.properties");
 	}
     public static void main(String[] args) throws Exception {
-      showPageInfo("mexico");
+      showPageInfo("washington,_d.c.");
     }
     
     public static void showPageInfo(String title) throws WikiApiException{

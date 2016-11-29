@@ -4,7 +4,7 @@
 		<!-- 数据集文件夹路径 -->
 		<fileDirPath>./data/ace2004/test</fileDirPath>
 		<!-- 上下文窗口 -->
-		<contextWindow>10</contextWindow>
+		<contextWindow>500</contextWindow>
 		<!-- 随机游走alpha -->
 		<alpha>0.85</alpha>
 		<!-- 收敛精度 -->
@@ -13,6 +13,10 @@
 		<gamma>20</gamma>
 		<!-- 限制实体正文字符长度 -->
 		<entityContentLen>3000</entityContentLen>
+		<!-- 候选实体剪枝阈值 -->
+		<candidateEntityNumThresh>40</candidateEntityNumThresh>
+		<!-- 流行度阈值 -->
+		<popularityThresh>10</popularityThresh>
 	</paramenter>
 	<indexFields>
 		<!-- 实体共现关系域 -->

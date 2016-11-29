@@ -1,17 +1,13 @@
 package com.entitylinking.utils;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
@@ -71,82 +67,69 @@ public class NLPUtils {
 	}
 	
 	/**
-	 * 处理传入的文档，获得mention集及候选实体集
+	 * 处理传入的文档，获得mention集、mention的上下文信息及候选实体集
 	 * @param text
 	 */
 	public static void getTextMentionTask(Text text){
-		
-		 // create an empty Annotation just with the given text
-        Annotation document = new Annotation(text.getContent());
-        
-        // run all Annotators on this text
-        pipeline.annotate(document);
-        Map<String, List<Integer>> wordsMap = new HashMap<String, List<Integer>>();
-        Set<String> nerSet = new HashSet<>();
-        List<Mention> mentions = new ArrayList<Mention>();
-        
-        // these are all the sentences in this document
-        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-        int lenCount = 0;
-        int index = 0;
-        for(CoreMap sentence: sentences) {
-            // a CoreLabel is a CoreMap with additional token-specific methods
-            for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
-                // this is the text of the token
-                //String word = token.get(TextAnnotation.class);
-                // this is the POS tag of the token
-                String pos = token.get(PartOfSpeechAnnotation.class);
-                // this is the NER label of the token
-                String ne = token.get(NamedEntityTagAnnotation.class);
-                String lemma = token.get(LemmaAnnotation.class).toLowerCase();
-                //去停用词
-                if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
-                	continue;
-                //用于记录mention与text的上下文
-                if(DictBean.getPosDict().contains(pos)){
-                	index = lenCount + token.index();
-                	//将上下文信息存入text中
-                	text.getTextContext().put(index, lemma);
-                	if(wordsMap.containsKey(lemma)){
-                		wordsMap.get(lemma).add(index);
-                	}else{
-                		List<Integer> mentionIndexList = new ArrayList<>();
-                		mentionIndexList.add(index);
-                		wordsMap.put(lemma, mentionIndexList);
-                	}
-//                	logger.info("token name:"+lemma+"\tindex:"+StringUtills.join(wordsMap.get(lemma), "\t"));
-                	if(nerCategory.contains(ne)){
-                		nerSet.add(lemma);
-                	}
-                }
-            }
-            lenCount += sentence.size();
-        }
-       //初始化text中上下文索引
-        text.setTextContextIndex();
+		//mentions从xml中已经加载完成
+        List<Mention> mentions = text.getEntityGraph().getMentions();
+        String content;
+        int mentionOffset;
+        int beginOffset;
+        int endOffset;
+        int textLen = text.getContent().split("\\s+").length;
         int entityLen = 0;
-        //保存mention
-        for(Entry<String, List<Integer>>entry:wordsMap.entrySet()){
-        	if(nerSet.contains(entry.getKey())){
-        		//初始化mention name
-        		Mention mention = new Mention(entry.getKey());
-        		//初始化mention tfidf
-        		logger.info("entry key:"+entry.getKey());
-        		logger.info("df size:"+DictBean.getDfDict().get(entry.getKey()));
-        		mention.setTfidfValue(CommonUtils.calTfidf(entry.getValue().size(), 
-        				DictBean.getDfDict().get(entry.getKey()), lenCount));
-            	//初始化mention在文中的位置信息
-        		mention.setMentionIndex(entry.getValue());
-//        		logger.info("mentionIndex size:"+entry.getValue().size());
-            	//初始化mention的候选实体列表
-        		List<Entity> candidateEntity = mention.candidatesOfMention(mention.getMentionName());
-        		mention.setCandidateEntity(candidateEntity);
-        		entityLen += candidateEntity.size();
-            	//初始化mention的上下文集合
-        		mention.initMentionContext(text.getTextContext(), text.getTextContextIndex());
-        		mentions.add(mention);
+        for(Mention mention:mentions){
+        	logger.info("mention:"+mention.getMentionName());
+        	//初始化mention tfidf
+    		mention.setTfidfValue(CommonUtils.calTfidf(mention.getOccurCounts(), 
+    				DictBean.getDfDict().get(mention.getMentionName()), textLen));
+    		//获取候选实体
+    		List<Entity> candidateEntity = mention.candidatesOfMention(mention.getMentionName());
+    		mention.setCandidateEntity(candidateEntity);
+    		entityLen += candidateEntity.size();
+    		//通过mention的offset及窗口来获取上下文
+        	mentionOffset = mention.getMentionOffset();
+        	if(mentionOffset - RELRWParameterBean.getContextWindow() < 0){
+        		beginOffset = 0;
+        	}else{
+        		beginOffset  = mentionOffset - RELRWParameterBean.getContextWindow();
         	}
         	
+        	if(mentionOffset + RELRWParameterBean.getContextWindow() >= text.getContent().length()){
+        		endOffset = text.getContent().length() -1;
+        	}else{
+        		endOffset = mentionOffset + RELRWParameterBean.getContextWindow();
+        	}
+        	
+        	content = text.getContent().substring(beginOffset,endOffset);
+        	
+        	 // create an empty Annotation just with the given text
+            Annotation document = new Annotation(content);
+            // run all Annotators on this text
+            pipeline.annotate(document);
+            // these are all the sentences in this document
+            List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+            for(CoreMap sentence: sentences) {
+                // a CoreLabel is a CoreMap with additional token-specific methods
+                for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
+                    // this is the text of the token
+                    //String word = token.get(TextAnnotation.class);
+                    // this is the POS tag of the token
+                    String pos = token.get(PartOfSpeechAnnotation.class);
+                    // this is the NER label of the token
+                    String ne = token.get(NamedEntityTagAnnotation.class);
+                    // this is the NER label of the token
+                    String lemma = token.get(LemmaAnnotation.class).toLowerCase();
+                    //去停用词
+                    if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
+                    	continue;
+                    //用于记录mention的上下文
+                    if(DictBean.getPosDict().contains(pos) && nerCategory.contains(ne)){
+                    	mention.getMentionContext().add(lemma);
+                    }
+                }
+            }
         }
         //对mention按照歧义性排序，歧义性按照候选实体个数来定义
         Collections.sort(mentions, new Comparator<Mention>() {
@@ -156,22 +139,26 @@ public class NLPUtils {
 				return arg0.getCandidateEntity().size() - arg1.getCandidateEntity().size();
 			}
 		});
+        
         text.getEntityGraph().setEntityLen(entityLen);
-        text.getEntityGraph().setMentions(mentions);
 	}
 	
+	/**
+	 * 获取实体上下文
+	 * @param content
+	 * @return
+	 */
 	public static Set<String> getEntityContext(String content){
-		
+		if(content.length() > 2 * RELRWParameterBean.getContextWindow()){
+			content = content.substring(0, 2* RELRWParameterBean.getContextWindow());
+		}
 		 // create an empty Annotation just with the given text
        Annotation document = new Annotation(content);
        // run all Annotators on this text
        pipeline.annotate(document);
        Set<String> nerContextSet = new HashSet<>();
-       int entityContextLen = RELRWParameterBean.getContextWindow();
        // these are all the sentences in this document
        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-       int index = 0;
-       //定义实体sentence只考虑前二十行
        for(CoreMap sentence: sentences) {
            // a CoreLabel is a CoreMap with additional token-specific methods
            for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
@@ -187,11 +174,8 @@ public class NLPUtils {
                	continue;
                //用于记录mention与text的上下文
                if(DictBean.getPosDict().contains(pos) && nerCategory.contains(ne)){
-            	  if(index < entityContextLen){
-            		 nerContextSet.add(lemma); 
-            	  }else {
-					return nerContextSet;
-				}
+            		nerContextSet.add(lemma); 
+            	  
                }
            }
        }

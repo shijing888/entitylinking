@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +26,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.entitylinking.linking.bean.DictBean;
+import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.PathBean;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 
@@ -47,17 +49,19 @@ public class Parameters {
 				&& PathBean.getAmbiguationDictPath()!=null){
 			logger.info("加载词典开始！");
 			long time1 = System.currentTimeMillis();
-			logger.info("synonymsDict path:"+PathBean.getSynonymsDictPath());
 			DictBean.setSynonymsDict(loadSynonymsDict(PathBean.getSynonymsDictPath()));
 			DictBean.setAmbiguationDict(loadDisambiguationDict(
 					PathBean.getAmbiguationDictPath()));
 			long time2 = System.currentTimeMillis();
 			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
+			logger.info("SynonymsDict size:"+DictBean.getSynonymsDict().size());
+			logger.info("AmbiguationDict size:"+DictBean.getAmbiguationDict().size());
 		}
 		
 		DictBean.setPosDict(loadSetDict(PathBean.getPosDictPath()));
 		DictBean.setStopWordDict(loadSetDict(PathBean.getStopWordDictPath()));
 		DictBean.setDfDict(loadDfDict(PathBean.getDfDictPath()));
+		DictBean.setMentionDict(loadMentionDict(PathBean.getMentionDictPath()));
 	}
 	
 	/**
@@ -102,6 +106,7 @@ public class Parameters {
 				PathBean.setPosDictPath(element.elementText("pos"));
 				PathBean.setStopWordDictPath(element.elementText("stopwords"));
 				PathBean.setDfDictPath(element.elementText("df"));
+				PathBean.setMentionDictPath(element.elementText("mentionDict"));
 			}else if(element.getName().equals("relPath")){//robust 实体链接方法参数
 				PathBean.setRelParameterPath(element.elementText("relParameterPath"));
 			}else if(element.getName().equals("indexDirPath")){//索引文件路径
@@ -162,6 +167,69 @@ public class Parameters {
 	}
 	
 	/**
+	 * 加载mention集合
+	 * @param path
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Map<String, List<Mention>> loadMentionDict(String path){
+		Map<String, List<Mention>> mentionDict = new HashMap<>();
+		List<Element> elements = getElementsFromXML(path);
+		for(Element element:elements){
+			String docuName = element.attributeValue("docName");
+			List<Mention> mentions = new ArrayList<>();
+			List<Element> subElements = element.elements();
+			for(Element subElement:subElements){
+				Mention mention = new Mention(NormalizeMention.getNormalizeMention(
+						subElement.elementText("mention"), true));
+				mention.setObjectEntity(NormalizeMention.getNormalizeMention(
+						subElement.elementText("wikiName"),true));
+				mention.setMentionOffset(Integer.parseInt(subElement.elementText("offset")));
+				mention.setOccurCounts(Integer.parseInt(subElement.elementText("length")));
+				mentions.add(mention);
+			}
+			mentionDict.put(docuName, mentions);
+		}
+		DictBean.setMentionDict(mentionDict);
+		return mentionDict;
+	}
+	
+	/**
+	 * 计算mention的df
+	 * @param wpath
+	 * @param xmlPath
+	 */
+	@SuppressWarnings("unchecked")
+	public void getMentionDf(String wpath,String xmlPath){
+		try {
+			Map<String, Integer> dfMap = loadDfDict(wpath);
+			List<Element> elements = getElementsFromXML(xmlPath);
+			for(Element element:elements){
+				List<Element> subElements = element.elements();
+				for(Element subElement:subElements){
+					String normMention = NormalizeMention.getNormalizeMention(
+							subElement.elementText("mention"), true);
+					if(!dfMap.containsKey(normMention)){
+						dfMap.put(normMention, 1);
+					}
+				}
+			}
+			BufferedWriter bWriter = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(new File(wpath)),"utf-8"));
+			StringBuilder sBuilder = new StringBuilder();
+			for(Entry<String, Integer>entry:dfMap.entrySet()){
+				sBuilder.delete(0, sBuilder.length());
+				bWriter.write(sBuilder.append(entry.getKey()).append("\t||\t")
+						.append(entry.getValue()).append("\n").toString());
+			}
+			bWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * 加载文档频率df
 	 * @param path
 	 * @return
@@ -196,7 +264,7 @@ public class Parameters {
 			StringBuilder sBuilder = new StringBuilder();
 			for(Entry<String, Integer>entry:DictBean.getDfDict().entrySet()){
 				sBuilder.delete(0, sBuilder.length());
-				bWriter.write(sBuilder.append(entry.getKey()).append("\t")
+				bWriter.write(sBuilder.append(entry.getKey()).append("\t||\t")
 						.append(entry.getValue()).append("\n").toString());
 			}
 			bWriter.close();
@@ -253,6 +321,10 @@ public class Parameters {
 							element.elementText("gamma")));
 					RELRWParameterBean.setEntityContentLen(Integer.parseInt(
 							element.elementText("entityContentLen")));
+					RELRWParameterBean.setCandidateEntityNumThresh(Integer.parseInt(
+							element.elementText("candidateEntityNumThresh")));
+					RELRWParameterBean.setPopularityThresh(Integer.parseInt(
+							element.elementText("popularityThresh")));
 				}else if(element.getName().equals("indexFields")){
 					List<Element> subElements = element.elements();
 					for(Element subElement:subElements){
@@ -273,5 +345,12 @@ public class Parameters {
 			logger.info("parameters' format error!");
 		}
 		
+	}
+	
+	public static void main(String args[]){
+		Parameters parameters = new Parameters();
+		String wpath = "./dict/df.txt";
+		String xmlPath = "./data/ace2004/ace2004.xml";
+		parameters.getMentionDf(wpath, xmlPath);
 	}
 }

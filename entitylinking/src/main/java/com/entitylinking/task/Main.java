@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.entitylinking.linking.LinkingKB;
+import com.entitylinking.linking.bean.DictBean;
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.PathBean;
@@ -41,8 +42,6 @@ public class Main {
 		Main main = new Main();
 		main.init();
 		main.linkingMainProcess();
-//		String mention = "mexico";
-//		main.testEntity(mention);
 		
 	}
 	
@@ -59,6 +58,11 @@ public class Main {
 				String filePath = file.getAbsolutePath();
 				textContent = FileUtils.readFileContent(filePath);
 				Text text = new Text(file.getName(), textContent);
+				logger.info("text name:"+file.getName());
+				if(!DictBean.getMentionDict().containsKey(file.getName())){
+					continue;
+				}
+				text.getEntityGraph().setMentions(DictBean.getMentionDict().get(file.getName()));
 				//生成该文档的密度子图
 				text.generateDensityGraph();
 				logger.info("entity graph finish!");
@@ -80,6 +84,10 @@ public class Main {
 					logger.info(sBuilder.toString());
 				}
 			}
+			
+			//将df持久化到本地
+//			Parameters parameters = new Parameters();
+//			parameters.pickleDf(PathBean.getDfDictPath());
 		}
 		return null;
 	}
@@ -92,7 +100,7 @@ public class Main {
 		parameters.loadPath("./xml/path.xml");
 		parameters.loadRELParameters(PathBean.getRelParameterPath());
 		parameters.loadDictFromXML();
-//		logger.info("alabama candidate:"+DictBean.getAmbiguationDict().get("alabama"));
+//		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
 	}
 	
 	public void testEntity(String mention){

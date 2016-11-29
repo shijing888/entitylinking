@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
 
 import com.entitylinking.lucene.IndexFile;
@@ -18,7 +19,7 @@ import com.entitylinking.lucene.IndexFile;
  *
  */
 public class EntityGraph {
-
+	static Logger logger = Logger.getLogger(EntityGraph.class);
 	/*所有实体的size*/
 	private int entityLen;
 	/*该图中所有的实体*/
@@ -46,6 +47,8 @@ public class EntityGraph {
 	
 	public EntityGraph(){
 		this.disambiguationMap = new HashMap<Mention, Entity>();
+		this.semantitcSignatureOfDocument = new double[this.entityLen];
+		this.semantitcSignatureOfEntity = new double[this.entityLen];
 	}
 	public Map<String, Integer> getEntityIndex() {
 		return entityIndex;
@@ -104,15 +107,19 @@ public class EntityGraph {
 	 * 设置文档的偏好向量
 	 */
 	public void setPreferVectorOfDocument() {
-		this.preferVectorOfDocument = new double[this.entityLen];
+		if(this.preferVectorOfDocument == null){
+			this.preferVectorOfDocument = new double[this.entityLen];
+		}
 		double important;
 		double polularity;
 		int index;
 		for(Entry<Mention, Entity>entry:this.disambiguationMap.entrySet()){
-			important = entry.getKey().getTfidfValue();
-			polularity = entry.getValue().getPopularity();
-			index = this.entityIndex.get(entry.getValue());
-			this.preferVectorOfDocument[index] = important * polularity;
+			if(entry.getValue() != null){
+				important = entry.getKey().getTfidfValue();
+				polularity = entry.getValue().getPopularity();
+				index = this.entityIndex.get(entry.getValue().getEntityName());
+				this.preferVectorOfDocument[index] = important * polularity;
+			}
 		}
 	}
 
@@ -154,7 +161,17 @@ public class EntityGraph {
 	public void initDisambiguationMap(){
 		this.disambiguationMap = new HashMap<>();
 		for(Mention mention:this.mentions){
-			this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
+			if(mention.getCandidateEntity().size() == 1){
+				this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
+			}
+		}
+		//若没有无歧义对，则将歧义性最低的给加入到map中
+		if(this.disambiguationMap.size() == 0){
+			for(Mention mention:this.mentions){
+				if(!mention.getCandidateEntity().isEmpty()){
+					this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
+				}
+			}
 		}
 	}
 	
@@ -170,6 +187,9 @@ public class EntityGraph {
 						RELRWParameterBean.getEntityRelationField2(),
 						RELRWParameterBean.getEntityRelationField3(), PathBean.getEntityRelationPath());
 				transferMatrix[i][j] = weight;
+				if(weight > 0){
+					logger.info(entities[i].getEntityName()+"->"+entities[j].getEntityName()+"\t"+i+"\t"+j+"\t的转移权重:"+weight);
+				}
 			}
 		}
 	}
@@ -188,11 +208,22 @@ public class EntityGraph {
 		String[] querys = new String[]{entity1,entity2};
 		String[] queryFields = new String[]{queryField2,queryField2};
 		int count = IndexFile.countCooccurence(querys, queryFields, indexDir);
+		if(count == 0){
+			return 0;
+		}
 		try {
 			Document document = IndexFile.queryDocument(entity1, queryField2, indexDir);
-			int entityOutCount = Integer.parseInt(document.get(queryField1));
-			if(entityOutCount > 0 && count > 0 && count <= entityOutCount){
-				return count / (double)entityOutCount;
+			String[] relateEntity = document.get(queryField2).split("\t\\|\t");
+			int outEntityCounts = 0;
+//			outEntityCounts = Integer.parseInt(document.get(queryField1));
+			for(String item:relateEntity){
+				querys = new String[]{entity1,item};
+				outEntityCounts += IndexFile.countCooccurence(querys, queryFields, indexDir);
+			}
+			if(outEntityCounts > 0 && count > 0 && count <= outEntityCounts){
+//				logger.info("实体"+entity1+"与实体"+entity2+" 共现次数:"+count);
+//				logger.info("与实体 "+entity1+" 有关的其他实体所有共现次数:"+outEntityCounts);
+				return count / (double)outEntityCounts;
 			}
 		} catch (Exception e) {
 			// TODO: handle exception

@@ -19,6 +19,10 @@ public class RELRWParameterBean {
 	private static double gamma;
 	/**限制实体正文字符长度*/
 	private static int entityContentLen;
+	/**候选实体剪枝阈值*/
+	private static int candidateEntityNumThresh;
+	/**流行度阈值*/
+	private static int popularityThresh;
 	/**实体关系域*/
 	private static String entityRelationField1;
 	private static String entityRelationField2;
@@ -60,6 +64,12 @@ public class RELRWParameterBean {
 	public static void setEntityContentLen(int entityContentLen) {
 		RELRWParameterBean.entityContentLen = entityContentLen;
 	}
+	public static int getCandidateEntityNumThresh() {
+		return candidateEntityNumThresh;
+	}
+	public static void setCandidateEntityNumThresh(int candidateEntityNumThresh) {
+		RELRWParameterBean.candidateEntityNumThresh = candidateEntityNumThresh;
+	}
 	public static String getEntityRelationField1() {
 		return entityRelationField1;
 	}
@@ -77,6 +87,12 @@ public class RELRWParameterBean {
 	}
 	public static void setEntityRelationField3(String entityRelationField3) {
 		RELRWParameterBean.entityRelationField3 = entityRelationField3;
+	}
+	public static int getPopularityThresh() {
+		return popularityThresh;
+	}
+	public static void setPopularityThresh(int popularityThresh) {
+		RELRWParameterBean.popularityThresh = popularityThresh;
 	}
 	
 }

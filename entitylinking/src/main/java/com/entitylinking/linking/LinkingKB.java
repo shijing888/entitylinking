@@ -25,16 +25,22 @@ public class LinkingKB {
 		EntityGraph entityGraph = text.getEntityGraph();
 		Map<Mention, Entity> mentionEntityMap = entityGraph.getDisambiguationMap();
 		double[] score = new double[entityGraph.getEntityLen()];
-		double[] signatureOfDocument = entityGraph.getSemantitcSignatureOfDocument();
+		double[] signatureOfDocument;
 		double[] signatureOfEntity;
 		double[] preferEntityVector = null;
+		//获取初始文档偏好向量
+		signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
+//		entityGraph.setSemantitcSignatureOfDocument(signatureOfDocument);
 		for(Mention mention:entityGraph.getMentions()){
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
 				mentionEntityMap.put(mention, null);
 			}else if (mention.getCandidateEntity().size() == 1) {//候选实体为1
 				mentionEntityMap.put(mention, mention.getCandidateEntity().get(0));
 			}else {//候选实体为多个
+//				signatureOfDocument = entityGraph.getSemantitcSignatureOfDocument();
 				for(int i=0;i<mention.getCandidateEntity().size();i++){
+					entityGraph.setPreferVectorOfEntity(i);
+					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
 					score[i] = calSemanticSimilarity(signatureOfEntity, signatureOfDocument);
 					score[i] += calLocalSimilarity(mention, mention.getCandidateEntity().get(i)); 
@@ -46,6 +52,7 @@ public class LinkingKB {
 						.equals(entityGraph.getEntities()[index].getEntityName())){
 						mentionEntityMap.put(mention, entityGraph.getEntities()[index]);
 						entityGraph.setPreferVectorOfDocument();
+						signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
 				}
 			}
 		}

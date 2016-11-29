@@ -7,6 +7,7 @@
 		<pos>./dict/pos.txt</pos>
 		<stopwords>./dict/stopword_en.txt</stopwords>
 		<df>./dict/df.txt</df>
+		<mentionDict>./data/ace2004/ace2004.xml</mentionDict>
 	</dictPath>
 	<!-- 参数配置文件路径 -->
 	<relPath>

@@ -18,6 +18,7 @@ import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
  */
 public class Entity {
 	static Logger logger = Logger.getLogger(Entity.class);
+	static Wikipedia wikipedia = WikiConfig.getWiki();
 	/**实体名称*/
 	private String entityName;
 	/**实体流行度*/
@@ -62,20 +63,67 @@ public class Entity {
      * @param title
      * @throws WikiApiException
      */
-    public void getEntityPageInfo(String title) throws WikiApiException{
-    	Wikipedia wikipedia = WikiConfig.getWiki();
-        Page page = wikipedia.getPage(title);
-        logger.info(page.getTitle());
-        //初始化title
-        entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
-        //初始化上下文
-        String content = page.getPlainText();
-        if(content.length() > RELRWParameterBean.getEntityContentLen()){
-        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());
-        }
-        entityContext = NLPUtils.getEntityContext(content);
-        //初始化流行度
-        popularity = page.getNumberOfInlinks();
+    public void getEntityPageInfo(String title){
+        Page page;
+		try {
+			page = wikipedia.getPage(title);
+//			//初始化流行度
+//	        popularity = page.getNumberOfInlinks();
+//	        if(popularity <= RELRWParameterBean.getPopularityThresh()){
+//	        	return false;
+//	        }
+//			logger.info("popularity:"+popularity);
+	        //初始化title
+//	        entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
+	        //初始化上下文
+	        String content = page.getPlainText();
+	        if(content.length() > RELRWParameterBean.getEntityContentLen()){
+	        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());
+	        }
+	        entityContext = NLPUtils.getEntityContext(content);
+		} catch (WikiApiException e) {
+			// TODO Auto-generated catch block
+			logger.info(title +" is not an entity!");
+			e.printStackTrace();
+		}
     }
     
+    /**
+     * 获取title对应的实体在wiki中的标准名称
+     * @param title
+     * @return
+     */
+    public String getEntityName(String title){
+    	Page page;
+ 		try {
+ 			page = wikipedia.getPage(title);
+ 			title = page.getTitle().getWikiStyleTitle().toLowerCase();
+ 	       return title;
+ 		} catch (WikiApiException e) {
+ 			// TODO Auto-generated catch block
+ 			logger.info(title +" is not an entity!");
+ 			e.printStackTrace();
+ 		}
+ 		return null;
+    }
+    /**
+     * 获取实体流行度
+     * @param title
+     * @return
+     */
+    public double getEntityPopularity(String title){
+        Page page;
+		try {
+			page = wikipedia.getPage(title);
+			//初始化流行度
+	        popularity = page.getNumberOfInlinks();
+			logger.info(title+"popularity:"+popularity);
+	       return page.getNumberOfInlinks();
+		} catch (WikiApiException e) {
+			// TODO Auto-generated catch block
+			logger.info(title +" is not an entity!");
+			e.printStackTrace();
+		}
+       return 0;
+    }
 }

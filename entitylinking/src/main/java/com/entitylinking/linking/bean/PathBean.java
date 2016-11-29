@@ -16,6 +16,8 @@ public class PathBean {
 	private static String relParameterPath;
 	/**entityRelation 索引文件夹路径*/
 	private static String entityRelationPath;
+	/**mention集合的xml文件*/
+	private static String mentionDictPath;
 	public static String getSynonymsDictPath() {
 		return synonymsDictPath;
 	}
@@ -57,6 +59,12 @@ public class PathBean {
 	}
 	public static void setEntityRelationPath(String entityRelationPath) {
 		PathBean.entityRelationPath = entityRelationPath;
+	}
+	public static String getMentionDictPath() {
+		return mentionDictPath;
+	}
+	public static void setMentionDictPath(String mentionDictPath) {
+		PathBean.mentionDictPath = mentionDictPath;
 	}
 	
 }
