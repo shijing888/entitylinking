@@ -325,6 +325,8 @@ public class Parameters {
 							element.elementText("candidateEntityNumThresh")));
 					RELRWParameterBean.setPopularityThresh(Integer.parseInt(
 							element.elementText("popularityThresh")));
+					RELRWParameterBean.setCooccurenceThresh(Integer.parseInt(
+							element.elementText("cooccurenceThresh")));
 				}else if(element.getName().equals("indexFields")){
 					List<Element> subElements = element.elements();
 					for(Element subElement:subElements){

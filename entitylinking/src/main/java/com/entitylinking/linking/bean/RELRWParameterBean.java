@@ -23,6 +23,8 @@ public class RELRWParameterBean {
 	private static int candidateEntityNumThresh;
 	/**流行度阈值*/
 	private static int popularityThresh;
+	/**实体共现次数阈值*/
+	private static int cooccurenceThresh;
 	/**实体关系域*/
 	private static String entityRelationField1;
 	private static String entityRelationField2;
@@ -93,6 +95,12 @@ public class RELRWParameterBean {
 	}
 	public static void setPopularityThresh(int popularityThresh) {
 		RELRWParameterBean.popularityThresh = popularityThresh;
+	}
+	public static int getCooccurenceThresh() {
+		return cooccurenceThresh;
+	}
+	public static void setCooccurenceThresh(int cooccurenceThresh) {
+		RELRWParameterBean.cooccurenceThresh = cooccurenceThresh;
 	}
 	
 }

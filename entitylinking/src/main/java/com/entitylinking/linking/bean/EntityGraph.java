@@ -182,14 +182,16 @@ public class EntityGraph {
 		double weight= 0;
 		this.transferMatrix = new double[entityLen][entityLen];
 		for(int i=0;i<entityLen;i++){
+			logger.info("i = "+i);
 			for(int j=0;j<entityLen;j++){
-				weight = calEdgeWeight(entities[i].getEntityName(), entities[j].getEntityName(), 
+				weight = calEdgeWeight(entities[i].getEntityName().replaceAll("/", "//"), 
+						entities[j].getEntityName().replaceAll("/", "//"), 
 						RELRWParameterBean.getEntityRelationField2(),
 						RELRWParameterBean.getEntityRelationField3(), PathBean.getEntityRelationPath());
 				transferMatrix[i][j] = weight;
-				if(weight > 0){
-					logger.info(entities[i].getEntityName()+"->"+entities[j].getEntityName()+"\t"+i+"\t"+j+"\t的转移权重:"+weight);
-				}
+//				if(weight > 0){
+//					logger.info(i+"\t"+j+"\t的转移权重:"+weight);
+//				}
 			}
 		}
 	}
@@ -205,13 +207,14 @@ public class EntityGraph {
 	 */
 	public double calEdgeWeight(String entity1,String entity2,String queryField1,
 			String queryField2,String indexDir){
-		String[] querys = new String[]{entity1,entity2};
-		String[] queryFields = new String[]{queryField2,queryField2};
-		int count = IndexFile.countCooccurence(querys, queryFields, indexDir);
-		if(count == 0){
-			return 0;
-		}
+		
 		try {
+			String[] querys = new String[]{entity1,entity2};
+			String[] queryFields = new String[]{queryField2,queryField2};
+			int count = IndexFile.countCooccurence(querys, queryFields, indexDir);
+			if(count < RELRWParameterBean.getCooccurenceThresh()){
+				return 0;
+			}
 			Document document = IndexFile.queryDocument(entity1, queryField2, indexDir);
 			String[] relateEntity = document.get(queryField2).split("\t\\|\t");
 			int outEntityCounts = 0;
@@ -220,7 +223,7 @@ public class EntityGraph {
 				querys = new String[]{entity1,item};
 				outEntityCounts += IndexFile.countCooccurence(querys, queryFields, indexDir);
 			}
-			if(outEntityCounts > 0 && count > 0 && count <= outEntityCounts){
+			if(outEntityCounts > 0 && count <= outEntityCounts){
 //				logger.info("实体"+entity1+"与实体"+entity2+" 共现次数:"+count);
 //				logger.info("与实体 "+entity1+" 有关的其他实体所有共现次数:"+outEntityCounts);
 				return count / (double)outEntityCounts;

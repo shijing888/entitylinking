@@ -25,6 +25,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.junit.Test;
 
 /**
  * 文件索引操作
@@ -35,6 +36,7 @@ public class IndexFile {
 
 	private static final int MAXTOP = 999;
 	public static void main(String args[]){
+		
 		//索引文件夹
 		String indexDir1 = "./index/synonymsIndex";
 		String indexDir2 = "./index/ambiguationIndex";
@@ -157,5 +159,23 @@ public class IndexFile {
 		}
 		
 		return count;
+	}
+	
+	@Test
+	public void test(){
+		String ss = "greens/green_party_usa";
+		System.out.println(ss.replaceAll("/", "//"));
+//		Document document = queryDocument(StringEscapeUtils.escapeJava("greens//green_party_usa"), "entityRelationValue", "./index/entityRelationIndex");
+//		System.out.println(document.get("entityRelationValue"));
+		//		 String sql="1' or '1'='1";  
+//        System.out.println("防SQL注入:"+StringEscapeUtils.escapeSql(sql)); //防SQL注入  
+//          
+//        System.out.println("转义HTML,注意汉字:"+StringEscapeUtils.escapeHtml("<font>chen磊  xing</font>"));    //转义HTML,注意汉字  
+//        System.out.println("反转义HTML:"+StringEscapeUtils.unescapeHtml("<font>chen磊  xing</font>"));  //反转义HTML  
+//          
+//        System.out.println("转成Unicode编码："+StringEscapeUtils.escapeJava("陈磊兴"));     //转义成Unicode编码  
+//          
+//        System.out.println("转义XML："+StringEscapeUtils.escapeXml("<name>陈磊兴</name>"));   //转义xml  
+//        System.out.println("反转义XML："+StringEscapeUtils.unescapeXml("<name>陈磊兴</name>"));    //转义xml  
 	}
 }

@@ -117,7 +117,7 @@ public class Entity {
 			page = wikipedia.getPage(title);
 			//初始化流行度
 	        popularity = page.getNumberOfInlinks();
-			logger.info(title+"popularity:"+popularity);
+			logger.info(title+" popularity:"+popularity);
 	       return page.getNumberOfInlinks();
 		} catch (WikiApiException e) {
 			// TODO Auto-generated catch block

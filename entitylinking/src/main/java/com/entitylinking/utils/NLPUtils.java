@@ -97,11 +97,11 @@ public class NLPUtils {
         	}
         	
         	if(mentionOffset + RELRWParameterBean.getContextWindow() >= text.getContent().length()){
-        		endOffset = text.getContent().length() -1;
+        		endOffset = text.getContent().length();
         	}else{
         		endOffset = mentionOffset + RELRWParameterBean.getContextWindow();
         	}
-        	
+        	//substring左闭右开
         	content = text.getContent().substring(beginOffset,endOffset);
         	
         	 // create an empty Annotation just with the given text
@@ -113,8 +113,6 @@ public class NLPUtils {
             for(CoreMap sentence: sentences) {
                 // a CoreLabel is a CoreMap with additional token-specific methods
                 for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
-                    // this is the text of the token
-                    //String word = token.get(TextAnnotation.class);
                     // this is the POS tag of the token
                     String pos = token.get(PartOfSpeechAnnotation.class);
                     // this is the NER label of the token
@@ -131,6 +129,7 @@ public class NLPUtils {
                 }
             }
         }
+        
         //对mention按照歧义性排序，歧义性按照候选实体个数来定义
         Collections.sort(mentions, new Comparator<Mention>() {
 			@Override
@@ -139,7 +138,7 @@ public class NLPUtils {
 				return arg0.getCandidateEntity().size() - arg1.getCandidateEntity().size();
 			}
 		});
-        
+        logger.info("所有实体总数为:"+entityLen);
         text.getEntityGraph().setEntityLen(entityLen);
 	}
 	

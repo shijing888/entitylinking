@@ -64,14 +64,14 @@ public class Text {
 		/*该图中所有的实体*/
 		int entityLen = this.getEntityGraph().getEntityLen(); 
 		Entity[] entities = new Entity[entityLen];
-		logger.info("entities size:"+entities.length);
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
 		int index = 0;
 		List<Entity> candidateEntity;
 		for(Mention mention:this.entityGraph.getMentions()){
 			candidateEntity = mention.getCandidateEntity();
+			mention.setTotalPopularity();
 			for(int i=0;i<candidateEntity.size() && index<entityLen;i++,index++){
-				entityIndex.put(candidateEntity.get(i).getEntityName(), i);
+				entityIndex.put(candidateEntity.get(i).getEntityName(), index);
 				entities[index] = candidateEntity.get(i);
 			}
 		}

@@ -3,6 +3,8 @@ package com.entitylinking.linking;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.EntityGraph;
 import com.entitylinking.linking.bean.Mention;
@@ -15,7 +17,7 @@ import com.entitylinking.linking.bean.Text;
  *
  */
 public class LinkingKB {
-
+	static Logger logger = Logger.getLogger(LinkingKB.class);
 	/**
 	 * 链接知识库过程，
 	 * @param text
@@ -39,11 +41,16 @@ public class LinkingKB {
 			}else {//候选实体为多个
 //				signatureOfDocument = entityGraph.getSemantitcSignatureOfDocument();
 				for(int i=0;i<mention.getCandidateEntity().size();i++){
+					Entity entity = mention.getCandidateEntity().get(i);
 					entityGraph.setPreferVectorOfEntity(i);
 					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
+					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"与文档的语义相似度为:");
 					score[i] = calSemanticSimilarity(signatureOfEntity, signatureOfDocument);
-					score[i] += calLocalSimilarity(mention, mention.getCandidateEntity().get(i)); 
+					logger.info(mention.getMentionName()+"与候选实体"+entity.getEntityName()+"的局部相容性为:");
+					score[i] *= calLocalSimilarity(mention, mention.getCandidateEntity().get(i));
+					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的流行度得分为:");
+					score[i] *= calPopularityScore(entity.getPopularity(), mention.getTotalPopularity());
 				}
 				int index = maxIndex(score);
 				if(!mentionEntityMap.containsKey(mention) ||
@@ -91,6 +98,7 @@ public class LinkingKB {
 			}
 		}
 		result = 1 / result;
+		logger.info(result);
 		return result;
 	}
 	
@@ -118,5 +126,15 @@ public class LinkingKB {
 		
 		return (double)commonCount / allCount;
 		
+	}
+	
+	/**
+	 * 计算流行度得分
+	 * @param popularity
+	 * @param totalPopularity
+	 * @return
+	 */
+	public double calPopularityScore(double popularity, double totalPopularity){
+		return popularity / totalPopularity;
 	}
 }

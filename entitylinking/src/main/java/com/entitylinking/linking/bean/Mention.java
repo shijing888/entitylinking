@@ -3,10 +3,8 @@ package com.entitylinking.linking.bean;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -34,13 +32,24 @@ public class Mention {
 	private int mentionOffset;
 	/**mention在文中出现的次数*/
 	private int occurCounts;
+	/**候选实体流行度总和*/
+	private double totalPopularity;
 	/**mention的上下文*/
 	private Set<String> mentionContext;
 	public Mention(String mention){
 		this.mentionName = mention;
-		candidateEntity = new ArrayList<Entity>();
 		mentionContext = new HashSet<>();
 		
+	}
+	public double getTotalPopularity() {
+		return totalPopularity;
+	}
+	public void setTotalPopularity() {
+		double count = 0;
+		for(Entity entity:candidateEntity){
+			count += entity.getPopularity();
+		}
+		this.totalPopularity = count;
 	}
 
 	public String getMentionName() {
@@ -137,12 +146,13 @@ public class Mention {
 //			}
 //		}
 		
-		logger.info("candidateSet:"+ StringUtils.join(candidateSet, "\t"));
 		logger.info("candidateSet size:"+candidateSet.size());
+		logger.info(mention+"的candidateSet:"+ StringUtils.join(candidateSet, "\t"));
+		
 		//candidateEntitySet用于消除重复实体
 		Set<String> candidateEntitySet = new HashSet<>();
-		Map<Entity,String> candidateEntityMap = new HashMap<>();
 		String normEntityName;
+		
 		for(String entityStr:candidateSet){
 			if(entityStr.contains(disambiguationStr)){
 				continue;
@@ -152,7 +162,7 @@ public class Mention {
 			if(normEntityName == null || candidateEntitySet.contains(normEntityName)){
 				continue;
 			}
-			double entityPopularity = entity.getEntityPopularity(entityStr);
+			double entityPopularity = entity.getEntityPopularity(normEntityName);
 			if(entityPopularity < RELRWParameterBean.getPopularityThresh()){
 				continue;
 			}
@@ -161,7 +171,6 @@ public class Mention {
 			entity.setEntityName(normEntityName);
 			entity.setPopularity(entityPopularity);
 			entities.add(entity);
-			candidateEntityMap.put(entity,entityStr);
 		}
 		
 		//对候选实体按照流行度降序排序，并只选取满足阈值数目的候选实体集合
@@ -170,21 +179,21 @@ public class Mention {
 			@Override
 			public int compare(Entity entity1, Entity entity2) {
 				// TODO Auto-generated method stub
-				return (int) (entity2.getPopularity() - entity1.getPopularity());
+				return (int)(entity2.getPopularity() - entity1.getPopularity());
 			}
 		});
-		
+		//只选择满足阈值数目的候选实体
 		if(entities.size() > RELRWParameterBean.getCandidateEntityNumThresh()){
 			entities = entities.subList(0, RELRWParameterBean.getCandidateEntityNumThresh());
 		}
-		String entityName;
 		for(Entity entity:entities){
-			entityName = candidateEntityMap.get(entity);
-			entity.getEntityPageInfo(entityName);
+			entity.getEntityPageInfo(entity.getEntityName());
 		}
-		logger.info(mention+" candidateList size:"+entities.size());
-		//只选择满足阈值数目的候选实体
-		
+		logger.info(mention+"的candidateList size:"+entities.size());		
+		for(Entity entity:entities){
+			logger.info(mention+"的candidate:"+ entity.getEntityName());
+		}
+	
 		return entities;
 	}
 }

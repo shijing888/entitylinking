@@ -74,7 +74,8 @@ public class Main {
 				for(Entry<Mention, Entity> entry :text.getEntityGraph()
 						.getDisambiguationMap().entrySet()){
 					sBuilder.delete(0, sBuilder.length());
-					sBuilder.append(entry.getKey().getMentionName()).append("\t");
+					sBuilder.append(entry.getKey().getMentionName()).append("\t")
+							.append(entry.getKey().getObjectEntity()).append("\t");
 					if(entry.getValue() == null){
 						sBuilder.append("null");
 					}else{
@@ -100,6 +101,7 @@ public class Main {
 		parameters.loadPath("./xml/path.xml");
 		parameters.loadRELParameters(PathBean.getRelParameterPath());
 		parameters.loadDictFromXML();
+		logger.info("houxuanshiti阈值:"+RELRWParameterBean.getCandidateEntityNumThresh());
 //		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
 	}
 	
