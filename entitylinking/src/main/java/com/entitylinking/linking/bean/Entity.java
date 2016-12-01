@@ -27,7 +27,8 @@ public class Entity {
 	private double[] semanticSignature;
 	/**实体的上下文*/
 	private Set<String> entityContext;
-	
+	/**实体的得分*/
+	private double score;
 	public Entity(String name){
 		this.entityName = name;
 	}
@@ -57,7 +58,12 @@ public class Entity {
 	public void setEntityContext(Set<String> entityContext) {
 		this.entityContext = entityContext;
 	}
-	
+	public double getScore() {
+		return score;
+	}
+	public void setScore(double score) {
+		this.score = score;
+	}
 	/**
      * 获取实体信息，名称、上下文、流行度
      * @param title
@@ -67,14 +73,10 @@ public class Entity {
         Page page;
 		try {
 			page = wikipedia.getPage(title);
-//			//初始化流行度
-//	        popularity = page.getNumberOfInlinks();
-//	        if(popularity <= RELRWParameterBean.getPopularityThresh()){
-//	        	return false;
-//	        }
-//			logger.info("popularity:"+popularity);
+			//初始化流行度
+	        popularity = page.getNumberOfInlinks();
 	        //初始化title
-//	        entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
+	        entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
 	        //初始化上下文
 	        String content = page.getPlainText();
 	        if(content.length() > RELRWParameterBean.getEntityContentLen()){

@@ -1,8 +1,6 @@
 package com.entitylinking.linking.bean;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +8,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.entitylinking.utils.CommonUtils;
 import com.entitylinking.utils.NormalizeMention;
 
 /**
@@ -102,34 +101,24 @@ public class Mention {
 	}
 
 	/**
-	 * 获取mention的候选实体
-	 * @param mention
-	 * @return
-	 */
-	public List<Entity> candidatesOfMention(String mention){
-		mention = NormalizeMention.getNormalizeMention(mention,true);
-		List<Entity> candidateList = obtainCandidate(mention);
-		return candidateList;
-	}
-	
-	/**
 	 * 查找mention对应的候选实体
 	 * @param mention
 	 * @return
 	 */
-	public List<Entity> obtainCandidate(String mention){
+	public List<Entity> obtainCandidate(){
+		String mentionStr = NormalizeMention.getNormalizeMention(this.mentionName,true);
 		Set<String> candidateSet = new HashSet<>();
 		List<Entity> entities = new ArrayList<>();
 		//先从同义词典中寻找
-		if(DictBean.getSynonymsDict().containsKey(mention)){
-			candidateSet.add(DictBean.getSynonymsDict().get(mention));
+		if(DictBean.getSynonymsDict().containsKey(mentionStr)){
+			candidateSet.add(DictBean.getSynonymsDict().get(mentionStr));
 		}
 		//再从歧义词典中寻找
-		if(DictBean.getAmbiguationDict().containsKey(mention)){
-			candidateSet.addAll(DictBean.getAmbiguationDict().get(mention));
+		if(DictBean.getAmbiguationDict().containsKey(mentionStr)){
+			candidateSet.addAll(DictBean.getAmbiguationDict().get(mentionStr));
 		}
-		if(DictBean.getAmbiguationDict().containsKey(DictBean.getSynonymsDict().get(mention))){
-			candidateSet.addAll(DictBean.getAmbiguationDict().get(DictBean.getSynonymsDict().get(mention)));
+		if(DictBean.getAmbiguationDict().containsKey(DictBean.getSynonymsDict().get(mentionStr))){
+			candidateSet.addAll(DictBean.getAmbiguationDict().get(DictBean.getSynonymsDict().get(mentionStr)));
 		}
 		
 		//若候选本身为歧义，则将其歧义项加进来
@@ -147,7 +136,7 @@ public class Mention {
 //		}
 		
 		logger.info("candidateSet size:"+candidateSet.size());
-		logger.info(mention+"的candidateSet:"+ StringUtils.join(candidateSet, "\t"));
+		logger.info(mentionStr+"的candidateSet:"+ StringUtils.join(candidateSet, "\t"));
 		
 		//candidateEntitySet用于消除重复实体
 		Set<String> candidateEntitySet = new HashSet<>();
@@ -162,38 +151,36 @@ public class Mention {
 			if(normEntityName == null || candidateEntitySet.contains(normEntityName)){
 				continue;
 			}
-			double entityPopularity = entity.getEntityPopularity(normEntityName);
-			if(entityPopularity < RELRWParameterBean.getPopularityThresh()){
-				continue;
-			}
+			//获取实体名称、流行度及上下文信息
+			entity.getEntityPageInfo(normEntityName);
+			entity.setScore(CommonUtils.commonWords(this, entity));
 			logger.info("entity title:"+normEntityName);
 			candidateEntitySet.add(normEntityName);
-			entity.setEntityName(normEntityName);
-			entity.setPopularity(entityPopularity);
 			entities.add(entity);
 		}
 		
-		//对候选实体按照流行度降序排序，并只选取满足阈值数目的候选实体集合
-		Collections.sort(entities, new Comparator<Entity>() {
-			//a>b升序，b>a降序
-			@Override
-			public int compare(Entity entity1, Entity entity2) {
-				// TODO Auto-generated method stub
-				return (int)(entity2.getPopularity() - entity1.getPopularity());
+		List<Entity> entities2 = new ArrayList<>(entities);
+		List<Entity> entities3 = new ArrayList<>();
+		//对候选实体按流行度进行降序
+		CommonUtils.sortListByPopularity(entities, true);
+		CommonUtils.sortListByContextSimliarity(entities2, true);
+		//对候选按照流行度和上下文相似性进行剪枝
+		for(int i=0;i<RELRWParameterBean.getCandidateEntityNumThresh();i++){
+			if(i < entities.size()){
+				if(entities2.get(i).getScore() > 0){
+					entities3.add(entities2.get(i));
+				}
+				entities3.add(entities.get(i));
 			}
-		});
-		//只选择满足阈值数目的候选实体
-		if(entities.size() > RELRWParameterBean.getCandidateEntityNumThresh()){
-			entities = entities.subList(0, RELRWParameterBean.getCandidateEntityNumThresh());
+			
 		}
+		
+		logger.info(mentionStr+"的candidateList size:"+entities.size());		
 		for(Entity entity:entities){
-			entity.getEntityPageInfo(entity.getEntityName());
-		}
-		logger.info(mention+"的candidateList size:"+entities.size());		
-		for(Entity entity:entities){
-			logger.info(mention+"的candidate:"+ entity.getEntityName());
+			logger.info(mentionStr+"的candidate:"+ entity.getEntityName());
 		}
 	
-		return entities;
+		return entities3;
 	}
+	
 }

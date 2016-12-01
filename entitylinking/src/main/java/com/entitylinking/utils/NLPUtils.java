@@ -85,7 +85,7 @@ public class NLPUtils {
     		mention.setTfidfValue(CommonUtils.calTfidf(mention.getOccurCounts(), 
     				DictBean.getDfDict().get(mention.getMentionName()), textLen));
     		//获取候选实体
-    		List<Entity> candidateEntity = mention.candidatesOfMention(mention.getMentionName());
+    		List<Entity> candidateEntity = mention.obtainCandidate();
     		mention.setCandidateEntity(candidateEntity);
     		entityLen += candidateEntity.size();
     		//通过mention的offset及窗口来获取上下文

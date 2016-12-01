@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -20,8 +23,10 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -128,6 +133,42 @@ public class IndexFile {
 		return null;
 	}
 	
+	public static Set<String> coocurenceEntities(String[] querys,String[] queryFields, 
+			BooleanClause.Occur[] flags,String indexDir){
+		Set<String> entitySet = new HashSet<>();
+		try {
+			//1. 获取索引文件目录
+			Directory directory;
+			directory = FSDirectory.open(Paths.get(indexDir));
+			//2. 创建IndexReader对象，读取索引文件
+			IndexReader indexReader = DirectoryReader.open(directory);
+			//3. 创建索引查询器，查询索引文件
+			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+			//4. 实例化分析器
+			Analyzer analyzer = new StandardAnalyzer();
+			//5. 创建查询解析器，解析query
+			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
+			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXTOP).scoreDocs;
+			for(ScoreDoc scoreDoc:scoreDocs){
+				entitySet.addAll(Arrays.asList(indexSearcher.doc(scoreDoc.doc)
+						.get(queryFields[0]).split("\t\\|\t")));
+			}
+			for(String str:querys){
+				if(entitySet.contains(str)){
+					entitySet.remove(str);
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		return entitySet;
+	} 
+	
 	/**
 	 * 通过查询共现次数来获取实体图中边的权重
 	 * @param querys
@@ -135,7 +176,7 @@ public class IndexFile {
 	 * @param indexDir
 	 * @return
 	 */
-	public static int countCooccurence(String[] querys,String[] queryFields,String indexDir){
+	public static int countCooccurence(String[] querys,String[] queryFields, BooleanClause.Occur[] flags, String indexDir){
 		int count = 0;
 		//1. 获取索引文件目录
 		Directory directory;
@@ -148,7 +189,11 @@ public class IndexFile {
 			//4. 实例化分析器
 			Analyzer analyzer = new StandardAnalyzer();
 			//5. 创建查询解析器，解析query
-			Query query = MultiFieldQueryParser.parse(querys, queryFields, analyzer);
+			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
+//			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXTOP).scoreDocs;
+//			for(ScoreDoc scoreDoc:scoreDocs){
+//				System.out.println(indexSearcher.doc(scoreDoc.doc).get(queryFields[0]));
+//			}
 			count = indexSearcher.search(query, MAXTOP).scoreDocs.length;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -163,9 +208,14 @@ public class IndexFile {
 	
 	@Test
 	public void test(){
-		String ss = "greens/green_party_usa";
-		System.out.println(ss.replaceAll("/", "//"));
-//		Document document = queryDocument(StringEscapeUtils.escapeJava("greens//green_party_usa"), "entityRelationValue", "./index/entityRelationIndex");
+		String[] querys = {"michael_jordan","nba"};
+		BooleanClause.Occur[] flags=new BooleanClause.Occur[]{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
+		String[] queryFields = {"entityRelationValue","entityRelationValue"};
+		String indexDir = "./index/entityRelationIndex";
+		coocurenceEntities(querys, queryFields,flags, indexDir);
+//		int count = countCooccurence(querys, queryFields, flags,indexDir);
+//		System.out.println(count);
+//		Document document = queryDocument(ss.replaceAll("/", "//"), "entityRelationValue", "./index/entityRelationIndex");
 //		System.out.println(document.get("entityRelationValue"));
 		//		 String sql="1' or '1'='1";  
 //        System.out.println("防SQL注入:"+StringEscapeUtils.escapeSql(sql)); //防SQL注入  

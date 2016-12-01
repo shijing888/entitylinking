@@ -69,7 +69,7 @@ public class Main {
 				//链接知识库过程
 				LinkingKB linkingKB = new LinkingKB();
 				linkingKB.obtainmentionEntityPairs(text);
-				logger.info("mention-entity found!");
+				logger.info("mention\t\ttrue entity\t\tfound entity");
 				StringBuilder sBuilder = new StringBuilder();
 				for(Entry<Mention, Entity> entry :text.getEntityGraph()
 						.getDisambiguationMap().entrySet()){
@@ -77,7 +77,7 @@ public class Main {
 					sBuilder.append(entry.getKey().getMentionName()).append("\t")
 							.append(entry.getKey().getObjectEntity()).append("\t");
 					if(entry.getValue() == null){
-						sBuilder.append("null");
+						sBuilder.append("nil");
 					}else{
 						sBuilder.append(entry.getValue().getEntityName());
 					}
@@ -101,7 +101,6 @@ public class Main {
 		parameters.loadPath("./xml/path.xml");
 		parameters.loadRELParameters(PathBean.getRelParameterPath());
 		parameters.loadDictFromXML();
-		logger.info("houxuanshiti阈值:"+RELRWParameterBean.getCandidateEntityNumThresh());
 //		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
 	}
 	
@@ -109,7 +108,7 @@ public class Main {
 		mention = NormalizeMention.getNormalizeMention(mention,true);
 		logger.info("mention:"+mention);
 		Mention mention2 = new Mention(mention);
-		List<Entity> candidateList = mention2.obtainCandidate(mention);
+		List<Entity> candidateList = mention2.obtainCandidate();
 		logger.info(mention+" candidates size:"+ candidateList.size());
 		logger.info(mention+" candidates are:"+ StringUtils.join(candidateList, "\t"));
 		for(Entity entity:candidateList){

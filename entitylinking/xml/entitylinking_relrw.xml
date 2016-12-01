@@ -14,7 +14,7 @@
 		<!-- 限制实体正文字符长度 -->
 		<entityContentLen>1000</entityContentLen>
 		<!-- 候选实体剪枝阈值 -->
-		<candidateEntityNumThresh>40</candidateEntityNumThresh>
+		<candidateEntityNumThresh>10</candidateEntityNumThresh>
 		<!-- 流行度阈值 -->
 		<popularityThresh>200</popularityThresh>
 		<!-- 实体共现次数阈值 -->

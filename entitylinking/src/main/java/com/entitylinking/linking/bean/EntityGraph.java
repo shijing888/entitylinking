@@ -10,6 +10,7 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.search.BooleanClause;
 
 import com.entitylinking.lucene.IndexFile;
 
@@ -73,6 +74,9 @@ public class EntityGraph {
 	public Map<Mention, Entity> getDisambiguationMap() {
 		return disambiguationMap;
 	}
+	public void setDisambiguationMap(Map<Mention, Entity> disambiguationMap) {
+		this.disambiguationMap = disambiguationMap;
+	}
 	public void setEntityIndex(Map<String, Integer> entityIndex) {
 		this.entityIndex = entityIndex;
 	}
@@ -105,22 +109,37 @@ public class EntityGraph {
 
 	/**
 	 * 设置文档的偏好向量
+	 * @param isAmbiguation,两种不同的初始化形式,若无歧义，则先验设为1
 	 */
-	public void setPreferVectorOfDocument() {
+	public void setPreferVectorOfDocument(boolean isDisAmbiguation) {
 		if(this.preferVectorOfDocument == null){
 			this.preferVectorOfDocument = new double[this.entityLen];
 		}
 		double important;
 		double polularity;
+		double totalPopularity;
 		int index;
-		for(Entry<Mention, Entity>entry:this.disambiguationMap.entrySet()){
-			if(entry.getValue() != null){
-				important = entry.getKey().getTfidfValue();
-				polularity = entry.getValue().getPopularity();
-				index = this.entityIndex.get(entry.getValue().getEntityName());
-				this.preferVectorOfDocument[index] = important * polularity;
+		if(isDisAmbiguation){
+			for(Entry<Mention, Entity>entry:this.disambiguationMap.entrySet()){
+				if(entry.getValue() != null){
+					important = entry.getKey().getTfidfValue();
+					polularity = 1;
+					index = this.entityIndex.get(entry.getValue().getEntityName());
+					this.preferVectorOfDocument[index] = important * polularity;
+				}
+			}
+		}else{
+			for(Entry<Mention, Entity>entry:this.disambiguationMap.entrySet()){
+				if(entry.getValue() != null){
+					totalPopularity = entry.getKey().getTotalPopularity();
+					important = entry.getKey().getTfidfValue();
+					polularity = entry.getValue().getPopularity() / totalPopularity;
+					index = this.entityIndex.get(entry.getValue().getEntityName());
+					this.preferVectorOfDocument[index] = important * polularity;
+				}
 			}
 		}
+		
 	}
 
 	public double[] getPreferVectorOfEntity() {
@@ -158,7 +177,8 @@ public class EntityGraph {
 	/**
 	 * 初始化无歧义mention-entity对，用于计算文档的语义签名
 	 */
-	public void initDisambiguationMap(){
+	public boolean initDisambiguationMap(){
+		boolean isDisAmbiguation = true;
 		this.disambiguationMap = new HashMap<>();
 		for(Mention mention:this.mentions){
 			if(mention.getCandidateEntity().size() == 1){
@@ -167,12 +187,15 @@ public class EntityGraph {
 		}
 		//若没有无歧义对，则将歧义性最低的给加入到map中
 		if(this.disambiguationMap.size() == 0){
+			isDisAmbiguation = false;
 			for(Mention mention:this.mentions){
 				if(!mention.getCandidateEntity().isEmpty()){
 					this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
 				}
 			}
 		}
+		
+		return isDisAmbiguation;
 	}
 	
 	/**
@@ -184,8 +207,8 @@ public class EntityGraph {
 		for(int i=0;i<entityLen;i++){
 			logger.info("i = "+i);
 			for(int j=0;j<entityLen;j++){
-				weight = calEdgeWeight(entities[i].getEntityName().replaceAll("/", "//"), 
-						entities[j].getEntityName().replaceAll("/", "//"), 
+				weight = calEdgeWeight(entities[i].getEntityName(), 
+						entities[j].getEntityName(), 
 						RELRWParameterBean.getEntityRelationField2(),
 						RELRWParameterBean.getEntityRelationField3(), PathBean.getEntityRelationPath());
 				transferMatrix[i][j] = weight;
@@ -211,7 +234,9 @@ public class EntityGraph {
 		try {
 			String[] querys = new String[]{entity1,entity2};
 			String[] queryFields = new String[]{queryField2,queryField2};
-			int count = IndexFile.countCooccurence(querys, queryFields, indexDir);
+			BooleanClause.Occur[] flags = new BooleanClause.Occur[]
+					{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
+			int count = IndexFile.countCooccurence(querys, queryFields, flags,indexDir);
 			if(count < RELRWParameterBean.getCooccurenceThresh()){
 				return 0;
 			}
@@ -221,7 +246,7 @@ public class EntityGraph {
 //			outEntityCounts = Integer.parseInt(document.get(queryField1));
 			for(String item:relateEntity){
 				querys = new String[]{entity1,item};
-				outEntityCounts += IndexFile.countCooccurence(querys, queryFields, indexDir);
+				outEntityCounts += IndexFile.countCooccurence(querys, queryFields, flags,indexDir);
 			}
 			if(outEntityCounts > 0 && count <= outEntityCounts){
 //				logger.info("实体"+entity1+"与实体"+entity2+" 共现次数:"+count);

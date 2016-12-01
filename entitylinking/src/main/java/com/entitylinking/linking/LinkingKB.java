@@ -1,15 +1,21 @@
 package com.entitylinking.linking;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.junit.Test;
 
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.EntityGraph;
 import com.entitylinking.linking.bean.Mention;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
+import com.entitylinking.utils.CommonUtils;
 
 /**
  * 实体链接到知识库的操作
@@ -26,39 +32,47 @@ public class LinkingKB {
 	public void obtainmentionEntityPairs(Text text){
 		EntityGraph entityGraph = text.getEntityGraph();
 		Map<Mention, Entity> mentionEntityMap = entityGraph.getDisambiguationMap();
-		double[] score = new double[entityGraph.getEntityLen()];
 		double[] signatureOfDocument;
 		double[] signatureOfEntity;
 		double[] preferEntityVector = null;
 		//获取初始文档偏好向量
 		signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
-//		entityGraph.setSemantitcSignatureOfDocument(signatureOfDocument);
+		//用于保存实体的score
+//		Map<Entity, Double> entityScoreMap = new HashMap<Entity, Double>();
 		for(Mention mention:entityGraph.getMentions()){
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
 				mentionEntityMap.put(mention, null);
 			}else if (mention.getCandidateEntity().size() == 1) {//候选实体为1
 				mentionEntityMap.put(mention, mention.getCandidateEntity().get(0));
 			}else {//候选实体为多个
-//				signatureOfDocument = entityGraph.getSemantitcSignatureOfDocument();
-				for(int i=0;i<mention.getCandidateEntity().size();i++){
-					Entity entity = mention.getCandidateEntity().get(i);
+				List<Entity> candidateList = mention.getCandidateEntity();
+				double score;
+//				entityScoreMap.clear();
+				for(int i=0;i<candidateList.size();i++){
+					score = 0;
+					Entity entity = candidateList.get(i);
 					entityGraph.setPreferVectorOfEntity(i);
 					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
+					logger.info("候选实体"+entity.getEntityName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfEntity)), "\t"));
+					logger.info("  文档"+entity.getEntityName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfDocument)), "\t"));
 					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"与文档的语义相似度为:");
-					score[i] = calSemanticSimilarity(signatureOfEntity, signatureOfDocument);
+					score = Math.log(1+calSemanticSimilarity(signatureOfEntity, signatureOfDocument));
 					logger.info(mention.getMentionName()+"与候选实体"+entity.getEntityName()+"的局部相容性为:");
-					score[i] *= calLocalSimilarity(mention, mention.getCandidateEntity().get(i));
+					score += Math.log(1+calLocalSimilarity(mention, candidateList.get(i)));
 					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的流行度得分为:");
-					score[i] *= calPopularityScore(entity.getPopularity(), mention.getTotalPopularity());
+					score += Math.log(1+calPopularityScore(entity.getPopularity(), mention.getTotalPopularity()));
+					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的总得分为:"+score);
+					entity.setScore(score);
 				}
-				int index = maxIndex(score);
+				Entity maxScoreEntity = maxScore(candidateList);
 				if(!mentionEntityMap.containsKey(mention) ||
 						mentionEntityMap.containsKey(mention) &&
 						!mentionEntityMap.get(mention).getEntityName()
-						.equals(entityGraph.getEntities()[index].getEntityName())){
-						mentionEntityMap.put(mention, entityGraph.getEntities()[index]);
-						entityGraph.setPreferVectorOfDocument();
+						.equals(maxScoreEntity.getEntityName())){
+						mentionEntityMap.put(mention, maxScoreEntity);
+						entityGraph.setDisambiguationMap(mentionEntityMap);
+						entityGraph.setPreferVectorOfDocument(false);
 						signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
 				}
 			}
@@ -71,16 +85,16 @@ public class LinkingKB {
 	 * @param arrays
 	 * @return
 	 */
-	public int maxIndex(double[] arrays){
+	public Entity maxScore(List<Entity> entityList){
 		double max = 0;
-		int index = 0;
-		for(int i=0;i<arrays.length;i++){
-			if(arrays[i] > max){
-				max = arrays[i];
-				index = i;
+		Entity maxEntity = null;
+		for(Entity entity:entityList){
+			if(entity.getScore() > max){
+				max = entity.getScore();
+				maxEntity = entity;
 			}
 		}
-		return index;
+		return maxEntity;
 	}
 	/**
 	 * 计算语义相似度
@@ -110,21 +124,15 @@ public class LinkingKB {
 	 */
 	public double calLocalSimilarity(Mention mention, Entity entity){
 		Set<String> mentionContext = mention.getMentionContext();
-		Set<String> entityContext = entity.getEntityContext();
-		int commonCount = 0;
+		int commonCount = CommonUtils.commonWords(mention, entity);
 		int allCount = mentionContext.size();
-		for(String item:mentionContext){
-			if(entityContext.contains(item)){
-				commonCount++;
-			}
+		if(commonCount < allCount){
+			logger.info((double)commonCount / allCount);
+			return (double)commonCount / allCount;
+		}else{
+			logger.info(1);
+			return 1;
 		}
-		for(String item2:entityContext){
-			if(!mentionContext.contains(item2)){
-				allCount++;
-			}
-		}
-		
-		return (double)commonCount / allCount;
 		
 	}
 	
@@ -135,6 +143,14 @@ public class LinkingKB {
 	 * @return
 	 */
 	public double calPopularityScore(double popularity, double totalPopularity){
+		logger.info(popularity / totalPopularity);
 		return popularity / totalPopularity;
+	}
+	
+	@Test
+	public void test(){
+		double[] dd = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.10,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18};
+		double[] ee = {0.18,0.17,0.16,0.15,0.14,0.13,0.12,0.11,0.10,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1};
+		System.out.println(calSemanticSimilarity(dd, ee));
 	}
 }
