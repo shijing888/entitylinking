@@ -29,6 +29,7 @@ public class Entity {
 	private Set<String> entityContext;
 	/**实体的得分*/
 	private double score;
+	private Page page;
 	public Entity(String name){
 		this.entityName = name;
 	}
@@ -70,7 +71,6 @@ public class Entity {
      * @throws WikiApiException
      */
     public void getEntityPageInfo(String title){
-        Page page;
 		try {
 			page = wikipedia.getPage(title);
 			//初始化流行度
@@ -96,7 +96,6 @@ public class Entity {
      * @return
      */
     public String getEntityName(String title){
-    	Page page;
  		try {
  			page = wikipedia.getPage(title);
  			title = page.getTitle().getWikiStyleTitle().toLowerCase();
@@ -114,12 +113,11 @@ public class Entity {
      * @return
      */
     public double getEntityPopularity(String title){
-        Page page;
 		try {
 			page = wikipedia.getPage(title);
 			//初始化流行度
 	        popularity = page.getNumberOfInlinks();
-			logger.info(title+" popularity:"+popularity);
+//			logger.info(title+" popularity:"+popularity);
 	       return page.getNumberOfInlinks();
 		} catch (WikiApiException e) {
 			// TODO Auto-generated catch block

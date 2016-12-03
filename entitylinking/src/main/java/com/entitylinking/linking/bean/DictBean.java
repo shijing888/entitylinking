@@ -12,24 +12,24 @@ import java.util.Set;
  */
 public class DictBean {
 
-	private static Map<String, String> synonymsDict;
-	private static Map<String, HashSet<String>> ambiguationDict;
+	private  Map<String, String> synonymsDict;
+	private  Map<String, HashSet<String>> ambiguationDict;
 	private static Set<String> posDict;
 	private static Set<String> stopWordDict;
 	private static Map<String, Integer> dfDict;
 	private static Map<String, List<Mention>> mentionDict;
 	
-	public static Map<String, String> getSynonymsDict() {
+	public Map<String, String> getSynonymsDict() {
 		return synonymsDict;
 	}
-	public static void setSynonymsDict(Map<String, String> synonymsDict) {
-		DictBean.synonymsDict = synonymsDict;
+	public void setSynonymsDict(Map<String, String> synonymsDict) {
+		this.synonymsDict = synonymsDict;
 	}
-	public static Map<String, HashSet<String>> getAmbiguationDict() {
+	public Map<String, HashSet<String>> getAmbiguationDict() {
 		return ambiguationDict;
 	}
-	public static void setAmbiguationDict(Map<String, HashSet<String>> ambiguationDict) {
-		DictBean.ambiguationDict = ambiguationDict;
+	public void setAmbiguationDict(Map<String, HashSet<String>> ambiguationDict) {
+		this.ambiguationDict = ambiguationDict;
 	}
 	public static Set<String> getPosDict() {
 		return posDict;

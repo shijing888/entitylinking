@@ -230,7 +230,6 @@ public class EntityGraph {
 	 */
 	public double calEdgeWeight(String entity1,String entity2,String queryField1,
 			String queryField2,String indexDir){
-		
 		try {
 			String[] querys = new String[]{entity1,entity2};
 			String[] queryFields = new String[]{queryField2,queryField2};

@@ -73,21 +73,21 @@ public class NLPUtils {
 	public static void getTextMentionTask(Text text){
 		//mentions从xml中已经加载完成
         List<Mention> mentions = text.getEntityGraph().getMentions();
+        Parameters parameters = new Parameters();
+        DictBean dictBean = parameters.loadSurfaceFormDict();
         String content;
         int mentionOffset;
         int beginOffset;
         int endOffset;
         int textLen = text.getContent().split("\\s+").length;
-        int entityLen = 0;
         for(Mention mention:mentions){
         	logger.info("mention:"+mention.getMentionName());
         	//初始化mention tfidf
     		mention.setTfidfValue(CommonUtils.calTfidf(mention.getOccurCounts(), 
     				DictBean.getDfDict().get(mention.getMentionName()), textLen));
     		//获取候选实体
-    		List<Entity> candidateEntity = mention.obtainCandidate();
+    		List<Entity> candidateEntity = mention.obtainCandidate(dictBean);
     		mention.setCandidateEntity(candidateEntity);
-    		entityLen += candidateEntity.size();
     		//通过mention的offset及窗口来获取上下文
         	mentionOffset = mention.getMentionOffset();
         	if(mentionOffset - RELRWParameterBean.getContextWindow() < 0){
@@ -138,8 +138,6 @@ public class NLPUtils {
 				return arg0.getCandidateEntity().size() - arg1.getCandidateEntity().size();
 			}
 		});
-        logger.info("所有实体总数为:"+entityLen);
-        text.getEntityGraph().setEntityLen(entityLen);
 	}
 	
 	/**

@@ -1,13 +1,16 @@
 package com.entitylinking.task;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.junit.Test;
 
 import com.entitylinking.linking.LinkingKB;
 import com.entitylinking.linking.bean.DictBean;
@@ -17,7 +20,6 @@ import com.entitylinking.linking.bean.PathBean;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
 import com.entitylinking.utils.FileUtils;
-import com.entitylinking.utils.NormalizeMention;
 import com.entitylinking.utils.Parameters;
 
 /**
@@ -104,15 +106,26 @@ public class Main {
 //		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
 	}
 	
-	public void testEntity(String mention){
-		mention = NormalizeMention.getNormalizeMention(mention,true);
-		logger.info("mention:"+mention);
-		Mention mention2 = new Mention(mention);
-		List<Entity> candidateList = mention2.obtainCandidate();
-		logger.info(mention+" candidates size:"+ candidateList.size());
-		logger.info(mention+" candidates are:"+ StringUtils.join(candidateList, "\t"));
-		for(Entity entity:candidateList){
-			logger.info("candidate entity:"+entity.getEntityName());
+	@Test
+	public void test(){
+		List<Integer> list = new ArrayList<Integer>();
+		for(int i=0;i<10;i++){
+			list.add(i);
+		}
+		List<Integer> list2 = new ArrayList<>(list);
+		System.out.println("size:"+list2.size());
+		Collections.sort(list2,new Comparator<Integer>() {
+
+			@Override
+			public int compare(Integer o1, Integer o2) {
+				// TODO Auto-generated method stub
+				return o2 - o1;
+			}
+			
+		});
+		for(int i=0;i<list2.size();i++){
+			System.out.println(list2.get(i)+"\t"+ list.get(i));
 		}
 	}
+	
 }

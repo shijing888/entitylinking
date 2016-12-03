@@ -69,10 +69,18 @@ public class Text {
 		logger.info("获得mention的候选实体与上下文共花费:"+(time2 - time1)/60000.0);
 		/*该图中所有的实体*/
 		List<Entity> entityList = new ArrayList<>();
+		Set<String> entityNameSet = new HashSet<>();
 		for(Mention mention:this.entityGraph.getMentions()){
-			entityList.addAll(mention.getCandidateEntity());
+			for(Entity entity:mention.getCandidateEntity()){
+				if(!entityNameSet.contains(entity.getEntityName())){
+					entityList.add(entity);
+					entityNameSet.add(entity.getEntityName());
+				}
+			}
 		}
-		int entityLen = extendEntity(entityList);
+		logger.info("before extending entityList size:"+entityList.size());
+		System.gc();
+		int entityLen = extendEntity(entityList,entityNameSet);
 		this.entityGraph.setEntityLen(entityLen);
 		Entity[] entities = new Entity[entityLen];
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
@@ -86,7 +94,7 @@ public class Text {
 				entities[index] = candidateEntity.get(i);
 			}
 		}
-		logger.info("all entities size:"+entityLen);
+		logger.info("after extending entities size:"+entityLen);
 		logger.info("init entityGraph eitities");
 		//初始化实体图
 		this.entityGraph.setEntities(entities);
@@ -103,19 +111,24 @@ public class Text {
 		logger.info("计算转移概率矩阵花费:"+(time4 - time3)/60000.0);
 	}
 
-	public int extendEntity(List<Entity>entities){
+	/**
+	 * 对实体图进行一阶扩展
+	 * @param entities
+	 * @return
+	 */
+	public int extendEntity(List<Entity>entities,Set<String>entityNameSet){
 		int len = entities.size();
-		Set<String> entityNameSet = new HashSet<>();
-		List<Entity> entityList = new ArrayList<Entity>(len);
+		if(len <= 1){
+			return len;
+		}
+		List<Entity> entityList = new ArrayList<Entity>(entities);
 		BooleanClause.Occur[] flags=new BooleanClause.Occur[]{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
 		String[] queryFields = {RELRWParameterBean.getEntityRelationField3(),
 				RELRWParameterBean.getEntityRelationField3()};
 		String indexDir = PathBean.getEntityRelationPath();
 		Entity entity = new Entity();
-		int popularity = RELRWParameterBean.getPopularityThresh();
-		for(Entity entity2:entities){
-			entityNameSet.add(entity2.getEntityName());
-		}
+		int popularityThresh = RELRWParameterBean.getPopularityThresh();
+		double entityPopularity;
 		for(int i=0;i<len-1;i++){
 			for(int j=i+1;j<len;j++){
 				String[] querys = new String[]{entityList.get(i).getEntityName(),
@@ -124,9 +137,10 @@ public class Text {
 				for(String item:set){
 					item = NormalizeMention.getNormalizeMention(item, true);
 					if(!entityNameSet.contains(item)){
-						if(entity.getEntityPopularity(item) > popularity){
+						entityPopularity = entity.getEntityPopularity(item); 
+						if(entityPopularity > popularityThresh){
 							Entity entity2 = new Entity();
-							entity2.getEntityPageInfo(item);
+							entity2.setEntityName(item);
 							entities.add(entity2);
 						}
 						entityNameSet.add(item);

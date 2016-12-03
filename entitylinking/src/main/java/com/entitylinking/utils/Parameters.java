@@ -45,23 +45,27 @@ public class Parameters {
 	 * @return
 	 */
 	public void loadDictFromXML(){
-		if(PathBean.getSynonymsDictPath()!=null 
-				&& PathBean.getAmbiguationDictPath()!=null){
-			logger.info("加载词典开始！");
-			long time1 = System.currentTimeMillis();
-			DictBean.setSynonymsDict(loadSynonymsDict(PathBean.getSynonymsDictPath()));
-			DictBean.setAmbiguationDict(loadDisambiguationDict(
-					PathBean.getAmbiguationDictPath()));
-			long time2 = System.currentTimeMillis();
-			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
-			logger.info("SynonymsDict size:"+DictBean.getSynonymsDict().size());
-			logger.info("AmbiguationDict size:"+DictBean.getAmbiguationDict().size());
-		}
-		
 		DictBean.setPosDict(loadSetDict(PathBean.getPosDictPath()));
 		DictBean.setStopWordDict(loadSetDict(PathBean.getStopWordDictPath()));
 		DictBean.setDfDict(loadDfDict(PathBean.getDfDictPath()));
 		DictBean.setMentionDict(loadMentionDict(PathBean.getMentionDictPath()));
+	}
+	
+	public DictBean loadSurfaceFormDict(){
+		DictBean dictBean = new DictBean();
+		if(PathBean.getSynonymsDictPath()!=null 
+				&& PathBean.getAmbiguationDictPath()!=null){
+			logger.info("加载词典开始！");
+			long time1 = System.currentTimeMillis();
+			dictBean.setSynonymsDict(loadSynonymsDict(PathBean.getSynonymsDictPath()));
+			dictBean.setAmbiguationDict(loadDisambiguationDict(
+					PathBean.getAmbiguationDictPath()));
+			long time2 = System.currentTimeMillis();
+			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
+			logger.info("SynonymsDict size:"+dictBean.getSynonymsDict().size());
+			logger.info("AmbiguationDict size:"+dictBean.getAmbiguationDict().size());
+		}
+		return dictBean;
 	}
 	
 	/**

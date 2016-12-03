@@ -105,20 +105,20 @@ public class Mention {
 	 * @param mention
 	 * @return
 	 */
-	public List<Entity> obtainCandidate(){
+	public List<Entity> obtainCandidate(DictBean dictBean){
 		String mentionStr = NormalizeMention.getNormalizeMention(this.mentionName,true);
 		Set<String> candidateSet = new HashSet<>();
 		List<Entity> entities = new ArrayList<>();
 		//先从同义词典中寻找
-		if(DictBean.getSynonymsDict().containsKey(mentionStr)){
-			candidateSet.add(DictBean.getSynonymsDict().get(mentionStr));
+		if(dictBean.getSynonymsDict().containsKey(mentionStr)){
+			candidateSet.add(dictBean.getSynonymsDict().get(mentionStr));
 		}
 		//再从歧义词典中寻找
-		if(DictBean.getAmbiguationDict().containsKey(mentionStr)){
-			candidateSet.addAll(DictBean.getAmbiguationDict().get(mentionStr));
+		if(dictBean.getAmbiguationDict().containsKey(mentionStr)){
+			candidateSet.addAll(dictBean.getAmbiguationDict().get(mentionStr));
 		}
-		if(DictBean.getAmbiguationDict().containsKey(DictBean.getSynonymsDict().get(mentionStr))){
-			candidateSet.addAll(DictBean.getAmbiguationDict().get(DictBean.getSynonymsDict().get(mentionStr)));
+		if(dictBean.getAmbiguationDict().containsKey(dictBean.getSynonymsDict().get(mentionStr))){
+			candidateSet.addAll(dictBean.getAmbiguationDict().get(dictBean.getSynonymsDict().get(mentionStr)));
 		}
 		
 		//若候选本身为歧义，则将其歧义项加进来
@@ -175,8 +175,8 @@ public class Mention {
 			
 		}
 		
-		logger.info(mentionStr+"的candidateList size:"+entities.size());		
-		for(Entity entity:entities){
+		logger.info(mentionStr+"的candidateList size:"+entities3.size());		
+		for(Entity entity:entities3){
 			logger.info(mentionStr+"的candidate:"+ entity.getEntityName());
 		}
 	
