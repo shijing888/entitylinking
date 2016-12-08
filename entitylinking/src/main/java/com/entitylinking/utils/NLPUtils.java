@@ -80,11 +80,17 @@ public class NLPUtils {
         int beginOffset;
         int endOffset;
         int textLen = text.getContent().split("\\s+").length;
+        double tfidfValue;
         for(Mention mention:mentions){
         	logger.info("mention:"+mention.getMentionName());
         	//初始化mention tfidf
-    		mention.setTfidfValue(CommonUtils.calTfidf(mention.getOccurCounts(), 
-    				DictBean.getDfDict().get(mention.getMentionName()), textLen));
+        	tfidfValue = CommonUtils.calTfidf(mention.getOccurCounts(), 
+    				DictBean.getDfDict().get(mention.getMentionName()), textLen);
+        	logger.info("mention出现次数:"+mention.getOccurCounts());
+        	logger.info("textLen:"+textLen);
+        	logger.info("mention df:"+DictBean.getDfDict().get(mention.getMentionName()));
+        	logger.info(mention.getMentionName()+"的tfidf值为:"+tfidfValue);
+    		mention.setTfidfValue(tfidfValue);
     		//获取候选实体
     		List<Entity> candidateEntity = mention.obtainCandidate(dictBean);
     		mention.setCandidateEntity(candidateEntity);

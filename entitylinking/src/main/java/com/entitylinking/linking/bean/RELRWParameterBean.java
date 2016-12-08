@@ -19,6 +19,8 @@ public class RELRWParameterBean {
 	private static double gamma;
 	/**限制实体正文字符长度*/
 	private static int entityContentLen;
+	/**文档总数*/
+	private static int totalDocument;
 	/**候选实体剪枝阈值*/
 	private static int candidateEntityNumThresh;
 	/**流行度阈值*/
@@ -30,6 +32,12 @@ public class RELRWParameterBean {
 	private static String entityRelationField2;
 	private static String entityRelationField3;
 	
+	public static int getTotalDocument() {
+		return totalDocument;
+	}
+	public static void setTotalDocument(int totalDocument) {
+		RELRWParameterBean.totalDocument = totalDocument;
+	}
 	public static String getSourceFileDirPath() {
 		return sourceFileDirPath;
 	}

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
+import com.entitylinking.linking.bean.RELRWParameterBean;
 
 public class CommonUtils {
 
@@ -17,7 +18,7 @@ public class CommonUtils {
 	 * @return
 	 */
 	public static double calTfidf(int tf,int df,int len){
-		return tf * (Math.log(len/(double)df) + 1);
+		return (double)tf/len * (Math.log(RELRWParameterBean.getTotalDocument()/(double)df) + 1);
 	}
 	
 	/**

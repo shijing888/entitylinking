@@ -10,6 +10,7 @@ import com.entitylinking.utils.NLPUtils;
 import de.tudarmstadt.ukp.wikipedia.api.Page;
 import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
+import de.tudarmstadt.ukp.wikipedia.api.exception.WikiPageNotFoundException;
 
 /**
  * 实体的数据结构
@@ -83,11 +84,15 @@ public class Entity {
 	        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());
 	        }
 	        entityContext = NLPUtils.getEntityContext(content);
-		} catch (WikiApiException e) {
-			// TODO Auto-generated catch block
-			logger.info(title +" is not an entity!");
-			e.printStackTrace();
-		}
+		}catch (WikiPageNotFoundException e) {
+ 			// TODO Auto-generated catch block
+ 			logger.info(title +" is not found!");
+ 			e.printStackTrace();
+ 		}catch (WikiApiException e) {
+ 			// TODO Auto-generated catch block
+ 			logger.info(title +" is not an entity!");
+ 			e.printStackTrace();
+ 		}
     }
     
     /**
@@ -100,7 +105,11 @@ public class Entity {
  			page = wikipedia.getPage(title);
  			title = page.getTitle().getWikiStyleTitle().toLowerCase();
  	       return title;
- 		} catch (WikiApiException e) {
+ 		}catch (WikiPageNotFoundException e) {
+ 			// TODO Auto-generated catch block
+ 			logger.info(title +" is not found!");
+ 			e.printStackTrace();
+ 		}catch (WikiApiException e) {
  			// TODO Auto-generated catch block
  			logger.info(title +" is not an entity!");
  			e.printStackTrace();
@@ -119,11 +128,15 @@ public class Entity {
 	        popularity = page.getNumberOfInlinks();
 //			logger.info(title+" popularity:"+popularity);
 	       return page.getNumberOfInlinks();
-		} catch (WikiApiException e) {
-			// TODO Auto-generated catch block
-			logger.info(title +" is not an entity!");
-			e.printStackTrace();
-		}
+		}catch (WikiPageNotFoundException e) {
+ 			// TODO Auto-generated catch block
+ 			logger.info(title +" is not found!");
+ 			e.printStackTrace();
+ 		}catch (WikiApiException e) {
+ 			// TODO Auto-generated catch block
+ 			logger.info(title +" is not an entity!");
+ 			e.printStackTrace();
+ 		}
        return 0;
     }
 }

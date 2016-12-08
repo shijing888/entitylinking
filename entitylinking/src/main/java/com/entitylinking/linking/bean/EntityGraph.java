@@ -1,10 +1,12 @@
 package com.entitylinking.linking.bean;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -123,9 +125,9 @@ public class EntityGraph {
 			for(Entry<Mention, Entity>entry:this.disambiguationMap.entrySet()){
 				if(entry.getValue() != null){
 					important = entry.getKey().getTfidfValue();
-					polularity = 1;
+//					polularity = 1;
 					index = this.entityIndex.get(entry.getValue().getEntityName());
-					this.preferVectorOfDocument[index] = important * polularity;
+					this.preferVectorOfDocument[index] = important;
 				}
 			}
 		}else{
@@ -142,6 +144,17 @@ public class EntityGraph {
 		
 	}
 
+	/**
+	 * 对文档语义向量进行更新
+	 * @param mention
+	 * @param entity
+	 */
+	public void updatePreferVectorOfDocument(Mention mention, Entity entity){
+		int index = this.entityIndex.get(entity.getEntityName());
+		double important = mention.getTfidfValue();
+		this.preferVectorOfDocument[index] = important;
+	}
+	
 	public double[] getPreferVectorOfEntity() {
 		return preferVectorOfEntity;
 	}
@@ -274,6 +287,9 @@ public class EntityGraph {
 		RealMatrix transferMatrix = new Array2DRowRealMatrix(this.getTransferMatrix());
 		ArrayRealVector realVector;
 		ArrayRealVector preferRealVector = new ArrayRealVector(preferVector);
+		logger.info("初始向量:"+StringUtils.join(Arrays.asList(preferVector), "\t"));
+		long time1,time2;
+		time1 = System.currentTimeMillis();
 		do {
 			tempVector = transferMatrix.preMultiply(oldSignatureVector);
 			realVector = new ArrayRealVector(tempVector);
@@ -282,7 +298,9 @@ public class EntityGraph {
 			oldSignatureVector = newSignatureVector;
 			newSignatureVector = realVector.getDataRef();
 		} while (!isConvergence(oldSignatureVector, newSignatureVector));
-		
+		time2 = System.currentTimeMillis();
+		logger.info("收敛后的向量:"+StringUtils.join(Arrays.asList(newSignatureVector), "\t"));
+		logger.info("随机游走花费时间:"+(time2 - time1)/1000.0+"秒");
 		return newSignatureVector;
 	}
 	

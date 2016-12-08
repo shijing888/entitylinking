@@ -72,7 +72,7 @@ public class LinkingKB {
 						.equals(maxScoreEntity.getEntityName())){
 						mentionEntityMap.put(mention, maxScoreEntity);
 						entityGraph.setDisambiguationMap(mentionEntityMap);
-						entityGraph.setPreferVectorOfDocument(false);
+						entityGraph.updatePreferVectorOfDocument(mention, maxScoreEntity);
 						signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
 				}
 			}
@@ -105,13 +105,20 @@ public class LinkingKB {
 	public double calSemanticSimilarity(double[] signatureOfEntity, double[]signatureOfDocument){
 		double result = 0;
 		for(int i=0;i<signatureOfEntity.length;i++){
+			if(signatureOfEntity[i] == 0 || signatureOfDocument[i] < 0){
+				continue;
+			}
 			if(signatureOfDocument[i] == 0){
 				result += signatureOfEntity[i] * RELRWParameterBean.getGamma();
 			}else{
 				result += signatureOfEntity[i] * Math.log(signatureOfEntity[i] / signatureOfDocument[i]);
 			}
+//			logger.info(i+"\t"+result+"\t"+signatureOfEntity[i]+"\t"+signatureOfDocument[i]);
 		}
-		result = 1 / result;
+//		logger.info(result);
+		if(result > 0){
+			result = 1 / result;
+		}
 		logger.info(result);
 		return result;
 	}

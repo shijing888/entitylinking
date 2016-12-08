@@ -80,7 +80,8 @@ public class Text {
 		}
 		logger.info("before extending entityList size:"+entityList.size());
 		System.gc();
-		int entityLen = extendEntity(entityList,entityNameSet);
+//		int entityLen = extendEntity(entityList,entityNameSet);
+		int entityLen = entityList.size();
 		this.entityGraph.setEntityLen(entityLen);
 		Entity[] entities = new Entity[entityLen];
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
@@ -129,11 +130,22 @@ public class Text {
 		Entity entity = new Entity();
 		int popularityThresh = RELRWParameterBean.getPopularityThresh();
 		double entityPopularity;
+		long time1,time2,time3,time4;
+//测试使用
+len = 11;		
 		for(int i=0;i<len-1;i++){
+			time1 = System.currentTimeMillis();
 			for(int j=i+1;j<len;j++){
 				String[] querys = new String[]{entityList.get(i).getEntityName(),
 						entityList.get(j).getEntityName()};
+				time3 = System.currentTimeMillis();
 				Set<String> set = IndexFile.coocurenceEntities(querys, queryFields, flags, indexDir);
+				time4 = System.currentTimeMillis();
+				if(j == 1){
+					logger.info("查询共现花费时间:"+(time4 - time3));
+				}
+				logger.info(i+"\t"+j+"\t的共现实体有:"+set.size());
+				time3 = System.currentTimeMillis();
 				for(String item:set){
 					item = NormalizeMention.getNormalizeMention(item, true);
 					if(!entityNameSet.contains(item)){
@@ -146,7 +158,12 @@ public class Text {
 						entityNameSet.add(item);
 					}
 				}
+				time4 = System.currentTimeMillis();
+				logger.info(i+"\t"+j+"\t共现实体查询流行度花费时间:"+(time4 - time3)/60000.0);
 			}
+			time2 = System.currentTimeMillis();
+			logger.info("i = "+i + "花费时间:" + (time2 - time1)/60000.0);
+			logger.info("i = "+i + "实体总数:" + entityList.size());
 		}
 		
 		return entities.size();
