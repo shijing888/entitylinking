@@ -11,6 +11,7 @@ public class PageBean {
 	private String name;
 	private String text;
 	private int isDisambiguation;
+	private int inDgree;
 	
 	public PageBean(String name, String text){
 		this.name = name;
@@ -19,6 +20,12 @@ public class PageBean {
 	
 	public PageBean(String name){
 		this.name = name;
+	}
+	
+	public PageBean(String name, String text, int inDgree){
+		this.name = name;
+		this.text = text;
+		this.inDgree = inDgree;
 	}
 	
 	public Long getId() {
@@ -50,6 +57,13 @@ public class PageBean {
 	}
 	public void setIsDisambiguation(int isDisambiguation) {
 		this.isDisambiguation = isDisambiguation;
+	}
+	public int getInDgree() {
+		return inDgree;
+	}
+
+	public void setInDgree(int inDgree) {
+		this.inDgree = inDgree;
 	}
 	
 	

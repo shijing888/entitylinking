@@ -13,7 +13,6 @@ import org.apache.lucene.search.BooleanClause;
 import com.entitylinking.lucene.IndexFile;
 import com.entitylinking.task.Main;
 import com.entitylinking.utils.NLPUtils;
-import com.entitylinking.utils.NormalizeMention;
 
 /**
  * 文本的数据结构
@@ -70,32 +69,40 @@ public class Text {
 		/*该图中所有的实体*/
 		List<Entity> entityList = new ArrayList<>();
 		Set<String> entityNameSet = new HashSet<>();
-		for(Mention mention:this.entityGraph.getMentions()){
-			for(Entity entity:mention.getCandidateEntity()){
-				if(!entityNameSet.contains(entity.getEntityName())){
-					entityList.add(entity);
-					entityNameSet.add(entity.getEntityName());
-				}
-			}
-		}
-		logger.info("before extending entityList size:"+entityList.size());
-		System.gc();
-//		int entityLen = extendEntity(entityList,entityNameSet);
-		int entityLen = entityList.size();
-		this.entityGraph.setEntityLen(entityLen);
-		Entity[] entities = new Entity[entityLen];
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
-		int index = 0;
 		List<Entity> candidateEntity;
+		String entityName;
+		//获得候选实体list
 		for(Mention mention:this.entityGraph.getMentions()){
 			candidateEntity = mention.getCandidateEntity();
 			mention.setTotalPopularity();
-			for(int i=0;i<candidateEntity.size() && index<entityLen;i++,index++){
-				entityIndex.put(candidateEntity.get(i).getEntityName(), index);
-				entities[index] = candidateEntity.get(i);
+			
+			for(int i=0;i<candidateEntity.size();i++){
+				entityName = candidateEntity.get(i).getEntityName();
+				if(!entityNameSet.contains(entityName)){
+					entityList.add(candidateEntity.get(i));
+					entityNameSet.add(entityName);
+				}
 			}
+			
 		}
-		logger.info("after extending entities size:"+entityLen);
+		
+		logger.info("before extending entityList size:"+entityList.size());
+		int candidateEntityLen = entityList.size();
+		//对候选实体进行扩展，构成实体图
+		int extendEntityLen = extendEntity(entityList,entityNameSet);
+		this.entityGraph.setEntityLen(extendEntityLen);
+		this.entityGraph.setCandidateEntityLen(candidateEntityLen);
+		Entity[] entities = new Entity[extendEntityLen];
+		//将list转化成数组保存实体
+		for(int i=0;i<extendEntityLen;i++){
+			if(i<candidateEntityLen){
+				entityIndex.put(entityList.get(i).getEntityName(), i);
+			}
+			entities[i] = entityList.get(i);
+		}
+		
+		logger.info("after extending entities size:"+extendEntityLen);
 		logger.info("init entityGraph eitities");
 		//初始化实体图
 		this.entityGraph.setEntities(entities);
@@ -127,45 +134,42 @@ public class Text {
 		String[] queryFields = {RELRWParameterBean.getEntityRelationField3(),
 				RELRWParameterBean.getEntityRelationField3()};
 		String indexDir = PathBean.getEntityRelationPath();
-		Entity entity = new Entity();
 		int popularityThresh = RELRWParameterBean.getPopularityThresh();
-		double entityPopularity;
-		long time1,time2,time3,time4;
-//测试使用
-len = 11;		
+		long time1,time2;
+		time1 = System.currentTimeMillis();
+		
 		for(int i=0;i<len-1;i++){
-			time1 = System.currentTimeMillis();
 			for(int j=i+1;j<len;j++){
 				String[] querys = new String[]{entityList.get(i).getEntityName(),
 						entityList.get(j).getEntityName()};
-				time3 = System.currentTimeMillis();
 				Set<String> set = IndexFile.coocurenceEntities(querys, queryFields, flags, indexDir);
-				time4 = System.currentTimeMillis();
-				if(j == 1){
-					logger.info("查询共现花费时间:"+(time4 - time3));
-				}
 				logger.info(i+"\t"+j+"\t的共现实体有:"+set.size());
-				time3 = System.currentTimeMillis();
 				for(String item:set){
-					item = NormalizeMention.getNormalizeMention(item, true);
-					if(!entityNameSet.contains(item)){
-						entityPopularity = entity.getEntityPopularity(item); 
-						if(entityPopularity > popularityThresh){
-							Entity entity2 = new Entity();
-							entity2.setEntityName(item);
-							entities.add(entity2);
+					String[] itemArray = item.split("\t");
+					if(itemArray.length == 2 ){
+						try {
+							if(!entityNameSet.contains(itemArray[0])){
+								if(Integer.parseInt(itemArray[1]) >= popularityThresh){
+									Entity entity = new Entity();
+									entity.setEntityName(itemArray[0]);
+									entities.add(entity);
+								}
+							}
+							entityNameSet.add(itemArray[0]);
+						} catch (Exception e) {
+							// TODO: handle exception
+							logger.info("实体格式错误:"+item);
 						}
-						entityNameSet.add(item);
+						
 					}
 				}
-				time4 = System.currentTimeMillis();
-				logger.info(i+"\t"+j+"\t共现实体查询流行度花费时间:"+(time4 - time3)/60000.0);
 			}
-			time2 = System.currentTimeMillis();
-			logger.info("i = "+i + "花费时间:" + (time2 - time1)/60000.0);
-			logger.info("i = "+i + "实体总数:" + entityList.size());
+			
+			
+			logger.info("i = "+i + "扩展后实体总数:" + entities.size());
 		}
-		
+		time2 = System.currentTimeMillis();
+		logger.info("扩展实体花费时间:" + (time2 - time1)/60000.0);
 		return entities.size();
 	}
 	

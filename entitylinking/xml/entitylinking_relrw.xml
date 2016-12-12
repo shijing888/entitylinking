@@ -16,7 +16,7 @@
 		<!-- 候选实体剪枝阈值 -->
 		<candidateEntityNumThresh>10</candidateEntityNumThresh>
 		<!-- 流行度阈值 -->
-		<popularityThresh>200</popularityThresh>
+		<popularityThresh>500</popularityThresh>
 		<!-- 实体共现次数阈值 -->
 		<cooccurenceThresh>5</cooccurenceThresh>
 	</paramenter>

@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -30,6 +31,8 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.junit.Test;
 
+import com.entitylinking.linking.bean.RELRWParameterBean;
+
 /**
  * 文件索引操作
  * @author HP
@@ -37,7 +40,13 @@ import org.junit.Test;
  */
 public class IndexFile {
 
-	private static final int MAXTOP = 999;
+	static Logger logger = Logger.getLogger(IndexFile.class);
+	private static final int MAXCoocurence = 999;
+	private static final int MAXSingleOccurence = 99999;
+	private static String[] cooccurenceQueryFields = new String[]{RELRWParameterBean.getEntityRelationField3(),
+													RELRWParameterBean.getEntityRelationField3()};
+	private static BooleanClause.Occur[] flags = new BooleanClause.Occur[]
+													{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
 	public static void main(String args[]){
 		
 		//索引文件夹
@@ -146,7 +155,7 @@ public class IndexFile {
 			Analyzer analyzer = new StandardAnalyzer();
 			//5. 创建查询解析器，解析query
 			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
-			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXTOP).scoreDocs;
+			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXCoocurence).scoreDocs;
 			for(ScoreDoc scoreDoc:scoreDocs){
 				entitySet.addAll(Arrays.asList(indexSearcher.doc(scoreDoc.doc)
 						.get(queryFields[0]).split("\t\\|\t")));
@@ -165,19 +174,50 @@ public class IndexFile {
 	} 
 	
 	/**
+	 * 查询某个实体的出现次数
+	 * @param queryString
+	 * @param indexDir
+	 * @return
+	 */
+	public static int countSingleOccurence(String queryString, String indexDir){
+		try {
+			//1. 获取索引文件目录
+			Directory directory = FSDirectory.open(Paths.get(indexDir));
+			//2. 创建IndexReader对象，读取索引文件
+			IndexReader indexReader = DirectoryReader.open(directory);
+			//3. 创建索引查询器，查询索引文件
+			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+			//4. 实例化分析器
+			Analyzer analyzer = new StandardAnalyzer();
+			//5. 创建查询解析器，解析query
+			QueryParser queryParser = new QueryParser("entityRelationValue", analyzer);
+			//6. 解析查询字符串获取查询对象
+			Query query = queryParser.parse(queryString);
+			TopDocs topDocs = indexSearcher.search(query,MAXSingleOccurence);
+			//7. 处理查询结果
+			if(topDocs != null){
+				return topDocs.scoreDocs.length;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return 0;
+	}
+	/**
 	 * 通过查询共现次数来获取实体图中边的权重
 	 * @param querys
 	 * @param queryFields
 	 * @param indexDir
 	 * @return
 	 */
-	public static int countCooccurence(String[] querys,String[] queryFields, BooleanClause.Occur[] flags, String indexDir){
+	public static int countCooccurence(String[] querys, String indexDir){
 		int count = 0;
 		if(querys.length == 2){
 			querys[0] = QueryParser.escape(querys[0]);
 			querys[1] = QueryParser.escape(querys[1]);
 		}
-	
 		try {
 			//1. 获取索引文件目录
 			Directory directory;
@@ -189,12 +229,13 @@ public class IndexFile {
 			//4. 实例化分析器
 			Analyzer analyzer = new StandardAnalyzer();
 			//5. 创建查询解析器，解析query
-			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
+			Query query = MultiFieldQueryParser.parse(querys, cooccurenceQueryFields, flags,analyzer);
 //			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXTOP).scoreDocs;
 //			for(ScoreDoc scoreDoc:scoreDocs){
 //				System.out.println(indexSearcher.doc(scoreDoc.doc).get(queryFields[0]));
 //			}
-			count = indexSearcher.search(query, MAXTOP).scoreDocs.length;
+			count = indexSearcher.search(query, MAXCoocurence).scoreDocs.length;
+//			logger.info(querys[0]+"\t"+querys[1]+"\t共现次数:"+count);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -206,11 +247,11 @@ public class IndexFile {
 	@Test
 	public void test(){
 		String[] querys = {"greens/green_party_usa","green"};
-		BooleanClause.Occur[] flags=new BooleanClause.Occur[]{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
-		String[] queryFields = {"entityRelationValue","entityRelationValue"};
 		String indexDir = "./index/entityRelationIndex";
+		String qString ="china";
 //		coocurenceEntities(querys, queryFields,flags, indexDir);
-		int count = countCooccurence(querys, queryFields, flags,indexDir);
+//		int count = countCooccurence(querys, indexDir);
+		int count = countSingleOccurence(qString, indexDir);
 		System.out.println(count);
 //		Document document = queryDocument(ss.replaceAll("/", "//"), "entityRelationValue", "./index/entityRelationIndex");
 //		System.out.println(document.get("entityRelationValue"));

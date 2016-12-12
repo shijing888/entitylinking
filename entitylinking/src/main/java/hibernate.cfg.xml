@@ -17,6 +17,7 @@
 	<property name="myeclipse.connection.profile">entitylinking</property>
 	-->
 	<mapping resource="com/entitylinking/wiki/bean/PageBean.hbm.xml" />
+	<mapping resource="com/entitylinking/wiki/bean/PageInLinksBean.hbm.xml" />
 	<mapping resource="com/entitylinking/wiki/bean/PageMapLineBean.hbm.xml" />
 
 

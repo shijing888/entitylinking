@@ -57,7 +57,7 @@ public class Main {
 			File[] fileList = fileDir.listFiles();
 			if(fileList == null || fileList.length == 0)
 				return null;
-			RELRWParameterBean.setTotalDocument(fileList.length);
+			RELRWParameterBean.setTotalDocument(41);
 			String textContent;
 			for(File file:fileList){
 				String filePath = file.getAbsolutePath();

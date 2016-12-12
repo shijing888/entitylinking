@@ -21,5 +21,7 @@
         <property name="isDisambiguation" type="java.lang.Integer">
             <column name="isDisambiguation" />
         </property>
+       
     </class>
+    
 </hibernate-mapping>

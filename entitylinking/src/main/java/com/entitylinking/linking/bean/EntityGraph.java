@@ -1,18 +1,17 @@
 package com.entitylinking.linking.bean;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.BooleanClause;
 
 import com.entitylinking.lucene.IndexFile;
 
@@ -25,6 +24,8 @@ public class EntityGraph {
 	static Logger logger = Logger.getLogger(EntityGraph.class);
 	/*所有实体的size*/
 	private int entityLen;
+	/*候选实体的size*/
+	private int candidateEntityLen;
 	/*该图中所有的实体*/
 	private Entity[] entities;
 	/*该图中所有的mention*/
@@ -73,6 +74,12 @@ public class EntityGraph {
 		this.entityLen = len;
 	}
 
+	public int getCandidateEntityLen() {
+		return candidateEntityLen;
+	}
+	public void setCandidateEntityLen(int candidateEntityLen) {
+		this.candidateEntityLen = candidateEntityLen;
+	}
 	public Map<Mention, Entity> getDisambiguationMap() {
 		return disambiguationMap;
 	}
@@ -217,17 +224,17 @@ public class EntityGraph {
 	public void calTransferMatrix(){
 		double weight= 0;
 		this.transferMatrix = new double[entityLen][entityLen];
-		for(int i=0;i<entityLen;i++){
+		String[] queryFields = new String[]{RELRWParameterBean.getEntityRelationField1(),
+					RELRWParameterBean.getEntityRelationField2(),RELRWParameterBean.getEntityRelationField3()};
+		for(int i=0;i<candidateEntityLen;i++){
 			logger.info("i = "+i);
 			for(int j=0;j<entityLen;j++){
 				weight = calEdgeWeight(entities[i].getEntityName(), 
 						entities[j].getEntityName(), 
-						RELRWParameterBean.getEntityRelationField2(),
-						RELRWParameterBean.getEntityRelationField3(), PathBean.getEntityRelationPath());
+						queryFields, PathBean.getEntityRelationPath());
 				transferMatrix[i][j] = weight;
-//				if(weight > 0){
-//					logger.info(i+"\t"+j+"\t的转移权重:"+weight);
-//				}
+//				logger.info(i+"\t"+entities[i].getEntityName()+"\t"+j+"\t"+entities[j].getEntityName()
+//						+"\t转移权重:"+weight);
 			}
 		}
 	}
@@ -241,30 +248,25 @@ public class EntityGraph {
 	 * @param indexDir
 	 * @return
 	 */
-	public double calEdgeWeight(String entity1,String entity2,String queryField1,
-			String queryField2,String indexDir){
+	public double calEdgeWeight(String entity1,String entity2,String[] queryFields,String indexDir){
 		try {
 			String[] querys = new String[]{entity1,entity2};
-			String[] queryFields = new String[]{queryField2,queryField2};
-			BooleanClause.Occur[] flags = new BooleanClause.Occur[]
-					{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
-			int count = IndexFile.countCooccurence(querys, queryFields, flags,indexDir);
+			int count = IndexFile.countCooccurence(querys,indexDir);
 			if(count < RELRWParameterBean.getCooccurenceThresh()){
 				return 0;
 			}
-			Document document = IndexFile.queryDocument(entity1, queryField2, indexDir);
-			String[] relateEntity = document.get(queryField2).split("\t\\|\t");
-			int outEntityCounts = 0;
-//			outEntityCounts = Integer.parseInt(document.get(queryField1));
-			for(String item:relateEntity){
-				querys = new String[]{entity1,item};
-				outEntityCounts += IndexFile.countCooccurence(querys, queryFields, flags,indexDir);
-			}
-			if(outEntityCounts > 0 && count <= outEntityCounts){
-//				logger.info("实体"+entity1+"与实体"+entity2+" 共现次数:"+count);
-//				logger.info("与实体 "+entity1+" 有关的其他实体所有共现次数:"+outEntityCounts);
-				return count / (double)outEntityCounts;
-			}
+			int singleCount = IndexFile.countSingleOccurence(entity1, indexDir);
+//			Document document = IndexFile.queryDocument(entity1, queryFields[0], indexDir);
+//			String[] relateEntity = document.get(queryFields[2]).split("\t\\|\t");
+//			int outEntityCounts = Integer.parseInt(document.get(queryFields[1]));
+//			int outEntityCounts = 0;
+//			for(String item:relateEntity){
+//				querys = new String[]{entity1,item};
+//				outEntityCounts += IndexFile.countCooccurence(querys, indexDir);
+//			}
+//			logger.info("实体"+entity1+"与实体"+entity2+" 共现次数:"+count);
+//			logger.info("与实体 "+entity1+" 有关的其他实体所有共现次数:"+outEntityCounts);
+			return count / (double)singleCount;
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -287,7 +289,7 @@ public class EntityGraph {
 		RealMatrix transferMatrix = new Array2DRowRealMatrix(this.getTransferMatrix());
 		ArrayRealVector realVector;
 		ArrayRealVector preferRealVector = new ArrayRealVector(preferVector);
-		logger.info("初始向量:"+StringUtils.join(Arrays.asList(preferVector), "\t"));
+		logger.info("初始向量:"+StringUtils.join(ArrayUtils.toObject(preferVector), "\t"));
 		long time1,time2;
 		time1 = System.currentTimeMillis();
 		do {
@@ -299,7 +301,7 @@ public class EntityGraph {
 			newSignatureVector = realVector.getDataRef();
 		} while (!isConvergence(oldSignatureVector, newSignatureVector));
 		time2 = System.currentTimeMillis();
-		logger.info("收敛后的向量:"+StringUtils.join(Arrays.asList(newSignatureVector), "\t"));
+		logger.info("收敛后的向量:"+StringUtils.join(ArrayUtils.toObject(newSignatureVector), "\t"));
 		logger.info("随机游走花费时间:"+(time2 - time1)/1000.0+"秒");
 		return newSignatureVector;
 	}
