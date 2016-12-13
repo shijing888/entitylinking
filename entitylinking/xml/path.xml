@@ -9,8 +9,9 @@
 		<df>./dict/df.txt</df>
 		<mentionDict>./data/ace2004/ace2004.xml</mentionDict>
 	</dictPath>
-	<!-- 参数配置文件路径 -->
+	<!-- 文件路径 -->
 	<relPath>
+		<resultDir>./data/result/ace2004</resultDir>
 		<relParameterPath>./xml/entitylinking_relrw.xml</relParameterPath>
 	</relPath>
 	<!-- 索引文件夹路径 -->

@@ -113,6 +113,7 @@ public class Parameters {
 				PathBean.setMentionDictPath(element.elementText("mentionDict"));
 			}else if(element.getName().equals("relPath")){//robust 实体链接方法参数
 				PathBean.setRelParameterPath(element.elementText("relParameterPath"));
+				PathBean.setResultDirPath(element.elementText("resultDir"));
 			}else if(element.getName().equals("indexDirPath")){//索引文件路径
 				PathBean.setEntityRelationPath(element.elementText("entityRelationPath"));
 			}
@@ -331,6 +332,13 @@ public class Parameters {
 							element.elementText("popularityThresh")));
 					RELRWParameterBean.setCooccurenceThresh(Integer.parseInt(
 							element.elementText("cooccurenceThresh")));
+					RELRWParameterBean.setSemanticSimWeight(Double.parseDouble(
+							element.elementText("semanticSimWeight")));
+					RELRWParameterBean.setContextSimWeight(Double.parseDouble(
+							element.elementText("contextSimWeight")));
+					RELRWParameterBean.setPopularityWeight(Double.parseDouble(
+							element.elementText("popularityWeight")));
+					RELRWParameterBean.setNilThres(Double.parseDouble(element.elementText("nilThres")));
 				}else if(element.getName().equals("indexFields")){
 					List<Element> subElements = element.elements();
 					for(Element subElement:subElements){

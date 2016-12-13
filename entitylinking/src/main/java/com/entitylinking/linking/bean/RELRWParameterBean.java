@@ -27,6 +27,14 @@ public class RELRWParameterBean {
 	private static int popularityThresh;
 	/**实体共现次数阈值*/
 	private static int cooccurenceThresh;
+	/**语义相似性权值*/
+	private static double semanticSimWeight;
+	/**上下文相似性权值*/
+	private static double contextSimWeight;
+	/**先验权值*/
+	private static double popularityWeight;
+	/**空值阈值*/
+	private static double nilThres;
 	/**实体关系域*/
 	private static String entityRelationField1;
 	private static String entityRelationField2;
@@ -80,6 +88,24 @@ public class RELRWParameterBean {
 	public static void setCandidateEntityNumThresh(int candidateEntityNumThresh) {
 		RELRWParameterBean.candidateEntityNumThresh = candidateEntityNumThresh;
 	}
+	public static double getSemanticSimWeight() {
+		return semanticSimWeight;
+	}
+	public static void setSemanticSimWeight(double semanticSimWeight) {
+		RELRWParameterBean.semanticSimWeight = semanticSimWeight;
+	}
+	public static double getContextSimWeight() {
+		return contextSimWeight;
+	}
+	public static void setContextSimWeight(double contextSimWeight) {
+		RELRWParameterBean.contextSimWeight = contextSimWeight;
+	}
+	public static double getPopularityWeight() {
+		return popularityWeight;
+	}
+	public static void setPopularityWeight(double popularityWeight) {
+		RELRWParameterBean.popularityWeight = popularityWeight;
+	}
 	public static String getEntityRelationField1() {
 		return entityRelationField1;
 	}
@@ -109,6 +135,12 @@ public class RELRWParameterBean {
 	}
 	public static void setCooccurenceThresh(int cooccurenceThresh) {
 		RELRWParameterBean.cooccurenceThresh = cooccurenceThresh;
+	}
+	public static double getNilThres() {
+		return nilThres;
+	}
+	public static void setNilThres(double nilThres) {
+		RELRWParameterBean.nilThres = nilThres;
 	}
 	
 }

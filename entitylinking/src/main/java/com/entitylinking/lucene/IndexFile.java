@@ -128,7 +128,7 @@ public class IndexFile {
 			Query query = queryParser.parse(queryString);
 			TopDocs topDocs = indexSearcher.search(query,1);
 			//7. 处理查询结果
-			if(topDocs != null){
+			if(topDocs != null && topDocs.scoreDocs.length > 0){
 				return indexSearcher.doc(topDocs.scoreDocs[0].doc);
 			}
 			
@@ -246,7 +246,7 @@ public class IndexFile {
 	
 	@Test
 	public void test(){
-		String[] querys = {"greens/green_party_usa","green"};
+//		String[] querys = {"greens/green_party_usa","green"};
 		String indexDir = "./index/entityRelationIndex";
 		String qString ="china";
 //		coocurenceEntities(querys, queryFields,flags, indexDir);

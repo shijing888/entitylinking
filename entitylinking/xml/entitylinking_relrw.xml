@@ -19,6 +19,14 @@
 		<popularityThresh>500</popularityThresh>
 		<!-- 实体共现次数阈值 -->
 		<cooccurenceThresh>5</cooccurenceThresh>
+		<!-- 语义相似性权值 -->
+		<semanticSimWeight>0.3</semanticSimWeight>
+		<!-- 上下文相似性权值 -->
+		<contextSimWeight>0.3</contextSimWeight>
+		<!-- 先验权值 -->
+		<popularityWeight>0.4</popularityWeight>
+		<!-- 空值阈值 -->
+		<nilThres>0.2</nilThres>
 	</paramenter>
 	<indexFields>
 		<!-- 实体共现关系域 -->

@@ -35,10 +35,14 @@ public class LinkingKB {
 		double[] signatureOfDocument;
 		double[] signatureOfEntity;
 		double[] preferEntityVector = null;
+		
+		double semanticSimWeight = RELRWParameterBean.getSemanticSimWeight();
+		double contextSimWeight = RELRWParameterBean.getContextSimWeight();
+		double popularityWeight = RELRWParameterBean.getPopularityWeight();
+		
 		//获取初始文档偏好向量
 		signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
-		//用于保存实体的score
-//		Map<Entity, Double> entityScoreMap = new HashMap<Entity, Double>();
+
 		for(Mention mention:entityGraph.getMentions()){
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
 				mentionEntityMap.put(mention, null);
@@ -55,13 +59,17 @@ public class LinkingKB {
 					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
 					logger.info("候选实体"+entity.getEntityName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfEntity)), "\t"));
-					logger.info("  文档"+entity.getEntityName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfDocument)), "\t"));
+					logger.info("  文档"+text.getTextName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfDocument)), "\t"));
 					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"与文档的语义相似度为:");
 					score = Math.log(1+calSemanticSimilarity(signatureOfEntity, signatureOfDocument));
+					if(score > 1){
+						score =1;
+					}
+					score *= semanticSimWeight;
 					logger.info(mention.getMentionName()+"与候选实体"+entity.getEntityName()+"的局部相容性为:");
-					score += Math.log(1+calLocalSimilarity(mention, candidateList.get(i)));
+					score += contextSimWeight * Math.log(1+calLocalSimilarity(mention, candidateList.get(i)));
 					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的流行度得分为:");
-					score += Math.log(1+calPopularityScore(entity.getPopularity(), mention.getTotalPopularity()));
+					score += popularityWeight * Math.log(1+calPopularityScore(entity.getPopularity(), mention.getTotalPopularity()));
 					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的总得分为:"+score);
 					entity.setScore(score);
 				}
@@ -94,7 +102,11 @@ public class LinkingKB {
 				maxEntity = entity;
 			}
 		}
-		return maxEntity;
+		if(max >= RELRWParameterBean.getNilThres()){
+			return maxEntity;
+		}else{
+			return null;
+		}
 	}
 	/**
 	 * 计算语义相似度

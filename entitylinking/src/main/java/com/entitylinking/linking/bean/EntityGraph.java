@@ -255,9 +255,12 @@ public class EntityGraph {
 			if(count < RELRWParameterBean.getCooccurenceThresh()){
 				return 0;
 			}
-			int singleCount = IndexFile.countSingleOccurence(entity1, indexDir);
-//			Document document = IndexFile.queryDocument(entity1, queryFields[0], indexDir);
-//			String[] relateEntity = document.get(queryFields[2]).split("\t\\|\t");
+//			int singleCount = IndexFile.countSingleOccurence(entity1, indexDir);
+			Document document = IndexFile.queryDocument(entity1, queryFields[0], indexDir);
+			String[] relateEntity = document.get(queryFields[2]).split("\t\\|\t");
+			int singleCount = 200 * relateEntity.length;
+			if(count > singleCount)
+				return 1;
 //			int outEntityCounts = Integer.parseInt(document.get(queryFields[1]));
 //			int outEntityCounts = 0;
 //			for(String item:relateEntity){

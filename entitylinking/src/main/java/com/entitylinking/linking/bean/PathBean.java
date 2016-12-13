@@ -18,6 +18,8 @@ public class PathBean {
 	private static String entityRelationPath;
 	/**mention集合的xml文件*/
 	private static String mentionDictPath;
+	/**实体链接结果文件夹*/
+	private static String resultDirPath;
 	public static String getSynonymsDictPath() {
 		return synonymsDictPath;
 	}
@@ -50,6 +52,12 @@ public class PathBean {
 	}
 	public static String getRelParameterPath() {
 		return relParameterPath;
+	}
+	public static String getResultDirPath() {
+		return resultDirPath;
+	}
+	public static void setResultDirPath(String resultDirPath) {
+		PathBean.resultDirPath = resultDirPath;
 	}
 	public static void setRelParameterPath(String relParameterPath) {
 		PathBean.relParameterPath = relParameterPath;
