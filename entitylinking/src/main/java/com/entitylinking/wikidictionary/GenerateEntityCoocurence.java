@@ -14,8 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+//import org.apache.log4j.Logger;
+//import org.apache.log4j.PropertyConfigurator;
 
 /**
  * 用于生成实体之间的关系
@@ -26,13 +26,13 @@ public class GenerateEntityCoocurence {
 
 	/**实体入度词典*/
 	private Map<String, Integer> entityCoocurence = new HashMap<String, Integer>();
-	static Logger logger = Logger.getLogger(GenerateEntityCoocurence.class);
-	static{
-		PropertyConfigurator.configure("log4j.properties");
-	}
+//	static Logger logger = Logger.getLogger(GenerateEntityCoocurence.class);
+//	static{
+//		PropertyConfigurator.configure("log4j.properties");
+//	}
 	public static void main(String args[]){
 		String rPath = "./dict/entityRelation4.txt";
-		String wPath = "./dict/coEntitiesCount.txt";
+		String 	wPath = "./dict/coEntitiesCount/coEntitiesCount_";
 		GenerateEntityCoocurence generateEntityRelation = new GenerateEntityCoocurence();
 		generateEntityRelation.countCoocurence(rPath, wPath);
 	}
@@ -46,7 +46,7 @@ public class GenerateEntityCoocurence {
 			StringBuilder str3 = new StringBuilder();
 			String[] alphabet = new String[]{"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q",
 					"r","s","t","u","v","w","x","y","z"};
-			wPath = "./dict/coEntitiesCount/coEntitiesCount_";
+		
 			StringBuilder stringBuilder = new StringBuilder();
 			for(int m=0;m<alphabet.length;m++){
 				for(int n=m;n<alphabet.length;n++){
@@ -105,7 +105,7 @@ public class GenerateEntityCoocurence {
 	}
 	
 	public void saveCoEntitiesDict(String path){
-		logger.info("持久化到本地文件begin！");
+//		logger.info("持久化到本地文件begin！");
 		if(entityCoocurence.size() > 0){
 			File file = new File(path);
 			if(!file.exists()){

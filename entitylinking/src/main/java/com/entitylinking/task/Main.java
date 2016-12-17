@@ -87,12 +87,10 @@ public class Main {
 						.getDisambiguationMap().entrySet()){
 					sBuilder.append(entry.getKey().getMentionName()).append("\t")
 							.append(entry.getKey().getObjectEntity()).append("\t");
-					if(entry.getValue() == null){
-						sBuilder.append("nil");
-					}else{
-						sBuilder.append(entry.getValue().getEntityName()).append("\t").append(entry.getValue().getScore());
-					}
-					sBuilder.append("\t");		
+				
+					sBuilder.append(entry.getValue().getEntityName()).append("\t").append(entry.getValue().getScore());
+					
+					sBuilder.append("\n");		
 
 				}
 				logger.info(sBuilder.toString());

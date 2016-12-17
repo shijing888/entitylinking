@@ -14,7 +14,7 @@
 		<!-- 限制实体正文字符长度 -->
 		<entityContentLen>1000</entityContentLen>
 		<!-- 候选实体剪枝阈值 -->
-		<candidateEntityNumThresh>10</candidateEntityNumThresh>
+		<candidateEntityNumThresh>40</candidateEntityNumThresh>
 		<!-- 流行度阈值 -->
 		<popularityThresh>500</popularityThresh>
 		<!-- 实体共现次数阈值 -->
@@ -28,6 +28,10 @@
 		<!-- 空值阈值 -->
 		<nilThres>0.2</nilThres>
 	</paramenter>
+	<constant>
+		<!-- 空实体链接 -->
+		<nil>nil</nil>
+	</constant>
 	<indexFields>
 		<!-- 实体共现关系域 -->
 		<entityRelationFields>

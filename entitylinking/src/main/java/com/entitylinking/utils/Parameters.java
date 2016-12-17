@@ -351,6 +351,9 @@ public class Parameters {
 									subElement.elementText("field3"));
 						}
 					}
+				}else if(element.getName().equals("constant")){
+							RELRWParameterBean.setEntityRelationField1(
+									element.elementText("nil"));
 				}
 				
 			}

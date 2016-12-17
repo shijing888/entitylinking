@@ -35,11 +35,19 @@ public class RELRWParameterBean {
 	private static double popularityWeight;
 	/**空值阈值*/
 	private static double nilThres;
+	/**空值字符串表示*/
+	private static String nil;
 	/**实体关系域*/
 	private static String entityRelationField1;
 	private static String entityRelationField2;
 	private static String entityRelationField3;
 	
+	public static String getNil() {
+		return nil;
+	}
+	public static void setNil(String nil) {
+		RELRWParameterBean.nil = nil;
+	}
 	public static int getTotalDocument() {
 		return totalDocument;
 	}

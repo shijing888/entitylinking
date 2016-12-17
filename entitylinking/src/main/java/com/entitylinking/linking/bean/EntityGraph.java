@@ -11,7 +11,7 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.log4j.Logger;
-import org.apache.lucene.document.Document;
+//import org.apache.lucene.document.Document;
 
 import com.entitylinking.lucene.IndexFile;
 
@@ -157,9 +157,12 @@ public class EntityGraph {
 	 * @param entity
 	 */
 	public void updatePreferVectorOfDocument(Mention mention, Entity entity){
-		int index = this.entityIndex.get(entity.getEntityName());
-		double important = mention.getTfidfValue();
-		this.preferVectorOfDocument[index] = important;
+		if(!entity.getEntityName().equals("nil")){
+			int index = this.entityIndex.get(entity.getEntityName());
+			double important = mention.getTfidfValue();
+			this.preferVectorOfDocument[index] = important;
+		}
+	
 	}
 	
 	public double[] getPreferVectorOfEntity() {
@@ -222,17 +225,18 @@ public class EntityGraph {
 	 * 计算转移矩阵
 	 */
 	public void calTransferMatrix(){
-		double weight= 0;
+		double[] weights;
 		this.transferMatrix = new double[entityLen][entityLen];
 		String[] queryFields = new String[]{RELRWParameterBean.getEntityRelationField1(),
 					RELRWParameterBean.getEntityRelationField2(),RELRWParameterBean.getEntityRelationField3()};
 		for(int i=0;i<candidateEntityLen;i++){
 			logger.info("i = "+i);
-			for(int j=0;j<entityLen;j++){
-				weight = calEdgeWeight(entities[i].getEntityName(), 
+			for(int j=i;j<entityLen;j++){
+				weights = calEdgeWeight(entities[i].getEntityName(), 
 						entities[j].getEntityName(), 
 						queryFields, PathBean.getEntityRelationPath());
-				transferMatrix[i][j] = weight;
+				transferMatrix[i][j] = weights[0];
+				transferMatrix[j][i] = weights[1];
 //				logger.info(i+"\t"+entities[i].getEntityName()+"\t"+j+"\t"+entities[j].getEntityName()
 //						+"\t转移权重:"+weight);
 			}
@@ -248,19 +252,23 @@ public class EntityGraph {
 	 * @param indexDir
 	 * @return
 	 */
-	public double calEdgeWeight(String entity1,String entity2,String[] queryFields,String indexDir){
+	public double[] calEdgeWeight(String entity1,String entity2,String[] queryFields,String indexDir){
+		double[] weights = new double[2];
 		try {
 			String[] querys = new String[]{entity1,entity2};
 			int count = IndexFile.countCooccurence(querys,indexDir);
-			if(count < RELRWParameterBean.getCooccurenceThresh()){
-				return 0;
+			
+			int singleCountOfEntity1 = IndexFile.countSingleOccurence(entity1, indexDir);
+			int singleCountOfEntity2 = IndexFile.countSingleOccurence(entity2, indexDir);
+			if(count < RELRWParameterBean.getCooccurenceThresh() || singleCountOfEntity1 == 0
+					|| singleCountOfEntity2 == 0){
+				weights[0] = 0;
+				weights[1] = 0;
+				return weights;
 			}
-//			int singleCount = IndexFile.countSingleOccurence(entity1, indexDir);
-			Document document = IndexFile.queryDocument(entity1, queryFields[0], indexDir);
-			String[] relateEntity = document.get(queryFields[2]).split("\t\\|\t");
-			int singleCount = 200 * relateEntity.length;
-			if(count > singleCount)
-				return 1;
+//			Document document = IndexFile.queryDocument(entity1, queryFields[0], indexDir);
+//			String[] relateEntity = document.get(queryFields[2]).split("\t\\|\t");
+//			int singleCount = 200 * relateEntity.length;
 //			int outEntityCounts = Integer.parseInt(document.get(queryFields[1]));
 //			int outEntityCounts = 0;
 //			for(String item:relateEntity){
@@ -269,11 +277,13 @@ public class EntityGraph {
 //			}
 //			logger.info("实体"+entity1+"与实体"+entity2+" 共现次数:"+count);
 //			logger.info("与实体 "+entity1+" 有关的其他实体所有共现次数:"+outEntityCounts);
-			return count / (double)singleCount;
+			weights[0] = count / (double)singleCountOfEntity1;
+			weights[1] = count / (double)singleCountOfEntity2;
+			return weights;
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		return 0;
+		return weights;
 	}
 	
 	/**
@@ -293,8 +303,8 @@ public class EntityGraph {
 		ArrayRealVector realVector;
 		ArrayRealVector preferRealVector = new ArrayRealVector(preferVector);
 		logger.info("初始向量:"+StringUtils.join(ArrayUtils.toObject(preferVector), "\t"));
-		long time1,time2;
-		time1 = System.currentTimeMillis();
+//		long time1,time2;
+//		time1 = System.currentTimeMillis();
 		do {
 			tempVector = transferMatrix.preMultiply(oldSignatureVector);
 			realVector = new ArrayRealVector(tempVector);
@@ -303,9 +313,9 @@ public class EntityGraph {
 			oldSignatureVector = newSignatureVector;
 			newSignatureVector = realVector.getDataRef();
 		} while (!isConvergence(oldSignatureVector, newSignatureVector));
-		time2 = System.currentTimeMillis();
+//		time2 = System.currentTimeMillis();
 		logger.info("收敛后的向量:"+StringUtils.join(ArrayUtils.toObject(newSignatureVector), "\t"));
-		logger.info("随机游走花费时间:"+(time2 - time1)/1000.0+"秒");
+//		logger.info("随机游走花费时间:"+(time2 - time1)/1000.0+"秒");
 		return newSignatureVector;
 	}
 	

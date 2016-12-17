@@ -143,7 +143,7 @@ public class Text {
 				String[] querys = new String[]{entityList.get(i).getEntityName(),
 						entityList.get(j).getEntityName()};
 				Set<String> set = IndexFile.coocurenceEntities(querys, queryFields, flags, indexDir);
-				logger.info(i+"\t"+j+"\t的共现实体有:"+set.size());
+//				logger.info(i+"\t"+j+"\t的共现实体有:"+set.size());
 				for(String item:set){
 					String[] itemArray = item.split("\t");
 					if(itemArray.length == 2 ){

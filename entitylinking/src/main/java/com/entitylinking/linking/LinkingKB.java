@@ -1,12 +1,12 @@
 package com.entitylinking.linking;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+//import org.apache.commons.lang.ArrayUtils;
+//import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
@@ -45,35 +45,58 @@ public class LinkingKB {
 
 		for(Mention mention:entityGraph.getMentions()){
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
-				mentionEntityMap.put(mention, null);
+				Entity entity = new Entity();
+				entity.setEntityName("nil");
+				mentionEntityMap.put(mention, entity);
 			}else if (mention.getCandidateEntity().size() == 1) {//候选实体为1
 				mentionEntityMap.put(mention, mention.getCandidateEntity().get(0));
 			}else {//候选实体为多个
 				List<Entity> candidateList = mention.getCandidateEntity();
-				double score;
-//				entityScoreMap.clear();
-				for(int i=0;i<candidateList.size();i++){
-					score = 0;
+				int len = candidateList.size();
+				int maxScoreIndex = 0;
+				double score,maxScore =0,maxSemanticScore=0,maxContextScore=0,maxPopularityScore=0;
+				double[] semanticScore = new double[len];
+				double[] contextScore = new double[len];
+				double[] popularityScore = new double[len];
+				for(int i=0;i<len;i++){
 					Entity entity = candidateList.get(i);
 					entityGraph.setPreferVectorOfEntity(i);
 					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
-					logger.info("候选实体"+entity.getEntityName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfEntity)), "\t"));
-					logger.info("  文档"+text.getTextName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfDocument)), "\t"));
-					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"与文档的语义相似度为:");
-					score = Math.log(1+calSemanticSimilarity(signatureOfEntity, signatureOfDocument));
-					if(score > 1){
-						score =1;
+//					logger.info("候选实体"+entity.getEntityName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfEntity)), "\t"));
+//					logger.info("  文档"+text.getTextName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfDocument)), "\t"));
+					semanticScore[i] = Math.log(1+calSemanticSimilarity(signatureOfEntity, signatureOfDocument));
+					if(maxSemanticScore < semanticScore[i]){
+						maxSemanticScore = semanticScore[i];
 					}
-					score *= semanticSimWeight;
-					logger.info(mention.getMentionName()+"与候选实体"+entity.getEntityName()+"的局部相容性为:");
-					score += contextSimWeight * Math.log(1+calLocalSimilarity(mention, candidateList.get(i)));
-					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的流行度得分为:");
-					score += popularityWeight * Math.log(1+calPopularityScore(entity.getPopularity(), mention.getTotalPopularity()));
-					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的总得分为:"+score);
-					entity.setScore(score);
+					contextScore[i] = Math.log(1+calLocalSimilarity(mention, candidateList.get(i)));
+					if(maxContextScore < contextScore[i]){
+						maxContextScore = contextScore[i];
+					}
+					popularityScore[i] = Math.log(1+calPopularityScore(entity.getPopularity(), mention.getTotalPopularity()));
+					if(maxPopularityScore < popularityScore[i]){
+						maxPopularityScore = popularityScore[i];
+					}
+					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的三项得分各为:"
+							+semanticScore[i]+"\t"+contextScore[i]+"\t"+popularityScore[i]);
 				}
-				Entity maxScoreEntity = maxScore(candidateList);
+				
+				for(int i=0;i<len;i++){
+					score = 0;
+					score += semanticSimWeight * (semanticScore[i] / maxSemanticScore);
+					score += contextSimWeight * (contextScore[i] / maxContextScore);
+					score += popularityWeight * (popularityScore[i] / maxPopularityScore);
+					
+					if(maxScore < score){
+						maxScore = score;
+						maxScoreIndex = i;
+					}
+				}
+				
+				Entity maxScoreEntity = candidateList.get(maxScoreIndex);
+				if(maxScore < RELRWParameterBean.getNilThres()){
+					maxScoreEntity.setEntityName(RELRWParameterBean.getNil());
+				}
 				if(!mentionEntityMap.containsKey(mention) ||
 						mentionEntityMap.containsKey(mention) &&
 						!mentionEntityMap.get(mention).getEntityName()
@@ -87,27 +110,7 @@ public class LinkingKB {
 		}
 		
 	}
-	
-	/**
-	 * 计算数组中最大值对应的下标
-	 * @param arrays
-	 * @return
-	 */
-	public Entity maxScore(List<Entity> entityList){
-		double max = 0;
-		Entity maxEntity = null;
-		for(Entity entity:entityList){
-			if(entity.getScore() > max){
-				max = entity.getScore();
-				maxEntity = entity;
-			}
-		}
-		if(max >= RELRWParameterBean.getNilThres()){
-			return maxEntity;
-		}else{
-			return null;
-		}
-	}
+
 	/**
 	 * 计算语义相似度
 	 * @param signatureOfEntity

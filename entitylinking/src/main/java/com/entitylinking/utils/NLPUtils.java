@@ -43,7 +43,6 @@ public class NLPUtils {
         Properties props = new Properties();
         props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
         pipeline = new StanfordCoreNLP(props);
-//        candidateMain =CandidateMain.getCandidateMain();
 	}
 	
 	//存放用于发现实体的类别
@@ -81,13 +80,13 @@ public class NLPUtils {
         int endOffset;
         int textLen = text.getContent().split("\\s+").length;
         double tfidfValue;
+        logger.info("textLen:"+textLen);
         for(Mention mention:mentions){
         	logger.info("mention:"+mention.getMentionName());
         	//初始化mention tfidf
         	tfidfValue = CommonUtils.calTfidf(mention.getOccurCounts(), 
     				DictBean.getDfDict().get(mention.getMentionName()), textLen);
         	logger.info("mention出现次数:"+mention.getOccurCounts());
-        	logger.info("textLen:"+textLen);
         	logger.info("mention df:"+DictBean.getDfDict().get(mention.getMentionName()));
         	logger.info(mention.getMentionName()+"的tfidf值为:"+tfidfValue);
     		mention.setTfidfValue(tfidfValue);

@@ -43,6 +43,9 @@ public class IndexFile {
 	static Logger logger = Logger.getLogger(IndexFile.class);
 	private static final int MAXCoocurence = 999;
 	private static final int MAXSingleOccurence = 99999;
+	private static Analyzer analyzer;
+	private static QueryParser singleQueryParser;
+	private static IndexSearcher indexSearcher;
 	private static String[] cooccurenceQueryFields = new String[]{RELRWParameterBean.getEntityRelationField3(),
 													RELRWParameterBean.getEntityRelationField3()};
 	private static BooleanClause.Occur[] flags = new BooleanClause.Occur[]
@@ -114,18 +117,11 @@ public class IndexFile {
 	 */
 	public static Document queryDocument(String queryString, String queryField, String indexDir){
 		try {
-			//1. 获取索引文件目录
-			Directory directory = FSDirectory.open(Paths.get(indexDir));
-			//2. 创建IndexReader对象，读取索引文件
-			IndexReader indexReader = DirectoryReader.open(directory);
-			//3. 创建索引查询器，查询索引文件
-			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-			//4. 实例化分析器
-			Analyzer analyzer = new StandardAnalyzer();
-			//5. 创建查询解析器，解析query
-			QueryParser queryParser = new QueryParser(queryField, analyzer);
+			initAnalyzer();
+			initIndexSearcher(indexDir);
+			singleQueryParserOfEntityCoocurence(queryField);
 			//6. 解析查询字符串获取查询对象
-			Query query = queryParser.parse(queryString);
+			Query query = singleQueryParser.parse(queryString);
 			TopDocs topDocs = indexSearcher.search(query,1);
 			//7. 处理查询结果
 			if(topDocs != null && topDocs.scoreDocs.length > 0){
@@ -144,15 +140,8 @@ public class IndexFile {
 			BooleanClause.Occur[] flags,String indexDir){
 		Set<String> entitySet = new HashSet<>();
 		try {
-			//1. 获取索引文件目录
-			Directory directory;
-			directory = FSDirectory.open(Paths.get(indexDir));
-			//2. 创建IndexReader对象，读取索引文件
-			IndexReader indexReader = DirectoryReader.open(directory);
-			//3. 创建索引查询器，查询索引文件
-			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-			//4. 实例化分析器
-			Analyzer analyzer = new StandardAnalyzer();
+			initAnalyzer();
+			initIndexSearcher(indexDir);
 			//5. 创建查询解析器，解析query
 			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
 			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXCoocurence).scoreDocs;
@@ -181,18 +170,12 @@ public class IndexFile {
 	 */
 	public static int countSingleOccurence(String queryString, String indexDir){
 		try {
-			//1. 获取索引文件目录
-			Directory directory = FSDirectory.open(Paths.get(indexDir));
-			//2. 创建IndexReader对象，读取索引文件
-			IndexReader indexReader = DirectoryReader.open(directory);
-			//3. 创建索引查询器，查询索引文件
-			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-			//4. 实例化分析器
-			Analyzer analyzer = new StandardAnalyzer();
-			//5. 创建查询解析器，解析query
-			QueryParser queryParser = new QueryParser("entityRelationValue", analyzer);
-			//6. 解析查询字符串获取查询对象
-			Query query = queryParser.parse(queryString);
+			queryString = QueryParser.escape(queryString);
+			initAnalyzer();
+			initIndexSearcher(indexDir);
+			singleQueryParser = singleQueryParserOfEntityCoocurence(RELRWParameterBean.getEntityRelationField3());
+			//解析查询字符串获取查询对象
+			Query query = singleQueryParser.parse(queryString);
 			TopDocs topDocs = indexSearcher.search(query,MAXSingleOccurence);
 			//7. 处理查询结果
 			if(topDocs != null){
@@ -219,15 +202,8 @@ public class IndexFile {
 			querys[1] = QueryParser.escape(querys[1]);
 		}
 		try {
-			//1. 获取索引文件目录
-			Directory directory;
-			directory = FSDirectory.open(Paths.get(indexDir));
-			//2. 创建IndexReader对象，读取索引文件
-			IndexReader indexReader = DirectoryReader.open(directory);
-			//3. 创建索引查询器，查询索引文件
-			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-			//4. 实例化分析器
-			Analyzer analyzer = new StandardAnalyzer();
+			initAnalyzer();
+			initIndexSearcher(indexDir);
 			//5. 创建查询解析器，解析query
 			Query query = MultiFieldQueryParser.parse(querys, cooccurenceQueryFields, flags,analyzer);
 //			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXTOP).scoreDocs;
@@ -243,6 +219,49 @@ public class IndexFile {
 		
 		return count;
 	}
+	
+	/**
+	 * 初始化indexSearcher
+	 */
+	public static void initIndexSearcher(String indexDir){
+		try {
+			if(indexSearcher == null){
+				//1. 获取索引文件目录
+				Directory directory = FSDirectory.open(Paths.get(indexDir));
+				//2. 创建IndexReader对象，读取索引文件
+				IndexReader indexReader = DirectoryReader.open(directory);
+				//3. 创建索引查询器，查询索引文件
+				if(indexSearcher == null)
+					indexSearcher = new IndexSearcher(indexReader);
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+	}
+	
+	/**
+	 * 初始化标准解析器
+	 */
+	public static void initAnalyzer(){
+		if(analyzer == null){
+			analyzer = new StandardAnalyzer();
+		}
+		
+	}
+	
+	/**
+	 * 返回指定搜索域下的queryParser
+	 * @param queryField
+	 * @return
+	 */
+	public static QueryParser singleQueryParserOfEntityCoocurence(String queryField){
+
+		if(singleQueryParser == null){
+			singleQueryParser = new QueryParser(queryField, analyzer);
+		}
+		return singleQueryParser;
+	} 
 	
 	@Test
 	public void test(){
