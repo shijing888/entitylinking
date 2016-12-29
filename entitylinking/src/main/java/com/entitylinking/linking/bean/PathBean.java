@@ -20,6 +20,23 @@ public class PathBean {
 	private static String mentionDictPath;
 	/**实体链接结果文件夹*/
 	private static String resultDirPath;
+	/**实体上下文文件路径*/
+	private static String entityContextPath;
+	/**mention上下文文件夹路径*/
+	private static String mentionContextDirPath;
+	
+	public static String getEntityContextPath() {
+		return entityContextPath;
+	}
+	public static void setEntityContextPath(String entityContextPath) {
+		PathBean.entityContextPath = entityContextPath;
+	}
+	public static String getMentionContextDirPath() {
+		return mentionContextDirPath;
+	}
+	public static void setMentionContextDirPath(String mentionContextDirPath) {
+		PathBean.mentionContextDirPath = mentionContextDirPath;
+	}
 	public static String getSynonymsDictPath() {
 		return synonymsDictPath;
 	}

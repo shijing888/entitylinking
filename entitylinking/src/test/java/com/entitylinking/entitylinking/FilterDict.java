@@ -8,21 +8,26 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 
 public class FilterDict {
 
+	private static int editDistTresh = 3;
 	public static void main(String args[]){
 		
 //		String rpath = "H:\\MysqlData\\ambiguationDict2.txt";
 //		String wpath = "H:\\MysqlData\\ambiguationDict3.txt";
 //		filterCategory(rpath, wpath);
-		String rpath = "./dict/synonymsDict2.txt";
-		String wpath = "./dict/synonymsDict.txt";
+		String rpath = "./dict/ambiguationDict.txt";
+		String wpath = "./dict/ambiguationDict2.txt";
 //		filterBracket(rpath, wpath);
-		filterSingleWord(rpath, wpath);
+//		filterSingleWord(rpath, wpath);
+		filterCandidate(rpath,wpath);
 	}
 	
 	public static void filterCategory(String rpath, String wpath){
@@ -103,10 +108,109 @@ public class FilterDict {
 		
 	}
 	
+	public static void filterCandidate(String rPath,String wPath){
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rPath))));
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(wPath)),"utf-8"));
+			String line,key,value;
+			while((line=br.readLine())!=null){
+				line = line.replace("&nbsp;", "_");
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length == 2){
+					key = lineArray[0];
+					value = lineArray[1];
+					line = judgeString(line,key, value);
+					if(line != null){
+						bw.write(line+"\n");
+					}
+					
+				}
+			}
+				
+			bw.close();
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static String judgeString(String line,String s1,String s2){
+		StringBuilder stringBuilder = new StringBuilder();
+		if(s1.contains("disambiguation")){
+			return line;
+		}
+		
+		boolean isContain = false;
+		stringBuilder.append(s1).append("\t||\t");
+		Set<String> candidateSet = new HashSet<>();
+		String[] keyArray = s1.split("[_]+");
+		String[] valueArray = s2.split("\t\\|\t");
+		for(String value:valueArray){
+			isContain = false;
+			//首先判断是否包含缩写
+			if(keyArray.length == 1){
+				String[] subValueArray = value.split("[_]+");
+				if(subValueArray.length > 1){
+					String result = "";
+//					System.out.println(value);
+					for(String str:subValueArray){
+						result+=str.charAt(0);
+					}
+					if(result.contains(s1)){
+						isContain = true;
+						candidateSet.add(value);
+					}
+				}
+				
+			}else{
+				//判断是否部分包含
+				isContain = false;
+				for(String item:keyArray){
+					if(value.contains(item)){
+						isContain = true;
+						break;
+					}
+				}
+				//value包含key中一部分
+				if(isContain){
+					isContain = true;
+					candidateSet.add(value);
+				}
+			}
+			//使用编辑距离来判断
+			if(!isContain){
+				int minEditDist = value.length();
+				int dist;
+				String[] subValueArray = value.split("[_]+");
+				for(String item1:keyArray){
+					for(String item2:subValueArray){
+						dist = EditDistance.getEditDistance(item1, item2);
+						if(minEditDist > dist){
+							minEditDist = dist;
+						}
+					}
+				}
+				
+				if(minEditDist <= editDistTresh){
+					candidateSet.add(value);
+				}
+			}
+		}
+		if(candidateSet.size() > 0){
+			stringBuilder.append(StringUtils.join(candidateSet,"\t|\t"));
+			return stringBuilder.toString();
+		}
+		return null;
+	}
+	
+	
+	
 	@Test
 	public void test(){
-		String ss = "[hhu]";
-		String re = "[\\[\\]]" ;
+		String ss = "h_h__u";
+		String re = "[_]+" ;
 		ss = ss.replaceAll(re, "");
 		System.out.println(ss);
 				

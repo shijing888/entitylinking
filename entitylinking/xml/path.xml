@@ -13,6 +13,8 @@
 	<relPath>
 		<resultDir>./data/result/ace2004</resultDir>
 		<relParameterPath>./xml/entitylinking_relrw.xml</relParameterPath>
+		<entityContextPath>./data/ace2004/context/entity/entityContext</entityContextPath>
+		<mentionContextDirPath>./data/ace2004/context/mention/</mentionContextDirPath>
 	</relPath>
 	<!-- 索引文件夹路径 -->
 	<indexDirPath>

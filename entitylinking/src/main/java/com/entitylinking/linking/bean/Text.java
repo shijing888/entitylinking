@@ -121,7 +121,7 @@ public class Text {
 
 	/**
 	 * 对实体图进行一阶扩展
-	 * @param entities
+	 * @param entitieshuoz
 	 * @return
 	 */
 	public int extendEntity(List<Entity>entities,Set<String>entityNameSet){

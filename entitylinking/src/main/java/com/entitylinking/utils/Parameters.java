@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -58,7 +59,7 @@ public class Parameters {
 			logger.info("加载词典开始！");
 			long time1 = System.currentTimeMillis();
 			dictBean.setSynonymsDict(loadSynonymsDict(PathBean.getSynonymsDictPath()));
-			dictBean.setAmbiguationDict(loadDisambiguationDict(
+			dictBean.setAmbiguationDict(loadMapDict(
 					PathBean.getAmbiguationDictPath()));
 			long time2 = System.currentTimeMillis();
 			logger.info("加载词典已完成！加载时间:"+(time2-time1)/60000);
@@ -114,6 +115,8 @@ public class Parameters {
 			}else if(element.getName().equals("relPath")){//robust 实体链接方法参数
 				PathBean.setRelParameterPath(element.elementText("relParameterPath"));
 				PathBean.setResultDirPath(element.elementText("resultDir"));
+				PathBean.setEntityContextPath(element.elementText("entityContextPath"));
+				PathBean.setMentionContextDirPath(element.elementText("mentionContextDirPath"));
 			}else if(element.getName().equals("indexDirPath")){//索引文件路径
 				PathBean.setEntityRelationPath(element.elementText("entityRelationPath"));
 			}
@@ -279,7 +282,39 @@ public class Parameters {
 		}
 	}
 	
-	public Map<String, HashSet<String>> loadDisambiguationDict(String path){
+	/**
+	 * 将增加的上下文信息持久化到本地
+	 * @param path
+	 * @param contextMap
+	 */
+	public void pickleContextMap(String path,Map<String, Set<String>> contextMap){
+		try {
+			File file = new File(path);
+			if(!file.exists()){
+				file.createNewFile();
+			}
+			BufferedWriter writer = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(file, true), "utf-8"));
+			StringBuilder stringBuilder = new StringBuilder();
+			
+			for(Entry<String, Set<String>>entry:contextMap.entrySet()){
+				stringBuilder.append(entry.getKey()).append("\t||\t")
+					.append(StringUtils.join(entry.getValue(), "\t|\t")).append("\n");
+			}
+			writer.write(stringBuilder.toString());
+			writer.close();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	
+	
+	/**
+	 * 用于加载消歧词典、上下文词典
+	 * @param path
+	 * @return
+	 */
+	public Map<String, HashSet<String>> loadMapDict(String path){
 		Map<String, HashSet<String>> disambiguationDict 
 								= new HashMap<String, HashSet<String>>();
 		try {
@@ -352,7 +387,7 @@ public class Parameters {
 						}
 					}
 				}else if(element.getName().equals("constant")){
-							RELRWParameterBean.setEntityRelationField1(
+							RELRWParameterBean.setNil(
 									element.elementText("nil"));
 				}
 				

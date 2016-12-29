@@ -1,7 +1,12 @@
 package com.entitylinking.entitylinking;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.junit.Test;
 
 import com.entitylinking.config.WikiConfig;
@@ -37,6 +42,50 @@ public class EntityTest {
 			e.printStackTrace();
 		}  
       
+	}
+	
+	@Test
+	public void test(){
+		int a[] = {1,2,3,4,5,6,7,8,9};
+		List<Integer> list = Arrays.asList(ArrayUtils.toObject(a));
+		test1(list);
+		for(int i: list){
+		System.out.print(i+"\t");
+	}
+	}
+	public  void test1(List<Integer> list){
+//		int a[] = {1,2,3,4,5,6,7,8,9};
+//		List<Integer> list = Arrays.asList(ArrayUtils.toObject(a));
+//		for(int i: list){
+//			System.out.print(i+"\t");
+//		}
+//		System.out.println("\n");
+		Collections.sort(list, new Comparator<Integer>() {
+
+			@Override
+			public int compare(Integer arg0, Integer arg1) {
+				// TODO Auto-generated method stub
+				return arg1 - arg0;
+			}
+		});
+		
+//		for(int i: list){
+//			System.out.print(i+"\t");
+//		}
+//		
+//		System.out.println("\n");
+//		Collections.sort(list, new Comparator<Integer>() {
+//
+//			@Override
+//			public int compare(Integer arg0, Integer arg1) {
+//				// TODO Auto-generated method stub
+//				return arg0 - arg1;
+//			}
+//		});
+//		
+//		for(int i: list){
+//			System.out.print(i+"\t");
+//		}
 	}
 	
 }

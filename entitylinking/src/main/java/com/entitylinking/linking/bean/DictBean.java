@@ -18,7 +18,14 @@ public class DictBean {
 	private static Set<String> stopWordDict;
 	private static Map<String, Integer> dfDict;
 	private static Map<String, List<Mention>> mentionDict;
+	private static Map<String, HashSet<String>> entityContextDict;
 	
+	public static Map<String, HashSet<String>> getEntityContextDict() {
+		return entityContextDict;
+	}
+	public static void setEntityContextDict(Map<String, HashSet<String>> entityContextDict) {
+		DictBean.entityContextDict = entityContextDict;
+	}
 	public Map<String, String> getSynonymsDict() {
 		return synonymsDict;
 	}

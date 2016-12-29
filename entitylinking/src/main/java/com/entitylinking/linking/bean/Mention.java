@@ -3,6 +3,7 @@ package com.entitylinking.linking.bean;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -100,12 +101,15 @@ public class Mention {
 		return mentionContext;
 	}
 
+	public void setMentionContext(Set<String> mentionContext) {
+		this.mentionContext = mentionContext;
+	}
 	/**
 	 * 查找mention对应的候选实体
 	 * @param mention
 	 * @return
 	 */
-	public List<Entity> obtainCandidate(DictBean dictBean){
+	public List<Entity> obtainCandidate(DictBean dictBean,Map<String, Set<String>> additiveEntityContextDict){
 		String mentionStr = NormalizeMention.getNormalizeMention(this.mentionName,true);
 		Set<String> candidateSet = new HashSet<>();
 		List<Entity> entities = new ArrayList<>();
@@ -151,30 +155,57 @@ public class Mention {
 			if(normEntityName == null || candidateEntitySet.contains(normEntityName)){
 				continue;
 			}
-			//获取实体名称、流行度及上下文信息
-			entity.getEntityPageInfo(normEntityName);
-			entity.setScore(CommonUtils.commonWords(this, entity));
-			logger.info("entity title:"+normEntityName);
-			candidateEntitySet.add(normEntityName);
-			entities.add(entity);
-		}
-		
-		List<Entity> entities2 = new ArrayList<>(entities);
-		List<Entity> entities3 = new ArrayList<>();
-		//对候选实体按流行度进行降序
-		CommonUtils.sortListByPopularity(entities, true);
-		CommonUtils.sortListByContextSimliarity(entities2, true);
-		//对候选按照流行度和上下文相似性进行剪枝
-		for(int i=0;i<RELRWParameterBean.getCandidateEntityNumThresh();i++){
-			if(i < entities.size()){
-				if(entities2.get(i).getScore() > 0){
-					entities3.add(entities2.get(i));
-				}
-				entities3.add(entities.get(i));
+			
+			try {
+				//获取实体名称、流行度及上下文信息
+				entity.getEntityPageInfo(normEntityName,additiveEntityContextDict);
+				entity.setScore(CommonUtils.commonWords(this, entity));
+				logger.info("entity title:"+normEntityName);
+				candidateEntitySet.add(normEntityName);
+				entities.add(entity);
+			} catch (Exception e) {
+				// TODO: handle exception
+				logger.info(normEntityName+" error!");
+				continue;
 			}
 			
 		}
 		
+		List<Entity> entities2 = new ArrayList<>(entities);
+		List<Entity> entities3 = new ArrayList<>();
+		//对候选实体按上下文相似性进行降序
+		CommonUtils.sortListByContextSimliarity(entities, true);
+		//对候选实体按流行度进行降序
+		CommonUtils.sortListByPopularity(entities2, true);
+		//对候选按照流行度和上下文相似性进行剪枝
+		int index = RELRWParameterBean.getCandidateEntityNumThresh();
+		Set<String> tempSet = new HashSet<>();
+		int i=0;
+		while(i<index){
+			if(i < entities.size()){
+				if(entities.get(i).getScore() > 0 && !tempSet.contains(entities.get(i).getEntityName())){
+					entities3.add(entities.get(i));
+					tempSet.add(entities.get(i).getEntityName());
+				}
+				
+				if(!tempSet.contains(entities2.get(i).getEntityName())){
+					entities3.add(entities.get(i));
+					tempSet.add(entities.get(i).getEntityName());
+				}
+				i++;
+			}else{
+				break;
+			}
+		}
+		
+		//从训练集中获得
+		if(!tempSet.contains(this.objectEntity)){
+			//获取实体名称、流行度及上下文信息
+			Entity entity = new Entity();
+			entity.getEntityPageInfo(this.objectEntity,additiveEntityContextDict);
+			entity.setScore(CommonUtils.commonWords(this, entity));
+			entities3.add(entity);
+		}
 		logger.info(mentionStr+"的candidateList size:"+entities3.size());		
 		for(Entity entity:entities3){
 			logger.info(mentionStr+"的candidate:"+ entity.getEntityName());

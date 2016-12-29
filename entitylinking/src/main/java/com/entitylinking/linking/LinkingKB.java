@@ -39,54 +39,78 @@ public class LinkingKB {
 		double semanticSimWeight = RELRWParameterBean.getSemanticSimWeight();
 		double contextSimWeight = RELRWParameterBean.getContextSimWeight();
 		double popularityWeight = RELRWParameterBean.getPopularityWeight();
-		
-		//获取初始文档偏好向量
-		signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
-
 		for(Mention mention:entityGraph.getMentions()){
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
 				Entity entity = new Entity();
-				entity.setEntityName("nil");
+				entity.setEntityName(RELRWParameterBean.getNil());
 				mentionEntityMap.put(mention, entity);
+				entityGraph.setDisambiguationMap(mentionEntityMap);
 			}else if (mention.getCandidateEntity().size() == 1) {//候选实体为1
-				mentionEntityMap.put(mention, mention.getCandidateEntity().get(0));
+				Entity entity = mention.getCandidateEntity().get(0);
+				mentionEntityMap.put(mention, entity);
+				entityGraph.setDisambiguationMap(mentionEntityMap);
+				entityGraph.updatePreferVectorOfDocument(mention, entity);
 			}else {//候选实体为多个
 				List<Entity> candidateList = mention.getCandidateEntity();
 				int len = candidateList.size();
 				int maxScoreIndex = 0;
 				double score,maxScore =0,maxSemanticScore=0,maxContextScore=0,maxPopularityScore=0;
-				double[] semanticScore = new double[len];
-				double[] contextScore = new double[len];
-				double[] popularityScore = new double[len];
+				double semanticScore=0,contextScore=0,popularityScore=0;
+				double[] semanticScores = new double[len];
+				double[] contextScores = new double[len];
+				double[] popularityScores = new double[len];
+				//获取文档语义签名
+				signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
+				
 				for(int i=0;i<len;i++){
 					Entity entity = candidateList.get(i);
-					entityGraph.setPreferVectorOfEntity(i);
+					entityGraph.setPreferVectorOfEntity(entityGraph.getEntityIndex().get(entity.getEntityName()));
 					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
 //					logger.info("候选实体"+entity.getEntityName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfEntity)), "\t"));
 //					logger.info("  文档"+text.getTextName()+"的语义签名向量:"+StringUtils.join(Arrays.asList(ArrayUtils.toObject(signatureOfDocument)), "\t"));
-					semanticScore[i] = Math.log(1+calSemanticSimilarity(signatureOfEntity, signatureOfDocument));
-					if(maxSemanticScore < semanticScore[i]){
-						maxSemanticScore = semanticScore[i];
+					semanticScores[i] = calSemanticSimilarity(signatureOfEntity, signatureOfDocument);
+					if(maxSemanticScore < semanticScores[i]){
+						maxSemanticScore = semanticScores[i];
 					}
-					contextScore[i] = Math.log(1+calLocalSimilarity(mention, candidateList.get(i)));
-					if(maxContextScore < contextScore[i]){
-						maxContextScore = contextScore[i];
+					contextScores[i] = calLocalSimilarity(mention, candidateList.get(i));
+					if(maxContextScore < contextScores[i]){
+						maxContextScore = contextScores[i];
 					}
-					popularityScore[i] = Math.log(1+calPopularityScore(entity.getPopularity(), mention.getTotalPopularity()));
-					if(maxPopularityScore < popularityScore[i]){
-						maxPopularityScore = popularityScore[i];
+					popularityScores[i] = calPopularityScore(entity.getPopularity(), mention.getTotalPopularity());
+					if(maxPopularityScore < popularityScores[i]){
+						maxPopularityScore = popularityScores[i];
 					}
-					logger.info(mention.getMentionName()+"的候选实体"+entity.getEntityName()+"的三项得分各为:"
-							+semanticScore[i]+"\t"+contextScore[i]+"\t"+popularityScore[i]);
+					
 				}
-				
+				logger.info("maxSemanticScore:"+maxSemanticScore+"\tmaxContextScore:"
+										+maxContextScore+"\tmaxPopularityScore:"+maxPopularityScore);
 				for(int i=0;i<len;i++){
 					score = 0;
-					score += semanticSimWeight * (semanticScore[i] / maxSemanticScore);
-					score += contextSimWeight * (contextScore[i] / maxContextScore);
-					score += popularityWeight * (popularityScore[i] / maxPopularityScore);
-					
+					if(maxSemanticScore > 0){
+						semanticScore = semanticSimWeight * (semanticScores[i] / maxSemanticScore);
+						score += semanticScore;
+					}
+					if(maxContextScore > 0){
+						contextScore = contextSimWeight * (contextScores[i] / maxContextScore);
+						score += contextScore;
+					}
+					if(maxPopularityScore > 0){
+						popularityScore = popularityWeight * (popularityScores[i] / maxPopularityScore);
+						score += popularityScore;
+					}
+					//若候选实体与mention字面量完全一致且score大于阈值则认为其是目标实体
+					if(candidateList.get(i).getEntityName().equals(mention.getMentionName())){
+						if(score >= RELRWParameterBean.getNilThres()){
+							score = 1;
+						}
+					}
+					candidateList.get(i).setScore(score);
+					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()+"的三项得分归一化前各为:"
+							+semanticScores[i]+"\t"+contextScores[i]+"\t"+popularityScores[i]);
+					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()+"的三项得分归一化后各为:"
+							+semanticScore+"\t"+contextScore+"\t"+popularityScore);
+					logger.info(candidateList.get(i).getEntityName()+" 加权总得分为:"+score);
 					if(maxScore < score){
 						maxScore = score;
 						maxScoreIndex = i;
@@ -101,12 +125,12 @@ public class LinkingKB {
 						mentionEntityMap.containsKey(mention) &&
 						!mentionEntityMap.get(mention).getEntityName()
 						.equals(maxScoreEntity.getEntityName())){
-						mentionEntityMap.put(mention, maxScoreEntity);
-						entityGraph.setDisambiguationMap(mentionEntityMap);
-						entityGraph.updatePreferVectorOfDocument(mention, maxScoreEntity);
-						signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
+					mentionEntityMap.put(mention, maxScoreEntity);
+					entityGraph.setDisambiguationMap(mentionEntityMap);
+					entityGraph.updatePreferVectorOfDocument(mention, maxScoreEntity);
 				}
 			}
+			
 		}
 		
 	}
@@ -120,7 +144,7 @@ public class LinkingKB {
 	public double calSemanticSimilarity(double[] signatureOfEntity, double[]signatureOfDocument){
 		double result = 0;
 		for(int i=0;i<signatureOfEntity.length;i++){
-			if(signatureOfEntity[i] == 0 || signatureOfDocument[i] < 0){
+			if(signatureOfEntity[i] == 0){
 				continue;
 			}
 			if(signatureOfDocument[i] == 0){
@@ -130,11 +154,10 @@ public class LinkingKB {
 			}
 //			logger.info(i+"\t"+result+"\t"+signatureOfEntity[i]+"\t"+signatureOfDocument[i]);
 		}
-//		logger.info(result);
-		if(result > 0){
+		
+		if(result != 0){
 			result = 1 / result;
 		}
-		logger.info(result);
 		return result;
 	}
 	
@@ -149,10 +172,10 @@ public class LinkingKB {
 		int commonCount = CommonUtils.commonWords(mention, entity);
 		int allCount = mentionContext.size();
 		if(commonCount < allCount){
-			logger.info((double)commonCount / allCount);
+//			logger.info((double)commonCount / allCount);
 			return (double)commonCount / allCount;
 		}else{
-			logger.info(1);
+//			logger.info(1);
 			return 1;
 		}
 		
@@ -165,7 +188,7 @@ public class LinkingKB {
 	 * @return
 	 */
 	public double calPopularityScore(double popularity, double totalPopularity){
-		logger.info(popularity / totalPopularity);
+//		logger.info(popularity / totalPopularity);
 		return popularity / totalPopularity;
 	}
 	

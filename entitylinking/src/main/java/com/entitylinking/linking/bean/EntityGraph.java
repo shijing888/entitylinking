@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+//import org.apache.commons.lang.ArrayUtils;
+//import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -157,7 +157,7 @@ public class EntityGraph {
 	 * @param entity
 	 */
 	public void updatePreferVectorOfDocument(Mention mention, Entity entity){
-		if(!entity.getEntityName().equals("nil")){
+		if(entity!=null && !entity.getEntityName().equals(RELRWParameterBean.getNil())){
 			int index = this.entityIndex.get(entity.getEntityName());
 			double important = mention.getTfidfValue();
 			this.preferVectorOfDocument[index] = important;
@@ -216,6 +216,8 @@ public class EntityGraph {
 					this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
 				}
 			}
+			
+			return isDisAmbiguation;
 		}
 		
 		return isDisAmbiguation;
@@ -302,7 +304,7 @@ public class EntityGraph {
 		RealMatrix transferMatrix = new Array2DRowRealMatrix(this.getTransferMatrix());
 		ArrayRealVector realVector;
 		ArrayRealVector preferRealVector = new ArrayRealVector(preferVector);
-		logger.info("初始向量:"+StringUtils.join(ArrayUtils.toObject(preferVector), "\t"));
+//		logger.info("初始向量:"+StringUtils.join(ArrayUtils.toObject(preferVector), "\t"));
 //		long time1,time2;
 //		time1 = System.currentTimeMillis();
 		do {
@@ -314,7 +316,7 @@ public class EntityGraph {
 			newSignatureVector = realVector.getDataRef();
 		} while (!isConvergence(oldSignatureVector, newSignatureVector));
 //		time2 = System.currentTimeMillis();
-		logger.info("收敛后的向量:"+StringUtils.join(ArrayUtils.toObject(newSignatureVector), "\t"));
+//		logger.info("收敛后的向量:"+StringUtils.join(ArrayUtils.toObject(newSignatureVector), "\t"));
 //		logger.info("随机游走花费时间:"+(time2 - time1)/1000.0+"秒");
 		return newSignatureVector;
 	}

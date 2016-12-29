@@ -7,16 +7,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.junit.Test;
 
 import com.entitylinking.linking.LinkingKB;
 import com.entitylinking.linking.bean.DictBean;
@@ -59,6 +58,7 @@ public class Main {
 	 */
 	public Map<String, String> linkingMainProcess(){
 		File fileDir = new File(RELRWParameterBean.getSourceFileDirPath());
+//		List<Text> texts = new ArrayList<>();
 		if(fileDir.isDirectory()){
 			File[] fileList = fileDir.listFiles();
 			if(fileList == null || fileList.length == 0)
@@ -77,6 +77,7 @@ public class Main {
 				//生成该文档的密度子图
 				text.generateDensityGraph();
 				logger.info("entity graph finish!");
+//				texts.add(text);
 				//链接知识库过程
 				LinkingKB linkingKB = new LinkingKB();
 				linkingKB.obtainmentionEntityPairs(text);
@@ -87,9 +88,14 @@ public class Main {
 						.getDisambiguationMap().entrySet()){
 					sBuilder.append(entry.getKey().getMentionName()).append("\t")
 							.append(entry.getKey().getObjectEntity()).append("\t");
-				
-					sBuilder.append(entry.getValue().getEntityName()).append("\t").append(entry.getValue().getScore());
+					if(entry.getValue().getEntityName() == null 
+							|| entry.getValue().getScore() < RELRWParameterBean.getNilThres()){
+						sBuilder.append(RELRWParameterBean.getNil());
+					}else{
+						sBuilder.append(entry.getValue().getEntityName());
+					}
 					
+					sBuilder.append("\t").append(entry.getValue().getScore());
 					sBuilder.append("\n");		
 
 				}
@@ -112,10 +118,12 @@ public class Main {
 				}
 			}
 			
-			//将df持久化到本地
+			//将df持久化到本地ddddd
 //			Parameters parameters = new Parameters();
 //			parameters.pickleDf(PathBean.getDfDictPath());
 		}
+		
+//		saveContextOfGraph(texts);
 		return null;
 	}
 	
@@ -130,25 +138,60 @@ public class Main {
 //		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
 	}
 	
-	@Test
-	public void test(){
-		List<Integer> list = new ArrayList<Integer>();
-		for(int i=0;i<10;i++){
-			list.add(i);
-		}
-		List<Integer> list2 = new ArrayList<>(list);
-		System.out.println("size:"+list2.size());
-		Collections.sort(list2,new Comparator<Integer>() {
-
-			@Override
-			public int compare(Integer o1, Integer o2) {
-				// TODO Auto-generated method stub
-				return o2 - o1;
+	/**
+	 * 保存mention与实体的上下文信息
+	 */
+	public void saveContextOfGraph(List<Text> texts){
+		String textName;
+		String saveMentionDirPath = "./data\\ace2004\\context\\mention\\";
+		String saveEntityPath = "./data\\ace2004\\context\\entity\\entityContext";
+		Map<String, Set<String>> entityContext = new HashMap<String, Set<String>>();
+		for(Text text:texts){
+			textName = text.getTextName();
+			String mentionPath = saveMentionDirPath + textName;
+			List<Mention> mentions = text.getEntityGraph().getMentions();
+			try {
+				BufferedWriter bWriter = new BufferedWriter(
+						new OutputStreamWriter(new FileOutputStream(new File(mentionPath)), "utf-8"));
+				for(Mention mention:mentions){
+					bWriter.write(mention.getMentionName()+"\t||\t"+StringUtils.join(mention.getMentionContext(), "\t|\t")+"\n");
+					List<Entity>entities  = mention.getCandidateEntity();
+					for(Entity entity:entities){
+						if(!entityContext.containsKey(entity.getEntityName())){
+							entityContext.put(entity.getEntityName(), entity.getEntityContext());
+						}
+					}
+				}
+				bWriter.close();
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			
-		});
-		for(int i=0;i<list2.size();i++){
-			System.out.println(list2.get(i)+"\t"+ list.get(i));
+		}
+		
+		try {
+			BufferedWriter bWriter = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(new File(saveEntityPath)), "utf-8"));
+			for(Entry<String, Set<String>>entry:entityContext.entrySet()){
+				bWriter.write(entry.getKey()+"\t||\t"+StringUtils.join(entry.getValue(), "\t|\t")+"\n");
+			}
+			bWriter.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	

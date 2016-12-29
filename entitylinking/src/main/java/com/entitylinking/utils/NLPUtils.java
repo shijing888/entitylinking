@@ -1,11 +1,12 @@
 package com.entitylinking.utils;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -14,6 +15,7 @@ import org.apache.log4j.Logger;
 import com.entitylinking.linking.bean.DictBean;
 import com.entitylinking.linking.bean.Entity;
 import com.entitylinking.linking.bean.Mention;
+import com.entitylinking.linking.bean.PathBean;
 import com.entitylinking.linking.bean.RELRWParameterBean;
 import com.entitylinking.linking.bean.Text;
 
@@ -46,23 +48,24 @@ public class NLPUtils {
 	}
 	
 	//存放用于发现实体的类别
-	private static Set<String> nerCategory = new HashSet<>(Arrays.asList(
-			new String[]{"PERSON","LOCATION","ORGANIZATION","DATE"}));
+//	private static Set<String> nerCategory = new HashSet<>(Arrays.asList(
+//			new String[]{"PERSON","LOCATION","ORGANIZATION","DATE"}));
 	
 	public static void main(String args[]){
 		 // read some text in the text variable
 //        String path = "./data/ace2004/RawTexts/chtb_171.eng";
 //		String content = FileUtils.readFileContent(path);
 //        processTextTask(new Text(content));
-		String dirPath = "./data/ace2004/RawTexts";
-		String savePath = "./dict/df.txt";
-		String stopPath = "./dict/stopword_en.txt";
-		String PosPath = "./dict/pos.txt";
-		Parameters parameters = new Parameters();
-		DictBean.setStopWordDict(parameters.loadSetDict(stopPath));
-		DictBean.setDfDict(parameters.loadDfDict(savePath));
-		DictBean.setPosDict(parameters.loadSetDict(PosPath));
-		countDF(dirPath, savePath);
+		
+//		String dirPath = "./data/ace2004/RawTexts";
+//		String savePath = "./dict/df.txt";
+//		String stopPath = "./dict/stopword_en.txt";
+//		String PosPath = "./dict/pos.txt";
+//		Parameters parameters = new Parameters();
+//		DictBean.setStopWordDict(parameters.loadSetDict(stopPath));
+//		DictBean.setDfDict(parameters.loadDfDict(savePath));
+//		DictBean.setPosDict(parameters.loadSetDict(PosPath));
+//		countDF(dirPath, savePath);
 	}
 	
 	/**
@@ -74,6 +77,12 @@ public class NLPUtils {
         List<Mention> mentions = text.getEntityGraph().getMentions();
         Parameters parameters = new Parameters();
         DictBean dictBean = parameters.loadSurfaceFormDict();
+        String mentionContextPath = PathBean.getMentionContextDirPath() + text.getTextName();
+        String entityContextPath = PathBean.getEntityContextPath();
+        Map<String, HashSet<String>> mentionContextMap = parameters.loadMapDict(mentionContextPath);
+        DictBean.setEntityContextDict(parameters.loadMapDict(entityContextPath));
+        logger.info("mentionContext map size:"+ mentionContextMap.size());
+        logger.info("entityContext map size:"+parameters.loadMapDict(entityContextPath).size());
         String content;
         int mentionOffset;
         int beginOffset;
@@ -81,6 +90,8 @@ public class NLPUtils {
         int textLen = text.getContent().split("\\s+").length;
         double tfidfValue;
         logger.info("textLen:"+textLen);
+        Map<String, Set<String>> additiveMentionContextDict = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> additiveEntityContextDict = new HashMap<String, Set<String>>();
         for(Mention mention:mentions){
         	logger.info("mention:"+mention.getMentionName());
         	//初始化mention tfidf
@@ -91,49 +102,59 @@ public class NLPUtils {
         	logger.info(mention.getMentionName()+"的tfidf值为:"+tfidfValue);
     		mention.setTfidfValue(tfidfValue);
     		//获取候选实体
-    		List<Entity> candidateEntity = mention.obtainCandidate(dictBean);
+    		List<Entity> candidateEntity = mention.obtainCandidate(dictBean,additiveEntityContextDict);
     		mention.setCandidateEntity(candidateEntity);
-    		//通过mention的offset及窗口来获取上下文
-        	mentionOffset = mention.getMentionOffset();
-        	if(mentionOffset - RELRWParameterBean.getContextWindow() < 0){
-        		beginOffset = 0;
-        	}else{
-        		beginOffset  = mentionOffset - RELRWParameterBean.getContextWindow();
-        	}
-        	
-        	if(mentionOffset + RELRWParameterBean.getContextWindow() >= text.getContent().length()){
-        		endOffset = text.getContent().length();
-        	}else{
-        		endOffset = mentionOffset + RELRWParameterBean.getContextWindow();
-        	}
-        	//substring左闭右开
-        	content = text.getContent().substring(beginOffset,endOffset);
-        	
-        	 // create an empty Annotation just with the given text
-            Annotation document = new Annotation(content);
-            // run all Annotators on this text
-            pipeline.annotate(document);
-            // these are all the sentences in this document
-            List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-            for(CoreMap sentence: sentences) {
-                // a CoreLabel is a CoreMap with additional token-specific methods
-                for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
-                    // this is the POS tag of the token
-                    String pos = token.get(PartOfSpeechAnnotation.class);
-                    // this is the NER label of the token
-                    String ne = token.get(NamedEntityTagAnnotation.class);
-                    // this is the NER label of the token
-                    String lemma = token.get(LemmaAnnotation.class).toLowerCase();
-                    //去停用词
-                    if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
-                    	continue;
-                    //用于记录mention的上下文
-                    if(DictBean.getPosDict().contains(pos) && nerCategory.contains(ne)){
-                    	mention.getMentionContext().add(lemma);
+    		
+    		if(mentionContextMap.containsKey(mention.getMentionName())){
+    			mention.setMentionContext(mentionContextMap.get(mention.getMentionName()));
+    		}else{
+        		//通过mention的offset及窗口来获取上下文
+            	mentionOffset = mention.getMentionOffset();
+            	if(mentionOffset - RELRWParameterBean.getContextWindow() < 0){
+            		beginOffset = 0;
+            	}else{
+            		beginOffset  = mentionOffset - RELRWParameterBean.getContextWindow();
+            	}
+            	
+            	if(mentionOffset + RELRWParameterBean.getContextWindow() >= text.getContent().length()){
+            		endOffset = text.getContent().length();
+            	}else{
+            		endOffset = mentionOffset + RELRWParameterBean.getContextWindow();
+            	}
+            	//substring左闭右开
+            	content = text.getContent().substring(beginOffset,endOffset);
+            	
+            	 // create an empty Annotation just with the given text
+                Annotation document = new Annotation(content);
+                // run all Annotators on this text
+                pipeline.annotate(document);
+                // these are all the sentences in this document
+                List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+                for(CoreMap sentence: sentences) {
+                    // a CoreLabel is a CoreMap with additional token-specific methods
+                    for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
+                        // this is the POS tag of the token
+                        String pos = token.get(PartOfSpeechAnnotation.class);
+                        // this is the NER label of the token
+//                        String ne = token.get(NamedEntityTagAnnotation.class);
+                        // this is the NER label of the token
+                        String lemma = token.get(LemmaAnnotation.class).toLowerCase();
+                        //去停用词
+                        if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
+                        	continue;
+                        //用于记录mention的上下文
+                        if(DictBean.getPosDict().contains(pos)){
+                        	mention.getMentionContext().add(lemma);
+                        }
                     }
                 }
-            }
+                logger.info(mention.getMentionName()+"不在mention上下文词典中");
+                additiveMentionContextDict.put(mention.getMentionName(), mention.getMentionContext());
+    		}
+
         }
+        parameters.pickleContextMap(mentionContextPath, additiveMentionContextDict);
+        parameters.pickleContextMap(entityContextPath, additiveEntityContextDict);
         
         //对mention按照歧义性排序，歧义性按照候选实体个数来定义
         Collections.sort(mentions, new Comparator<Mention>() {
@@ -151,6 +172,7 @@ public class NLPUtils {
 	 * @return
 	 */
 	public static Set<String> getEntityContext(String content){
+		
 		if(content.length() > 2 * RELRWParameterBean.getContextWindow()){
 			content = content.substring(0, 2* RELRWParameterBean.getContextWindow());
 		}
@@ -165,17 +187,17 @@ public class NLPUtils {
            // a CoreLabel is a CoreMap with additional token-specific methods
            for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
                // this is the text of the token
-               //String word = token.get(TextAnnotation.class);
+//               String word = token.get(TextAnnotation.class);
                // this is the POS tag of the token
                String pos = token.get(PartOfSpeechAnnotation.class);
                // this is the NER label of the token
-               String ne = token.get(NamedEntityTagAnnotation.class);
+//               String ne = token.get(NamedEntityTagAnnotation.class);
                String lemma = token.get(LemmaAnnotation.class).toLowerCase();
                //去停用词
                if(DictBean.getStopWordDict().contains(lemma) || lemma.length() < 2)
                	continue;
                //用于记录mention与text的上下文
-               if(DictBean.getPosDict().contains(pos) && nerCategory.contains(ne)){
+               if(DictBean.getPosDict().contains(pos)){
             		nerContextSet.add(lemma); 
             	  
                }

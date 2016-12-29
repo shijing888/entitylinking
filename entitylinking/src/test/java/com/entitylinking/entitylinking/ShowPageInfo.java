@@ -30,7 +30,7 @@ public class ShowPageInfo {
 		PropertyConfigurator.configure("log4j.properties");
 	}
     public static void main(String[] args) throws Exception {
-      showPageInfo("washington,_d.c.");
+      showPageInfo("ministry_of_defense_(iran)");
     }
     
     public static void showPageInfo(String title) throws WikiApiException{
@@ -45,10 +45,10 @@ public class ShowPageInfo {
         Wikipedia wiki = new Wikipedia(dbConfig);
 //        String title = "micheal jordan";
         Page page = wiki.getPage(title);  
-        logger.info(page.getText());
+//        logger.info(page.getText());
         // wikipedia页面的title
         System.out.println("Queried string       : " + title);
-        System.out.println("Title                : " + page.getTitle());
+        System.out.println("Title                : " + page.getTitle().getWikiStyleTitle().toLowerCase());
         System.out.println("id                   : " + page.getPageId());
         // 是否是消歧页面
         System.out.println("IsDisambiguationPage : " + page.isDisambiguation());       

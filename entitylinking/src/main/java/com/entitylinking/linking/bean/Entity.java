@@ -1,8 +1,10 @@
 package com.entitylinking.linking.bean;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.sweble.wikitext.lazy.utils.ParserShouldNotBeHereException;
 
 import com.entitylinking.config.WikiConfig;
 import com.entitylinking.utils.NLPUtils;
@@ -71,19 +73,26 @@ public class Entity {
      * @param title
      * @throws WikiApiException
      */
-    public void getEntityPageInfo(String title){
+    public void getEntityPageInfo(String title,Map<String, Set<String>> additiveEntityContextDict){
 		try {
 			page = wikipedia.getPage(title);
 			//初始化流行度
 	        popularity = page.getNumberOfInlinks();
 	        //初始化title
 	        entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
-	        //初始化上下文
-	        String content = page.getPlainText();
-	        if(content.length() > RELRWParameterBean.getEntityContentLen()){
-	        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());
+	        if(DictBean.getEntityContextDict().containsKey(entityName)){
+	        	entityContext = DictBean.getEntityContextDict().get(entityName);
+	        }else{
+	        	 //初始化上下文
+		        String content = page.getPlainText();
+		        if(content.length() > RELRWParameterBean.getEntityContentLen()){
+		        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());
+		        }
+		        entityContext = NLPUtils.getEntityContext(content);
+		        logger.info(entityName+"不在实体上下文词典中");
+		        additiveEntityContextDict.put(entityName, entityContext);
 	        }
-	        entityContext = NLPUtils.getEntityContext(content);
+	       
 		}catch (WikiPageNotFoundException e) {
  			// TODO Auto-generated catch block
  			logger.info(title +" is not found!");
@@ -92,7 +101,9 @@ public class Entity {
  			// TODO Auto-generated catch block
  			logger.info(title +" is not an entity!");
  			e.printStackTrace();
- 		}
+ 		}catch (ParserShouldNotBeHereException e) {
+			// TODO: handle exception
+		}
     }
     
     /**
