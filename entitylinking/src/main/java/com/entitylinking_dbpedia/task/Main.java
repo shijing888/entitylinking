@@ -1,4 +1,4 @@
-package com.entitylinking.task;
+package com.entitylinking_dbpedia.task;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,22 +10,23 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import com.entitylinking.linking.LinkingKB;
-import com.entitylinking.linking.bean.DictBean;
-import com.entitylinking.linking.bean.Entity;
-import com.entitylinking.linking.bean.Mention;
-import com.entitylinking.linking.bean.PathBean;
-import com.entitylinking.linking.bean.RELRWParameterBean;
-import com.entitylinking.linking.bean.Text;
-import com.entitylinking.utils.FileUtils;
-import com.entitylinking.utils.Parameters;
+import com.entitylinking_dbpedia.linking.LinkingKB;
+import com.entitylinking_dbpedia.linking.bean.DictBean;
+import com.entitylinking_dbpedia.linking.bean.Entity;
+import com.entitylinking_dbpedia.linking.bean.Mention;
+import com.entitylinking_dbpedia.linking.bean.PathBean;
+import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
+import com.entitylinking_dbpedia.linking.bean.Text;
+import com.entitylinking_dbpedia.utils.FileUtils;
+import com.entitylinking_dbpedia.utils.NLPUtils;
+import com.entitylinking_dbpedia.utils.Parameters;
 
 /**
  * 实体链接主程序
@@ -48,7 +49,11 @@ public class Main {
 		 */
 		Main main = new Main();
 		main.init();
-		main.linkingMainProcess();
+//		main.linkingMainProcess();
+		//处理短文本上下文
+		String rpath = "./data/dbpedia/short_abstracts_en";
+		String wpath = "./data/dbpedia/short_abstracts_context.ttl";
+		NLPUtils.processShortAbstract(rpath, wpath);
 		
 	}
 	

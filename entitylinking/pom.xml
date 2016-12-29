@@ -86,18 +86,16 @@
            <version>3.6.1</version>
         </dependency>
 		
-		<!-- 
 		<dependency>
-   			<groupId>edu.stanford.nlp</groupId>
-   			<artifactId>stanford-corenlp</artifactId>
-  			<version>3.6.0</version>
+   			 <groupId>org.apache.jena</groupId>
+   			 <artifactId>jena-core</artifactId>
+  			 <version>3.1.1</version>
 		</dependency>
-
+		
 		<dependency>
-   			<groupId>edu.stanford.nlp</groupId>
-            <artifactId>stanford-corenlp</artifactId>
-            <version>3.6.0</version>
-            <classifier>models</classifier>
-        </dependency> -->
+  			 <groupId>org.apache.jena</groupId>
+    		 <artifactId>jena-arq</artifactId>
+  		     <version>3.1.1</version>
+		</dependency>
 	</dependencies>
 </project>
