@@ -131,9 +131,9 @@ public class Text {
 		}
 		List<Entity> entityList = new ArrayList<Entity>(entities);
 		BooleanClause.Occur[] flags=new BooleanClause.Occur[]{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
-		String[] queryFields = {RELRWParameterBean.getEntityRelationField3(),
-				RELRWParameterBean.getEntityRelationField3()};
-		String indexDir = PathBean.getEntityRelationPath();
+		String[] queryFields = {RELRWParameterBean.getEntityRelationField1(),
+				RELRWParameterBean.getEntityRelationField2()};
+		String indexDir = PathBean.getEntityByDbpediaRelationPath();
 		int popularityThresh = RELRWParameterBean.getPopularityThresh();
 		long time1,time2;
 		time1 = System.currentTimeMillis();
@@ -143,6 +143,9 @@ public class Text {
 				String[] querys = new String[]{entityList.get(i).getEntityName(),
 						entityList.get(j).getEntityName()};
 				Set<String> set = IndexFile.coocurenceEntities(querys, queryFields, flags, indexDir);
+				querys[0] = entityList.get(j).getEntityName();
+				querys[1] = entityList.get(i).getEntityName();
+				set.addAll(IndexFile.coocurenceEntities(querys, queryFields, flags, indexDir));
 //				logger.info(i+"\t"+j+"\t的共现实体有:"+set.size());
 				for(String item:set){
 					String[] itemArray = item.split("\t");

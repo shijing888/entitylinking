@@ -1,6 +1,7 @@
 package com.entitylinking_dbpedia.linking.bean;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +9,9 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.lucene.document.Document;
 
+import com.entitylinking_dbpedia.lucene.IndexFile;
 import com.entitylinking_dbpedia.linking.bean.DictBean;
 import com.entitylinking_dbpedia.linking.bean.Entity;
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
@@ -27,8 +30,12 @@ public class Mention {
 	private String mentionName;
 	/**mention在文档集中的tfidf值*/
 	private double tfidfValue;
-	/**目标实体*/
-	private String objectEntity;
+	/**wiki目标实体*/
+	private String wikiObjectEntity;
+	/**dbpedia目标实体*/
+	private String dbpediaObjectEntity;
+	/**yago目标实体*/
+	private String yagoObjectEntity;
 	/**mention的候选实体集*/
 	private List<Entity> candidateEntity;
 	/**mention首次出现的位置*/
@@ -77,14 +84,25 @@ public class Mention {
 	public void setMentionName(String mentionName) {
 		this.mentionName = mentionName;
 	}
-	public String getObjectEntity() {
-		return objectEntity;
-	}
 
-	public void setObjectEntity(String objectEntity) {
-		this.objectEntity = objectEntity;
+	public String getWikiObjectEntity() {
+		return wikiObjectEntity;
 	}
-
+	public void setWikiObjectEntity(String wikiObjectEntity) {
+		this.wikiObjectEntity = wikiObjectEntity;
+	}
+	public String getDbpediaObjectEntity() {
+		return dbpediaObjectEntity;
+	}
+	public void setDbpediaObjectEntity(String dbpediaObjectEntity) {
+		this.dbpediaObjectEntity = dbpediaObjectEntity;
+	}
+	public String getYagoObjectEntity() {
+		return yagoObjectEntity;
+	}
+	public void setYagoObjectEntity(String yagoObjectEntity) {
+		this.yagoObjectEntity = yagoObjectEntity;
+	}
 	public double getTfidfValue() {
 		return tfidfValue;
 	}
@@ -116,31 +134,31 @@ public class Mention {
 		String mentionStr = NormalizeMention.getNormalizeMention(this.mentionName,true);
 		Set<String> candidateSet = new HashSet<>();
 		List<Entity> entities = new ArrayList<>();
+		Document document;
 		//先从同义词典中寻找
-		if(dictBean.getSynonymsDict().containsKey(mentionStr)){
-			candidateSet.add(dictBean.getSynonymsDict().get(mentionStr));
+		document = IndexFile.queryDocument(mentionStr, RELRWParameterBean.getSynonymsDictField1(),
+				PathBean.getSynonymsDictPath());
+		if(document != null){
+			String synonymsValue = document.get(RELRWParameterBean.getSynonymsDictField2());
+			candidateSet.add(synonymsValue);
+			document = IndexFile.queryDocument(synonymsValue, RELRWParameterBean.getAmbiguationDictField1(),
+					PathBean.getAmbiguationDictPath());
+			if(document != null){
+				String[] candidates = document.get(RELRWParameterBean.getAmbiguationDictField2()).split("\t\\|\t");
+				candidateSet.addAll(Arrays.asList(candidates));
+			}
 		}
 		//再从歧义词典中寻找
-		if(dictBean.getAmbiguationDict().containsKey(mentionStr)){
-			candidateSet.addAll(dictBean.getAmbiguationDict().get(mentionStr));
-		}
-		if(dictBean.getAmbiguationDict().containsKey(dictBean.getSynonymsDict().get(mentionStr))){
-			candidateSet.addAll(dictBean.getAmbiguationDict().get(dictBean.getSynonymsDict().get(mentionStr)));
+		document = IndexFile.queryDocument(mentionStr, RELRWParameterBean.getAmbiguationDictField1(),
+				PathBean.getAmbiguationDictPath());
+		if(document != null){
+			String[] candidates = document.get(RELRWParameterBean.getAmbiguationDictField2()).split("\t\\|\t");
+			candidateSet.addAll(Arrays.asList(candidates));
 		}
 		
-		//若候选本身为歧义，则将其歧义项加进来
-//		Queue<String> seeds = new LinkedList<String>(candidateSet);
-//		String candidate;
-//		while(!seeds.isEmpty()){
-//			candidate = seeds.poll();
-////			logger.info("candidate:"+candidate);
-//			if(DictBean.getAmbiguationDict().containsKey(candidate)){
-////				logger.info("add candidates:"+ StringUtils.join(DictBean.getAmbiguationDict().get(candidate),"\t"));
-//				candidateSet.addAll(DictBean.getAmbiguationDict().get(candidate));
-//				candidateSet.remove(candidate);
-////				seeds.addAll(DictBean.getAmbiguationDict().get(candidate));
-//			}
-//		}
+		//再通过Lucene寻找
+		candidateSet.addAll(IndexFile.queryCandidateLabel(mentionStr, RELRWParameterBean.getDbpediaLabelField(),
+				PathBean.getDbpediaLabelNamePath()));
 		
 		logger.info("candidateSet size:"+candidateSet.size());
 		logger.info(mentionStr+"的candidateSet:"+ StringUtils.join(candidateSet, "\t"));
@@ -153,15 +171,26 @@ public class Mention {
 			if(entityStr.contains(disambiguationStr)){
 				continue;
 			}
-			Entity entity = new Entity();
-			normEntityName = entity.getEntityName(entityStr);
+			
+			normEntityName = NormalizeMention.getNormalizeMention(entityStr, true);
 			if(normEntityName == null || candidateEntitySet.contains(normEntityName)){
+				continue;
+			}
+			
+			//通过dbpedia标签文件判断是否为实体
+			document = IndexFile.queryDocument(normEntityName, RELRWParameterBean.getDbpediaLabelField(),
+					PathBean.getDbpediaLabelNamePath());
+			if(document == null){
 				continue;
 			}
 			
 			try {
 				//获取实体名称、流行度及上下文信息
-				entity.getEntityPageInfo(normEntityName,additiveEntityContextDict);
+				Entity entity = new Entity();
+				entity = entity.getEntityPageInfo(normEntityName,additiveEntityContextDict);
+				if(entity == null){
+					continue;
+				}
 				entity.setScore(CommonUtils.commonWords(this, entity));
 				logger.info("entity title:"+normEntityName);
 				candidateEntitySet.add(normEntityName);
@@ -192,8 +221,8 @@ public class Mention {
 				}
 				
 				if(!tempSet.contains(entities2.get(i).getEntityName())){
-					entities3.add(entities.get(i));
-					tempSet.add(entities.get(i).getEntityName());
+					entities3.add(entities2.get(i));
+					tempSet.add(entities2.get(i).getEntityName());
 				}
 				i++;
 			}else{
@@ -201,14 +230,18 @@ public class Mention {
 			}
 		}
 		
-		//从训练集中获得
-		if(!tempSet.contains(this.objectEntity)){
-			//获取实体名称、流行度及上下文信息
-			Entity entity = new Entity();
-			entity.getEntityPageInfo(this.objectEntity,additiveEntityContextDict);
-			entity.setScore(CommonUtils.commonWords(this, entity));
-			entities3.add(entity);
-		}
+//		//从训练集中获得
+//		if(!tempSet.contains(this.dbpediaObjectEntity)){
+//			//获取实体名称、流行度及上下文信息
+//			Entity entity = new Entity();
+//			entity = entity.getEntityPageInfo(this.dbpediaObjectEntity,additiveEntityContextDict);
+//			
+//			if(entity != null){
+//				entity.setScore(CommonUtils.commonWords(this, entity));
+//				entities3.add(entity);
+//			}
+//			
+//		}
 		logger.info(mentionStr+"的candidateList size:"+entities3.size());		
 		for(Entity entity:entities3){
 			logger.info(mentionStr+"的candidate:"+ entity.getEntityName());

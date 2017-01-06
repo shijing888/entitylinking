@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EL>
+	<paramenter>
+		<!-- 数据集文件夹路径 -->
+		<fileDirPath>./data/ace2004/RawTexts</fileDirPath>
+		<!-- 上下文窗口 -->
+		<contextWindow>500</contextWindow>
+		<!-- 随机游走alpha -->
+		<alpha>0.85</alpha>
+		<!-- 收敛精度 -->
+		<convergencePrecise>0.01</convergencePrecise>
+		<!-- 散度gamma值 -->
+		<gamma>20</gamma>
+		<!-- 限制实体正文字符长度 -->
+		<entityContentLen>1000</entityContentLen>
+		<!-- 候选实体剪枝阈值 -->
+		<candidateEntityNumThresh>40</candidateEntityNumThresh>
+		<!-- 流行度阈值 -->
+		<popularityThresh>1</popularityThresh>
+		<!-- 实体共现次数阈值 -->
+		<cooccurenceThresh>5</cooccurenceThresh>
+		<!-- 语义相似性权值 -->
+		<semanticSimWeight>0.2</semanticSimWeight>
+		<!-- 上下文相似性权值 -->
+		<contextSimWeight>0.25</contextSimWeight>
+		<!-- 先验权值 -->
+		<popularityWeight>0.35</popularityWeight>
+		<!-- 字面量相似性权值 -->
+		<literalSimWeight>0.2</literalSimWeight>
+		<!-- 空值阈值 -->
+		<nilThres>0.05</nilThres>
+		<!-- 字面量sigmoid函数参数 -->
+		<literalSigmoidParameter>5</literalSigmoidParameter>
+	</paramenter>
+	<constant>
+		<!-- 空实体链接 -->
+		<nil>nil</nil>
+	</constant>
+	<indexFields>
+		<!-- 实体共现关系域 -->
+		<entityRelationFields>
+			<field1>entity1</field1>
+			<field2>entity2</field2>
+			<field3>entityCoocurCount</field3>
+		</entityRelationFields>
+		<!-- 短摘要 -->
+		<shortAbstractTextFields>
+			<field1>entity</field1>
+			<field2>abstractText</field2>
+		</shortAbstractTextFields>
+		<!-- 同义词典 -->
+		<synonymsDictFields>
+			<field1>synonymsKey</field1>
+			<field2>synonymsItems</field2>
+		</synonymsDictFields>
+		<!-- 歧义词典 -->
+		<ambiguationDictFields>
+			<field1>ambiguationKey</field1>
+			<field2>ambiguationItems</field2>
+		</ambiguationDictFields>
+		<!-- dbpedia实体标签 -->
+		<dbpediaLabelFields>
+			<field1>labelName</field1>
+		</dbpediaLabelFields>
+	</indexFields>
+</EL>

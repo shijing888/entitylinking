@@ -46,28 +46,57 @@ public class IndexFile {
 	private static Analyzer analyzer;
 	private static QueryParser singleQueryParser;
 	private static IndexSearcher indexSearcher;
-	private static String[] cooccurenceQueryFields = new String[]{RELRWParameterBean.getEntityRelationField3(),
-													RELRWParameterBean.getEntityRelationField3()};
+
+	private static String[] entityCoocurCountsFields = new String[]{RELRWParameterBean.getEntityRelationField1(),
+													RELRWParameterBean.getEntityRelationField2()};
+//	private static String[] entityCoocurCountsFields = new String[]{"entity1","entity2"};
 	private static BooleanClause.Occur[] flags = new BooleanClause.Occur[]
 													{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
 	public static void main(String args[]){
+		//实体共现关系索引创建
+//		//索引文件夹
+//		String indexDir1 = "./index/entityByDbpediaRelationIndex";
+//		//需要创建索引的文件
+//		String filePath1 = "./data/dbpedia/infobox_properties_enCoccurence.ttl";
+//		//索引的字段
+//		String[] fields1 = new String[]{"entity1","entity2","entityCoocurCount"};
+//		creatIndex(filePath1, indexDir1, fields1);
 		
+		//实体短文本摘要索引创建
+//		//索引文件夹
+//		String indexDir2 = "./index/short_abstractTextIndex";
+//		//需要创建索引的文件
+//		String filePath2 = "./data/dbpedia/short_abstracts_enText.ttl";
+//		//索引的字段
+//		String[] fields2 = new String[]{"entity","abstractText"};
+//		creatIndex(filePath2, indexDir2, fields2);
+		
+//		//同义词典索引创建
+//		//索引文件夹
+//		String indexDir3 = "./index/synonymsIndex";
+//		//需要创建索引的文件
+//		String filePath3 = "./dict/synonymsDict.txt";
+//		//索引的字段
+//		String[] fields3 = new String[]{"synonymsKey","synonymsItems"};
+//		creatIndex(filePath3, indexDir3, fields3);
+
+		//歧义词典索引创建
 		//索引文件夹
-		String indexDir1 = "./index/synonymsIndex";
-		String indexDir2 = "./index/ambiguationIndex";
-		String indexDir3 = "./index/entityRelationIndex";
-		//需要创建索引的文件
-		String filePath1 = "./dict/synonymsDict.txt";
-		String filePath2 = "./dict/ambiguationDict.txt";
-		String filePath3 = "./dict/entityRelation.txt";
-		//索引的字段
-		String[] fields1 = new String[]{"synonymsDictKey","synonymsDictValue"}; 
-		String[] fields2 = new String[]{"ambiguationDictKey","ambiguationDictValue"}; 
-		String[] fields3 = new String[]{"entityRelationKey","entityCount","entityRelationValue"}; 
+//		String indexDir4 = "./index/ambiguationIndex";
+//		//需要创建索引的文件
+//		String filePath4 = "./dict/ambiguationDict.txt";
+//		//索引的字段
+//		String[] fields4 = new String[]{"ambiguationKey","ambiguationItems"};
+//		creatIndex(filePath4, indexDir4, fields4);
 		
-		creatIndex(filePath1, indexDir1, fields1);
-		creatIndex(filePath2, indexDir2, fields2);
-		creatIndex(filePath3, indexDir3, fields3);
+//		//label实体标记索引创建
+//		//索引文件夹
+		String indexDir5 = "./index/labelIndex";
+		//需要创建索引的文件
+		String filePath5 = "./data/dbpedia/labels_enText.ttl";
+		//索引的字段
+		String[] fields5 = new String[]{"labelName"};
+		creatIndex(filePath5, indexDir5, fields5);
 	}
 	
 	/**
@@ -136,13 +165,50 @@ public class IndexFile {
 		return null;
 	}
 	
+	/**
+	 * 查询两个实体之间成边的次数
+	 * @param querys
+	 * @param indexDir
+	 * @return
+	 */
+	public static int entityCoocurCounts(String[] querys, String indexDir){
+		int count = 0;
+		if(querys.length == 2){
+			querys[0] = QueryParser.escape(querys[0]);
+			querys[1] = QueryParser.escape(querys[1]);
+		}
+		try {
+			initAnalyzer();
+			initIndexSearcher(indexDir);
+			//5. 创建查询解析器，解析query
+			Query query = MultiFieldQueryParser.parse(querys, entityCoocurCountsFields, flags,analyzer);
+			TopDocs topDocs  = indexSearcher.search(query, 1);
+			if(topDocs.scoreDocs.length > 0){
+				Document document = indexSearcher.doc(topDocs.scoreDocs[0].doc);
+				count = Integer.parseInt(document.get(RELRWParameterBean.getEntityRelationField3()));
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return count;
+	}
+	
+	/**
+	 * 将共现实体查询出来
+	 * @param querys
+	 * @param queryFields
+	 * @param flags
+	 * @param indexDir
+	 * @return
+	 */
 	public static Set<String> coocurenceEntities(String[] querys,String[] queryFields, 
 			BooleanClause.Occur[] flags,String indexDir){
 		Set<String> entitySet = new HashSet<>();
 		try {
 			initAnalyzer();
 			initIndexSearcher(indexDir);
-			//5. 创建查询解析器，解析query
 			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
 			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXCoocurence).scoreDocs;
 			for(ScoreDoc scoreDoc:scoreDocs){
@@ -161,6 +227,39 @@ public class IndexFile {
 			
 		return entitySet;
 	} 
+	
+	/**
+	 * 通过lucene查询词的候选
+	 * @param queryString
+	 * @param queryField
+	 * @param indexDir
+	 * @return
+	 */
+	public static Set<String> queryCandidateLabel(String queryString,String queryField,String indexDir){
+		Set<String> entitySet = new HashSet<>();
+		try {
+			queryString = QueryParser.escape(queryString);
+			initAnalyzer();
+			initIndexSearcher(indexDir);
+			singleQueryParser = singleQueryParserOfEntityCoocurence(queryField);
+			//解析查询字符串获取查询对象
+			Query query = singleQueryParser.parse(queryString);
+			TopDocs topDocs = indexSearcher.search(query,RELRWParameterBean.getCandidateEntityNumThresh());
+			ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+			for(ScoreDoc scoreDoc:scoreDocs){
+				entitySet.add(indexSearcher.doc(scoreDoc.doc)
+						.get(queryField));
+				System.out.println(indexSearcher.doc(scoreDoc.doc)
+						.get(queryField));
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		return entitySet;
+	} 
+	
 	
 	/**
 	 * 查询某个实体的出现次数
@@ -188,52 +287,20 @@ public class IndexFile {
 		
 		return 0;
 	}
-	/**
-	 * 通过查询共现次数来获取实体图中边的权重
-	 * @param querys
-	 * @param queryFields
-	 * @param indexDir
-	 * @return
-	 */
-	public static int countCooccurence(String[] querys, String indexDir){
-		int count = 0;
-		if(querys.length == 2){
-			querys[0] = QueryParser.escape(querys[0]);
-			querys[1] = QueryParser.escape(querys[1]);
-		}
-		try {
-			initAnalyzer();
-			initIndexSearcher(indexDir);
-			//5. 创建查询解析器，解析query
-			Query query = MultiFieldQueryParser.parse(querys, cooccurenceQueryFields, flags,analyzer);
-//			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXTOP).scoreDocs;
-//			for(ScoreDoc scoreDoc:scoreDocs){
-//				System.out.println(indexSearcher.doc(scoreDoc.doc).get(queryFields[0]));
-//			}
-			count = indexSearcher.search(query, MAXCoocurence).scoreDocs.length;
-//			logger.info(querys[0]+"\t"+querys[1]+"\t共现次数:"+count);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return count;
-	}
 	
 	/**
 	 * 初始化indexSearcher
 	 */
 	public static void initIndexSearcher(String indexDir){
+		
+		
 		try {
-			if(indexSearcher == null){
-				//1. 获取索引文件目录
-				Directory directory = FSDirectory.open(Paths.get(indexDir));
-				//2. 创建IndexReader对象，读取索引文件
-				IndexReader indexReader = DirectoryReader.open(directory);
-				//3. 创建索引查询器，查询索引文件
-				if(indexSearcher == null)
-					indexSearcher = new IndexSearcher(indexReader);
-			}
+			//1. 获取索引文件目录
+			Directory directory = FSDirectory.open(Paths.get(indexDir));
+			//2. 创建IndexReader对象，读取索引文件
+			IndexReader indexReader = DirectoryReader.open(directory);
+			//3. 创建索引查询器，查询索引文件
+			indexSearcher = new IndexSearcher(indexReader);
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -257,32 +324,30 @@ public class IndexFile {
 	 */
 	public static QueryParser singleQueryParserOfEntityCoocurence(String queryField){
 
-		if(singleQueryParser == null){
-			singleQueryParser = new QueryParser(queryField, analyzer);
-		}
+		singleQueryParser = new QueryParser(queryField, analyzer);
 		return singleQueryParser;
 	} 
 	
 	@Test
 	public void test(){
-//		String[] querys = {"greens/green_party_usa","green"};
-		String indexDir = "./index/entityRelationIndex";
-		String qString ="china";
+//		String[] querys1 = {"newfoundland_and_labrador","shawn_doyle"};
+//		String[] querys2 = {"shawn_doyle","newfoundland_and_labrador"};
+//		String indexDir = "./index/entityByDbpediaRelationIndex";
+//		String qString ="jerusalem";
+//		Document document = queryDocument(qString, "synonymsKey", "./index/synonymsIndex");
+//		System.out.println(document.get("synonymsItems"));
+//		System.out.println("doc1:"+document.toString());
+//		qString ="china";
+//		document = queryDocument(qString, "ambiguationKey", "./index/ambiguationIndex");
+//		System.out.println(document.get("ambiguationKey"));
+//		System.out.println("doc2:"+document.toString());
 //		coocurenceEntities(querys, queryFields,flags, indexDir);
-//		int count = countCooccurence(querys, indexDir);
-		int count = countSingleOccurence(qString, indexDir);
-		System.out.println(count);
+//		int count = entityCoocurCounts(querys1, indexDir);
+//		count += entityCoocurCounts(querys2, indexDir);
+//		int count = countSingleOccurence(qString, indexDir);
+//		System.out.println(count);
 //		Document document = queryDocument(ss.replaceAll("/", "//"), "entityRelationValue", "./index/entityRelationIndex");
 //		System.out.println(document.get("entityRelationValue"));
-		//		 String sql="1' or '1'='1";  
-//        System.out.println("防SQL注入:"+StringEscapeUtils.escapeSql(sql)); //防SQL注入  
-//          
-//        System.out.println("转义HTML,注意汉字:"+StringEscapeUtils.escapeHtml("<font>chen磊  xing</font>"));    //转义HTML,注意汉字  
-//        System.out.println("反转义HTML:"+StringEscapeUtils.unescapeHtml("<font>chen磊  xing</font>"));  //反转义HTML  
-//          
-//        System.out.println("转成Unicode编码："+StringEscapeUtils.escapeJava("陈磊兴"));     //转义成Unicode编码  
-//          
-//        System.out.println("转义XML："+StringEscapeUtils.escapeXml("<name>陈磊兴</name>"));   //转义xml  
-//        System.out.println("反转义XML："+StringEscapeUtils.unescapeXml("<name>陈磊兴</name>"));    //转义xml  
+
 	}
 }

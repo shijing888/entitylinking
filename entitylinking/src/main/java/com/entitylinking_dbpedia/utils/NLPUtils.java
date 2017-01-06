@@ -75,7 +75,7 @@ public class NLPUtils {
 		String PosPath = "./dict/pos.txt";
 		Parameters parameters = new Parameters();
 		DictBean.setStopWordDict(parameters.loadSetDict(stopPath));
-		DictBean.setDfDict(parameters.loadDfDict(savePath));
+		DictBean.setDfDict(parameters.loadString2IntegerDict(savePath));
 		DictBean.setPosDict(parameters.loadSetDict(PosPath));
 		countDF(dirPath, savePath);
 	}
@@ -88,22 +88,22 @@ public class NLPUtils {
 		//mentions从xml中已经加载完成
         List<Mention> mentions = text.getEntityGraph().getMentions();
         Parameters parameters = new Parameters();
-        DictBean dictBean = parameters.loadSurfaceFormDict();
+//        DictBean dictBean = parameters.loadSurfaceFormDict();
+        DictBean dictBean = null;
         String mentionContextPath = PathBean.getMentionContextDirPath() + text.getTextName();
-        String entityContextPath = PathBean.getEntityContextPath();
+        String entityByDbpediaContextPath = PathBean.getEntityByDbpediaContextPath();
         Map<String, HashSet<String>> mentionContextMap = parameters.loadMapDict(mentionContextPath);
-        DictBean.setEntityContextDict(parameters.loadMapDict(entityContextPath));
-        logger.info("mentionContext map size:"+ mentionContextMap.size());
-        logger.info("entityContext map size:"+parameters.loadMapDict(entityContextPath).size());
+        DictBean.setEntityContextDict(parameters.loadMapDict(entityByDbpediaContextPath));
+
         String content;
         int mentionOffset;
         int beginOffset;
         int endOffset;
         int textLen = text.getContent().split("\\s+").length;
         double tfidfValue;
-        logger.info("textLen:"+textLen);
         Map<String, Set<String>> additiveMentionContextDict = new HashMap<String, Set<String>>();
         Map<String, Set<String>> additiveEntityContextDict = new HashMap<String, Set<String>>();
+       
         for(Mention mention:mentions){
         	logger.info("mention:"+mention.getMentionName());
         	//初始化mention tfidf
@@ -166,7 +166,7 @@ public class NLPUtils {
 
         }
         parameters.pickleContextMap(mentionContextPath, additiveMentionContextDict);
-        parameters.pickleContextMap(entityContextPath, additiveEntityContextDict);
+        parameters.pickleContextMap(entityByDbpediaContextPath, additiveEntityContextDict);
         
         //对mention按照歧义性排序，歧义性按照候选实体个数来定义
         Collections.sort(mentions, new Comparator<Mention>() {

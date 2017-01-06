@@ -21,7 +21,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.IndexSearcher;
@@ -125,6 +124,8 @@ public class IndexFile {
 			Query query = singleQueryParser.parse(queryString);
 			TopDocs topDocs = indexSearcher.search(query,1);
 			//7. 处理查询结果
+			System.out.println(topDocs != null);
+			System.out.println(topDocs.scoreDocs.length);
 			if(topDocs != null && topDocs.scoreDocs.length > 0){
 				return indexSearcher.doc(topDocs.scoreDocs[0].doc);
 			}
@@ -267,14 +268,14 @@ public class IndexFile {
 	@Test
 	public void test(){
 //		String[] querys = {"greens/green_party_usa","green"};
-		String indexDir = "./index/entityRelationIndex";
-		String qString ="china";
+//		String indexDir = "./index/entityRelationIndex";
+		String qString ="siege_of_jerusalem_(1099)";
 //		coocurenceEntities(querys, queryFields,flags, indexDir);
 //		int count = countCooccurence(querys, indexDir);
-		int count = countSingleOccurence(qString, indexDir);
-		System.out.println(count);
-//		Document document = queryDocument(ss.replaceAll("/", "//"), "entityRelationValue", "./index/entityRelationIndex");
-//		System.out.println(document.get("entityRelationValue"));
+//		int count = countSingleOccurence(qString, indexDir);
+//		System.out.println(count);
+		Document document = queryDocument(qString, "entity", "./index/entityByDbpediaRelationIndex");
+		System.out.println(document.get("entity"));
 		//		 String sql="1' or '1'='1";  
 //        System.out.println("防SQL注入:"+StringEscapeUtils.escapeSql(sql)); //防SQL注入  
 //          

@@ -49,10 +49,16 @@ public class Parameters {
 	public void loadDictFromXML(){
 		DictBean.setPosDict(loadSetDict(PathBean.getPosDictPath()));
 		DictBean.setStopWordDict(loadSetDict(PathBean.getStopWordDictPath()));
-		DictBean.setDfDict(loadDfDict(PathBean.getDfDictPath()));
+		DictBean.setDfDict(loadString2IntegerDict(PathBean.getDfDictPath()));
 		DictBean.setMentionDict(loadMentionDict(PathBean.getMentionDictPath()));
+		DictBean.setEntityByDbpeidaPopularityDict(loadString2IntegerDict(
+				PathBean.getEntityByDbpeidaPopularityPath()));
 	}
 	
+	/**
+	 * 加载同义歧义词典
+	 * @return
+	 */
 	public DictBean loadSurfaceFormDict(){
 		DictBean dictBean = new DictBean();
 		if(PathBean.getSynonymsDictPath()!=null 
@@ -113,13 +119,19 @@ public class Parameters {
 				PathBean.setStopWordDictPath(element.elementText("stopwords"));
 				PathBean.setDfDictPath(element.elementText("df"));
 				PathBean.setMentionDictPath(element.elementText("mentionDict"));
+				PathBean.setEntityByDbpeidaPopularityPath(element.elementText("entityByDbpeidaPopularity"));
 			}else if(element.getName().equals("relPath")){//robust 实体链接方法参数
-				PathBean.setRelParameterPath(element.elementText("relParameterPath"));
+				PathBean.setRelParameterByDbpediaPath(element.elementText("relParameterByDbpediaPath"));
 				PathBean.setResultDirPath(element.elementText("resultDir"));
 				PathBean.setEntityContextPath(element.elementText("entityContextPath"));
+				PathBean.setEntityByDbpediaContextPath(element.elementText("entityByDbpediaContextPath"));
 				PathBean.setMentionContextDirPath(element.elementText("mentionContextDirPath"));
 			}else if(element.getName().equals("indexDirPath")){//索引文件路径
-				PathBean.setEntityRelationPath(element.elementText("entityRelationPath"));
+				PathBean.setShortAbstractTextPath(element.elementText("shortAbstractTextPath"));
+				PathBean.setEntityByDbpediaRelationPath(element.elementText("entityByDbpediaRelationPath"));
+				PathBean.setSynonymsDictPath(element.elementText("synonymsDictPath"));
+				PathBean.setAmbiguationDictPath(element.elementText("ambiguationDictPath"));
+				PathBean.setDbpediaLabelNamePath(element.elementText("dbpediaLabelName"));
 			}
 		}
 	}
@@ -191,8 +203,12 @@ public class Parameters {
 			for(Element subElement:subElements){
 				Mention mention = new Mention(NormalizeMention.getNormalizeMention(
 						subElement.elementText("mention"), true));
-				mention.setObjectEntity(NormalizeMention.getNormalizeMention(
+				mention.setWikiObjectEntity(NormalizeMention.getNormalizeMention(
 						subElement.elementText("wikiName"),true));
+				mention.setDbpediaObjectEntity(NormalizeMention.getNormalizeMention(
+						subElement.elementText("dbpediaName"),true));
+				mention.setYagoObjectEntity(NormalizeMention.getNormalizeMention(
+						subElement.elementText("yagoName"),true));
 				mention.setMentionOffset(Integer.parseInt(subElement.elementText("offset")));
 				mention.setOccurCounts(Integer.parseInt(subElement.elementText("length")));
 				mentions.add(mention);
@@ -211,7 +227,7 @@ public class Parameters {
 	@SuppressWarnings("unchecked")
 	public void getMentionDf(String wpath,String xmlPath){
 		try {
-			Map<String, Integer> dfMap = loadDfDict(wpath);
+			Map<String, Integer> dfMap = loadString2IntegerDict(wpath);
 			List<Element> elements = getElementsFromXML(xmlPath);
 			for(Element element:elements){
 				List<Element> subElements = element.elements();
@@ -243,7 +259,7 @@ public class Parameters {
 	 * @param path
 	 * @return
 	 */
-	public Map<String, Integer> loadDfDict(String path){
+	public Map<String, Integer> loadString2IntegerDict(String path){
 		Map<String, Integer> dfMap = new HashMap<>();
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -374,6 +390,10 @@ public class Parameters {
 							element.elementText("contextSimWeight")));
 					RELRWParameterBean.setPopularityWeight(Double.parseDouble(
 							element.elementText("popularityWeight")));
+					RELRWParameterBean.setLiteralSimWeight(Double.parseDouble(
+							element.elementText("literalSimWeight")));
+					RELRWParameterBean.setSigmoidParameter(Double.parseDouble(
+							element.elementText("literalSigmoidParameter")));
 					RELRWParameterBean.setNilThres(Double.parseDouble(element.elementText("nilThres")));
 				}else if(element.getName().equals("indexFields")){
 					List<Element> subElements = element.elements();
@@ -385,6 +405,24 @@ public class Parameters {
 									subElement.elementText("field2"));
 							RELRWParameterBean.setEntityRelationField3(
 									subElement.elementText("field3"));
+						}else if(subElement.getName().equals("shortAbstractTextFields")){
+							RELRWParameterBean.setShortAbstractField1(
+									subElement.elementText("field1"));
+							RELRWParameterBean.setShortAbstractField2(
+									subElement.elementText("field2"));
+						}else if(subElement.getName().equals("synonymsDictFields")){
+							RELRWParameterBean.setSynonymsDictField1(
+									subElement.elementText("field1"));
+							RELRWParameterBean.setSynonymsDictField2(
+									subElement.elementText("field2"));
+						}else if(subElement.getName().equals("ambiguationDictFields")){
+							RELRWParameterBean.setAmbiguationDictField1(
+									subElement.elementText("field1"));
+							RELRWParameterBean.setAmbiguationDictField2(
+									subElement.elementText("field2"));
+						}else if(subElement.getName().equals("dbpediaLabelFields")){
+							RELRWParameterBean.setDbpediaLabelField(
+									subElement.elementText("field1"));
 						}
 					}
 				}else if(element.getName().equals("constant")){

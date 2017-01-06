@@ -21,7 +21,14 @@ public class DictBean {
 	private static Map<String, Integer> dfDict;
 	private static Map<String, List<Mention>> mentionDict;
 	private static Map<String, HashSet<String>> entityContextDict;
+	private static Map<String, Integer> entityByDbpeidaPopularityDict;
 	
+	public static Map<String, Integer> getEntityByDbpeidaPopularityDict() {
+		return entityByDbpeidaPopularityDict;
+	}
+	public static void setEntityByDbpeidaPopularityDict(Map<String, Integer> entityByDbpeidaPopularityDict) {
+		DictBean.entityByDbpeidaPopularityDict = entityByDbpeidaPopularityDict;
+	}
 	public static Map<String, HashSet<String>> getEntityContextDict() {
 		return entityContextDict;
 	}

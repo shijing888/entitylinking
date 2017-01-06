@@ -22,6 +22,7 @@ import com.entitylinking_dbpedia.lucene.IndexFile;
  */
 public class EntityGraph {
 	static Logger logger = Logger.getLogger(EntityGraph.class);
+	static int MAXITERATERCOUNTS = 9999;
 	/*所有实体的size*/
 	private int entityLen;
 	/*候选实体的size*/
@@ -229,14 +230,11 @@ public class EntityGraph {
 	public void calTransferMatrix(){
 		double[] weights;
 		this.transferMatrix = new double[entityLen][entityLen];
-		String[] queryFields = new String[]{RELRWParameterBean.getEntityRelationField1(),
-					RELRWParameterBean.getEntityRelationField2(),RELRWParameterBean.getEntityRelationField3()};
 		for(int i=0;i<candidateEntityLen;i++){
 			logger.info("i = "+i);
 			for(int j=i;j<entityLen;j++){
 				weights = calEdgeWeight(entities[i].getEntityName(), 
-						entities[j].getEntityName(), 
-						queryFields, PathBean.getEntityRelationPath());
+						entities[j].getEntityName(), PathBean.getEntityByDbpediaRelationPath());
 				transferMatrix[i][j] = weights[0];
 				transferMatrix[j][i] = weights[1];
 //				logger.info(i+"\t"+entities[i].getEntityName()+"\t"+j+"\t"+entities[j].getEntityName()
@@ -254,11 +252,14 @@ public class EntityGraph {
 	 * @param indexDir
 	 * @return
 	 */
-	public double[] calEdgeWeight(String entity1,String entity2,String[] queryFields,String indexDir){
+	public double[] calEdgeWeight(String entity1,String entity2, String indexDir){
 		double[] weights = new double[2];
 		try {
 			String[] querys = new String[]{entity1,entity2};
-			int count = IndexFile.countCooccurence(querys,indexDir);
+			int count = IndexFile.entityCoocurCounts(querys,indexDir);
+			querys[0] = entity2;
+			querys[1] = entity1;
+			count += IndexFile.entityCoocurCounts(querys,indexDir);
 			
 			int singleCountOfEntity1 = IndexFile.countSingleOccurence(entity1, indexDir);
 			int singleCountOfEntity2 = IndexFile.countSingleOccurence(entity2, indexDir);
@@ -307,6 +308,7 @@ public class EntityGraph {
 //		logger.info("初始向量:"+StringUtils.join(ArrayUtils.toObject(preferVector), "\t"));
 //		long time1,time2;
 //		time1 = System.currentTimeMillis();
+		int i=0;
 		do {
 			tempVector = transferMatrix.preMultiply(oldSignatureVector);
 			realVector = new ArrayRealVector(tempVector);
@@ -314,7 +316,8 @@ public class EntityGraph {
 			realVector = realVector.add(preferRealVector.mapMultiply(1-alpha));
 			oldSignatureVector = newSignatureVector;
 			newSignatureVector = realVector.getDataRef();
-		} while (!isConvergence(oldSignatureVector, newSignatureVector));
+		} while (!isConvergence(oldSignatureVector, newSignatureVector) && i++ < MAXITERATERCOUNTS);
+		
 //		time2 = System.currentTimeMillis();
 //		logger.info("收敛后的向量:"+StringUtils.join(ArrayUtils.toObject(newSignatureVector), "\t"));
 //		logger.info("随机游走花费时间:"+(time2 - time1)/1000.0+"秒");

@@ -7,17 +7,23 @@
 		<pos>./dict/pos.txt</pos>
 		<stopwords>./dict/stopword_en.txt</stopwords>
 		<df>./dict/df.txt</df>
-		<mentionDict>./data/ace2004/ace2004.xml</mentionDict>
+		<mentionDict>./data/ace2004/ace2004_all.xml</mentionDict>
+		<entityByDbpeidaPopularity>./data/dbpedia/entity_popularity.ttl</entityByDbpeidaPopularity>
 	</dictPath>
 	<!-- 文件路径 -->
 	<relPath>
-		<resultDir>./data/result/ace2004</resultDir>
-		<relParameterPath>./xml/entitylinking_relrw.xml</relParameterPath>
+		<resultDir>./data/result/ace2004_dbpedia</resultDir>
+		<relParameterByDbpediaPath>./xml/entitylinking_dbpedia.xml</relParameterByDbpediaPath>
 		<entityContextPath>./data/ace2004/context/entity/entityContext</entityContextPath>
+		<entityByDbpediaContextPath>./data/ace2004/context/entity/entityByDbpediaContext</entityByDbpediaContextPath>
 		<mentionContextDirPath>./data/ace2004/context/mention/</mentionContextDirPath>
 	</relPath>
 	<!-- 索引文件夹路径 -->
 	<indexDirPath>
-		<entityRelationPath>./index/entityRelationIndex</entityRelationPath>
+		<shortAbstractTextPath>./index/short_abstractTextIndex</shortAbstractTextPath>
+		<entityByDbpediaRelationPath>./index/entityByDbpediaRelationIndex</entityByDbpediaRelationPath>
+		<synonymsDictPath>./index/synonymsIndex</synonymsDictPath>
+		<ambiguationDictPath>./index/ambiguationIndex</ambiguationDictPath>
+		<dbpediaLabelName>./index/labelIndex</dbpediaLabelName>
 	</indexDirPath>
 </Paths>

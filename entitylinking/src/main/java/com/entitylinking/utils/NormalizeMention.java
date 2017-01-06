@@ -37,6 +37,7 @@ public class NormalizeMention {
 		
 			String rawTitleText = "";
 			String wikiStyleTitle = "";
+			titleText = titleText.replace("-", "_");
 	        for(String str:titleText.split("[ _]")){
 	        	if(str.equals(""))
 	        		continue;

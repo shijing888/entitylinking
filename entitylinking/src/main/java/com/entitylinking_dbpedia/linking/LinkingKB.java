@@ -15,6 +15,7 @@ import com.entitylinking_dbpedia.linking.bean.Mention;
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
 import com.entitylinking_dbpedia.linking.bean.Text;
 import com.entitylinking_dbpedia.utils.CommonUtils;
+import com.entitylinking_dbpedia.utils.EditDistance;
 
 /**
  * 实体链接到知识库的操作
@@ -38,6 +39,8 @@ public class LinkingKB {
 		double semanticSimWeight = RELRWParameterBean.getSemanticSimWeight();
 		double contextSimWeight = RELRWParameterBean.getContextSimWeight();
 		double popularityWeight = RELRWParameterBean.getPopularityWeight();
+		double literalSimWeight = RELRWParameterBean.getLiteralSimWeight();
+		
 		for(Mention mention:entityGraph.getMentions()){
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
 				Entity entity = new Entity();
@@ -53,11 +56,13 @@ public class LinkingKB {
 				List<Entity> candidateList = mention.getCandidateEntity();
 				int len = candidateList.size();
 				int maxScoreIndex = 0;
-				double score,maxScore =0,maxSemanticScore=0,maxContextScore=0,maxPopularityScore=0;
-				double semanticScore=0,contextScore=0,popularityScore=0;
+				double score,maxScore =0,maxSemanticScore=0,maxContextScore=0,
+						maxPopularityScore=0,maxLiteralScore=0;
+				double semanticScore=0,contextScore=0,popularityScore=0,literalScore=0;
 				double[] semanticScores = new double[len];
 				double[] contextScores = new double[len];
 				double[] popularityScores = new double[len];
+				double[] literalScores = new double[len];
 				//获取文档语义签名
 				signatureOfDocument = entityGraph.calSignature(entityGraph.getPreferVectorOfDocument());
 				
@@ -78,10 +83,14 @@ public class LinkingKB {
 					if(maxPopularityScore < popularityScores[i]){
 						maxPopularityScore = popularityScores[i];
 					}
-					
+					literalScores[i] = calLiteralScore(mention.getMentionName(), 
+							entity.getEntityName(), RELRWParameterBean.getSigmoidParameter());
+					if(maxLiteralScore < literalScores[i]){
+						maxLiteralScore = literalScores[i];
+					}
 				}
-				logger.info("maxSemanticScore:"+maxSemanticScore+"\tmaxContextScore:"
-										+maxContextScore+"\tmaxPopularityScore:"+maxPopularityScore);
+				logger.info("maxSemanticScore:"+maxSemanticScore+"\tmaxContextScore:"+maxContextScore+
+						"\tmaxPopularityScore:"+maxPopularityScore+"\tmaxLiteralScore:"+maxLiteralScore);
 				for(int i=0;i<len;i++){
 					score = 0;
 					if(maxSemanticScore > 0){
@@ -96,17 +105,23 @@ public class LinkingKB {
 						popularityScore = popularityWeight * (popularityScores[i] / maxPopularityScore);
 						score += popularityScore;
 					}
-					//若候选实体与mention字面量完全一致且score大于阈值则认为其是目标实体
-					if(candidateList.get(i).getEntityName().equals(mention.getMentionName())){
-						if(score >= RELRWParameterBean.getNilThres()){
-							score = 1;
-						}
+					if(maxLiteralScore > 0){
+						literalScore = literalSimWeight * (literalScores[i] / maxLiteralScore);
+						score += literalScore;
 					}
+//					//若候选实体与mention字面量完全一致且score大于阈值则认为其是目标实体
+//					if(candidateList.get(i).getEntityName().equals(mention.getMentionName())){
+//						if(score >= RELRWParameterBean.getNilThres()){
+//							score = 1;
+//						}
+//					}
 					candidateList.get(i).setScore(score);
-					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()+"的三项得分归一化前各为:"
-							+semanticScores[i]+"\t"+contextScores[i]+"\t"+popularityScores[i]);
-					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()+"的三项得分归一化后各为:"
-							+semanticScore+"\t"+contextScore+"\t"+popularityScore);
+					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()
+							+"的四项得分归一化前各为:"+semanticScores[i]+"\t"+contextScores[i]+"\t"
+							+popularityScores[i]+"\t"+literalScores[i]);
+					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()
+							+"的四项得分归一化后各为:"+semanticScore+"\t"+contextScore+"\t"+popularityScore+"\t"
+							+literalScore);
 					logger.info(candidateList.get(i).getEntityName()+" 加权总得分为:"+score);
 					if(maxScore < score){
 						maxScore = score;
@@ -183,7 +198,22 @@ public class LinkingKB {
 	 */
 	public double calPopularityScore(double popularity, double totalPopularity){
 //		logger.info(popularity / totalPopularity);
-		return popularity / totalPopularity;
+		if(totalPopularity > 0)
+			return popularity / totalPopularity;
+		else
+			return 0;
+	}
+
+	/**
+	 * 计算字面量得分
+	 * @param s1
+	 * @param s2
+	 * @param a
+	 * @return
+	 */
+	public double calLiteralScore(String s1,String s2,double a){
+		int dis = EditDistance.getEditDistance(s1, s2);
+		return 1 /(1+(Math.exp(dis - 3)));
 	}
 	
 }

@@ -12,10 +12,12 @@ public class PathBean {
 	private static String stopWordDictPath;
 	/**文档频率词典*/
 	private static String dfDictPath;
-	/**robust entity linking 参数xml路径*/
-	private static String relParameterPath;
-	/**entityRelation 索引文件夹路径*/
-	private static String entityRelationPath;
+	/**基于dbpedia的参数xml路径*/
+	private static String relParameterByDbpediaPath;
+	/**entityByDbpediaRelationPath 索引文件夹路径*/
+	private static String entityByDbpediaRelationPath;
+	/**短摘要文本索引文件路径*/
+	private static String shortAbstractTextPath;
 	/**mention集合的xml文件*/
 	private static String mentionDictPath;
 	/**实体链接结果文件夹*/
@@ -24,12 +26,54 @@ public class PathBean {
 	private static String entityContextPath;
 	/**mention上下文文件夹路径*/
 	private static String mentionContextDirPath;
+	/**dbpedia实体上下文文件路径*/
+	private static String entityByDbpediaContextPath;
+	/**dbpedia实体流行度文件路径*/
+	private static String entityByDbpeidaPopularityPath;
+	/**dbpedia实体标签*/
+	private static String dbpediaLabelNamePath;
 	
+	public static String getDbpediaLabelNamePath() {
+		return dbpediaLabelNamePath;
+	}
+	public static void setDbpediaLabelNamePath(String dbpediaLabelNamePath) {
+		PathBean.dbpediaLabelNamePath = dbpediaLabelNamePath;
+	}
+	public static String getShortAbstractTextPath() {
+		return shortAbstractTextPath;
+	}
+	public static void setShortAbstractTextPath(String shortAbstractTextPath) {
+		PathBean.shortAbstractTextPath = shortAbstractTextPath;
+	}
+	public static String getEntityByDbpeidaPopularityPath() {
+		return entityByDbpeidaPopularityPath;
+	}
+	public static void setEntityByDbpeidaPopularityPath(String entityByDbpeidaPopularityPath) {
+		PathBean.entityByDbpeidaPopularityPath = entityByDbpeidaPopularityPath;
+	}
+	public static String getEntityByDbpediaRelationPath() {
+		return entityByDbpediaRelationPath;
+	}
+	public static void setEntityByDbpediaRelationPath(String entityByDbpediaRelationPath) {
+		PathBean.entityByDbpediaRelationPath = entityByDbpediaRelationPath;
+	}
+	public static String getEntityByDbpediaContextPath() {
+		return entityByDbpediaContextPath;
+	}
+	public static void setEntityByDbpediaContextPath(String entityByDbpediaContextPath) {
+		PathBean.entityByDbpediaContextPath = entityByDbpediaContextPath;
+	}
 	public static String getEntityContextPath() {
 		return entityContextPath;
 	}
 	public static void setEntityContextPath(String entityContextPath) {
 		PathBean.entityContextPath = entityContextPath;
+	}
+	public static String getRelParameterByDbpediaPath() {
+		return relParameterByDbpediaPath;
+	}
+	public static void setRelParameterByDbpediaPath(String relParameterByDbpediaPath) {
+		PathBean.relParameterByDbpediaPath = relParameterByDbpediaPath;
 	}
 	public static String getMentionContextDirPath() {
 		return mentionContextDirPath;
@@ -67,24 +111,14 @@ public class PathBean {
 	public static void setDfDictPath(String dfDictPath) {
 		PathBean.dfDictPath = dfDictPath;
 	}
-	public static String getRelParameterPath() {
-		return relParameterPath;
-	}
+
 	public static String getResultDirPath() {
 		return resultDirPath;
 	}
 	public static void setResultDirPath(String resultDirPath) {
 		PathBean.resultDirPath = resultDirPath;
 	}
-	public static void setRelParameterPath(String relParameterPath) {
-		PathBean.relParameterPath = relParameterPath;
-	}
-	public static String getEntityRelationPath() {
-		return entityRelationPath;
-	}
-	public static void setEntityRelationPath(String entityRelationPath) {
-		PathBean.entityRelationPath = entityRelationPath;
-	}
+	
 	public static String getMentionDictPath() {
 		return mentionDictPath;
 	}

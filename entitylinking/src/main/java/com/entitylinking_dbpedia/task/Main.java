@@ -25,12 +25,11 @@ import com.entitylinking_dbpedia.linking.bean.PathBean;
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
 import com.entitylinking_dbpedia.linking.bean.Text;
 import com.entitylinking_dbpedia.utils.FileUtils;
-import com.entitylinking_dbpedia.utils.NLPUtils;
 import com.entitylinking_dbpedia.utils.Parameters;
 
 /**
  * 实体链接主程序
- * @author HP
+ * @author HP 
  *
  */
 public class Main {
@@ -49,12 +48,8 @@ public class Main {
 		 */
 		Main main = new Main();
 		main.init();
-//		main.linkingMainProcess();
-		//处理短文本上下文
-		String rpath = "./data/dbpedia/short_abstracts_en";
-		String wpath = "./data/dbpedia/short_abstracts_context.ttl";
-		NLPUtils.processShortAbstract(rpath, wpath);
-		
+		main.linkingMainProcess();
+
 	}
 	
 	/**
@@ -63,7 +58,6 @@ public class Main {
 	 */
 	public Map<String, String> linkingMainProcess(){
 		File fileDir = new File(RELRWParameterBean.getSourceFileDirPath());
-//		List<Text> texts = new ArrayList<>();
 		if(fileDir.isDirectory()){
 			File[] fileList = fileDir.listFiles();
 			if(fileList == null || fileList.length == 0)
@@ -92,7 +86,7 @@ public class Main {
 				for(Entry<Mention, Entity> entry :text.getEntityGraph()
 						.getDisambiguationMap().entrySet()){
 					sBuilder.append(entry.getKey().getMentionName()).append("\t")
-							.append(entry.getKey().getObjectEntity()).append("\t");
+							.append(entry.getKey().getDbpediaObjectEntity()).append("\t");
 					if(entry.getValue().getEntityName() == null 
 							|| entry.getValue().getScore() < RELRWParameterBean.getNilThres()){
 						sBuilder.append(RELRWParameterBean.getNil());
@@ -123,7 +117,7 @@ public class Main {
 				}
 			}
 			
-			//将df持久化到本地ddddd
+			//将df持久化到本地
 //			Parameters parameters = new Parameters();
 //			parameters.pickleDf(PathBean.getDfDictPath());
 		}
@@ -133,12 +127,12 @@ public class Main {
 	}
 	
 	/**
-	 * 初始化工作
+	 * 初始化工作，加载参数和词典等
 	 */
 	public void init(){
 		Parameters parameters = new Parameters();
 		parameters.loadPath("./xml/path.xml");
-		parameters.loadRELParameters(PathBean.getRelParameterPath());
+		parameters.loadRELParameters(PathBean.getRelParameterByDbpediaPath());
 		parameters.loadDictFromXML();
 //		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
 	}

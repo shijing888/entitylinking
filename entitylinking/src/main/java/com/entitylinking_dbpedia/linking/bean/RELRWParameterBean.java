@@ -33,15 +33,83 @@ public class RELRWParameterBean {
 	private static double contextSimWeight;
 	/**先验权值*/
 	private static double popularityWeight;
+	/**字面量相似性权值*/
+	private static double literalSimWeight;
 	/**空值阈值*/
 	private static double nilThres;
 	/**空值字符串表示*/
 	private static String nil;
+	/**sigmoid函数参数*/
+	private static double sigmoidParameter;
 	/**实体关系域*/
 	private static String entityRelationField1;
 	private static String entityRelationField2;
 	private static String entityRelationField3;
-	
+	/**短摘要索引域*/
+	private static String shortAbstractField1;
+	private static String shortAbstractField2;
+	/**同义词典索引域*/
+	private static String synonymsDictField1;
+	private static String synonymsDictField2;
+	/**歧义词典索引域*/
+	private static String ambiguationDictField1;
+	private static String ambiguationDictField2;
+	/**dbpedia实体标签*/
+	private static String dbpediaLabelField;
+	public static double getLiteralSimWeight() {
+		return literalSimWeight;
+	}
+	public static void setLiteralSimWeight(double literalSimWeight) {
+		RELRWParameterBean.literalSimWeight = literalSimWeight;
+	}
+	public static double getSigmoidParameter() {
+		return sigmoidParameter;
+	}
+	public static void setSigmoidParameter(double sigmoidParameter) {
+		RELRWParameterBean.sigmoidParameter = sigmoidParameter;
+	}
+	public static String getSynonymsDictField1() {
+		return synonymsDictField1;
+	}
+	public static void setSynonymsDictField1(String synonymsDictField1) {
+		RELRWParameterBean.synonymsDictField1 = synonymsDictField1;
+	}
+	public static String getSynonymsDictField2() {
+		return synonymsDictField2;
+	}
+	public static void setSynonymsDictField2(String synonymsDictField2) {
+		RELRWParameterBean.synonymsDictField2 = synonymsDictField2;
+	}
+	public static String getAmbiguationDictField1() {
+		return ambiguationDictField1;
+	}
+	public static void setAmbiguationDictField1(String ambiguationDictField1) {
+		RELRWParameterBean.ambiguationDictField1 = ambiguationDictField1;
+	}
+	public static String getAmbiguationDictField2() {
+		return ambiguationDictField2;
+	}
+	public static void setAmbiguationDictField2(String ambiguationDictField2) {
+		RELRWParameterBean.ambiguationDictField2 = ambiguationDictField2;
+	}
+	public static String getDbpediaLabelField() {
+		return dbpediaLabelField;
+	}
+	public static void setDbpediaLabelField(String dbpediaLabelField) {
+		RELRWParameterBean.dbpediaLabelField = dbpediaLabelField;
+	}
+	public static String getShortAbstractField1() {
+		return shortAbstractField1;
+	}
+	public static void setShortAbstractField1(String shortAbstractField1) {
+		RELRWParameterBean.shortAbstractField1 = shortAbstractField1;
+	}
+	public static String getShortAbstractField2() {
+		return shortAbstractField2;
+	}
+	public static void setShortAbstractField2(String shortAbstractField2) {
+		RELRWParameterBean.shortAbstractField2 = shortAbstractField2;
+	}
 	public static String getNil() {
 		return nil;
 	}
