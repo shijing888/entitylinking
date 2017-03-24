@@ -113,8 +113,10 @@ public class Text {
 		long time3 = System.currentTimeMillis();
 		logger.info("初始化实体、实体索引、初始mention-entityMap、文档偏好向量共花费:"+(time3 - time2)/60000.0);
 		logger.info("init entityGraph transferMatrix");
-		//计算转移矩阵
-		this.entityGraph.calTransferMatrix();
+		//利用共现计算转移矩阵
+//		this.entityGraph.calTransferMatrix();
+		//利用卡茨关联性计算转移矩阵
+		this.entityGraph.calTransferMatrixOfKatzPath();
 		long time4 = System.currentTimeMillis();
 		logger.info("计算转移概率矩阵花费:"+(time4 - time3)/60000.0);
 	}

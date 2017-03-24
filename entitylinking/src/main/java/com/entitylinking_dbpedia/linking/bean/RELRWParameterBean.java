@@ -37,6 +37,12 @@ public class RELRWParameterBean {
 	private static double literalSimWeight;
 	/**空值阈值*/
 	private static double nilThres;
+	/**路径跳数*/
+	private static int skipNums;
+	/**基于路径的衰减系数*/
+	private static double pathAlpha;
+	/**选取的最短路径跳数*/
+	private static int topK;
 	/**空值字符串表示*/
 	private static String nil;
 	/**sigmoid函数参数*/
@@ -61,6 +67,24 @@ public class RELRWParameterBean {
 	}
 	public static void setLiteralSimWeight(double literalSimWeight) {
 		RELRWParameterBean.literalSimWeight = literalSimWeight;
+	}
+	public static int getTopK() {
+		return topK;
+	}
+	public static void setTopK(int topK) {
+		RELRWParameterBean.topK = topK;
+	}
+	public static int getSkipNums() {
+		return skipNums;
+	}
+	public static void setSkipNums(int skipNums) {
+		RELRWParameterBean.skipNums = skipNums;
+	}
+	public static double getPathAlpha() {
+		return pathAlpha;
+	}
+	public static void setPathAlpha(double pathAlpha) {
+		RELRWParameterBean.pathAlpha = pathAlpha;
 	}
 	public static double getSigmoidParameter() {
 		return sigmoidParameter;

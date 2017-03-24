@@ -1,5 +1,12 @@
 package com.entitylinking_dbpedia.utils;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -15,7 +22,11 @@ public class NormalizeMention {
 	  
 	public static void main(String args[]){
 		
-		System.out.println(NormalizeMention.getNormalizeMention("michael jeffy jordan ()",false));
+//		System.out.println(NormalizeMention.getNormalizeMention("michael jeffy jordan ()",false));
+		String rpath = "./data/ace2004/ace2004new.xml";
+		String wpath = "./data/ace2004/ace2004_new.xml";
+		normMentionOfDataset(rpath, wpath);
+		
 	}
 	
 	public static List<String> getNormalizeMentionList(String[] titleList, boolean caseSensitive){
@@ -95,6 +106,36 @@ public class NormalizeMention {
 		 ch[0] = (char)(ch[0] - 32);
 		 }
 		 return new String(ch); 
+	 }
+	 
+	 /**
+	  * 将数据集中的mention去掉uri，保留原名称
+	  * @param rpath
+	  * @param wpath
+	  */
+	 public static void normMentionOfDataset(String rpath,String wpath){
+		 String dbpediaName = "http://dbpedia.org/resource/";
+		 String yagoName = "http://yago-knowledge.org/resource/";
+		 try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(rpath)), "utf-8"));
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			String line;
+			while((line = reader.readLine())!=null){
+				if(line.contains(dbpediaName)){
+					line = line.replace(dbpediaName, "");
+				}else if(line.contains(yagoName)){
+					line = line.replace(yagoName, "");
+				}
+				writer.write(line + "\n"); 
+			}
+			
+			reader.close();
+			writer.close();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 	 }
 	 
 }

@@ -7,10 +7,16 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
 
+import com.entitylinking_dbpedia.config.WikiConfig;
 import com.entitylinking_dbpedia.linking.bean.DictBean;
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
 import com.entitylinking_dbpedia.lucene.IndexFile;
 import com.entitylinking_dbpedia.utils.NLPUtils;
+
+import de.tudarmstadt.ukp.wikipedia.api.Category;
+import de.tudarmstadt.ukp.wikipedia.api.Page;
+import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
+import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
 
 /**
  * 实体的数据结构
@@ -19,6 +25,7 @@ import com.entitylinking_dbpedia.utils.NLPUtils;
  */
 public class Entity {
 	static Logger logger = Logger.getLogger(Entity.class);
+	static Wikipedia wikipedia = WikiConfig.getWiki();
 	/**实体名称*/
 	private String entityName;
 	/**实体流行度*/
@@ -29,6 +36,8 @@ public class Entity {
 	private Set<String> entityContext;
 	/**实体的得分*/
 	private double score;
+	/**实体category*/
+	private Set<String> category;
 	
 	public Entity(String name){
 		this.entityName = name;
@@ -65,12 +74,42 @@ public class Entity {
 	public void setScore(double score) {
 		this.score = score;
 	}
+	public Set<String> getCategory() {
+		return category;
+	}
+	public void setCategory(Set<String> category) {
+		this.category = category;
+	}
+	
 	/**
-     * 获取实体信息，名称、上下文、流行度
+	 * 从wiki中获取category
+	 * @param title
+	 * @return
+	 */
+	public Set<String> getCategory(String title){
+		Set<String> categorySet = new HashSet<>();
+		try {
+			Page page = wikipedia.getPage(title);
+			Set<Category> category = page.getCategories();
+			for(Category item:category){
+				String[] array = item.getTitle().toString().split(" ");
+				for(String s:array){
+					categorySet.add(s);
+				}
+			}
+		} catch (WikiApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return categorySet;
+	}
+	
+	/**
+     * 获取实体信息，名称、上下文、流行度、类型
      * @param title
-     * @throws WikiApiException
      */
-    public Entity getEntityPageInfo(String title,Map<String, Set<String>> additiveEntityContextDict){
+    public Entity getEntityPageInfo(String title,Map<String, Set<String>> additiveEntityContextDict,
+    							Map<String, Set<String>> additiveEntityCategoryDict){
 		
         //初始化title
         entityName = title;
@@ -80,6 +119,15 @@ public class Entity {
 		}else{
 			popularity = 0;
 		}
+		//初始化类型
+//		if(DictBean.getEntityCategoryDict().containsKey(entityName)){
+//			category = DictBean.getEntityCategoryDict().get(entityName);
+//		}else{
+//			category = getCategory(title);
+//			additiveEntityCategoryDict.put(entityName, category);
+//		}
+		
+		
 		//初始化上下文
         if(DictBean.getEntityContextDict().containsKey(entityName)){
         	entityContext = DictBean.getEntityContextDict().get(entityName);
@@ -87,6 +135,11 @@ public class Entity {
         	Document document = IndexFile.queryDocument(entityName, 
         						RELRWParameterBean.getShortAbstractField1(), PathBean.getShortAbstractTextPath());
 	        if(document != null){
+	        	String name = document.get(RELRWParameterBean.getShortAbstractField1());
+	        	if(!title.equals(name)){
+	        		logger.info(title+"无摘要内容,查询出的实体为:\t"+name);
+	        		return this;
+	        	}
 	        	String content = document.get(RELRWParameterBean.getShortAbstractField2());
 		        if(content.length() > RELRWParameterBean.getEntityContentLen()){
 		        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());

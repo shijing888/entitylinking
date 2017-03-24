@@ -134,6 +134,7 @@ public class Main {
 		parameters.loadPath("./xml/path.xml");
 		parameters.loadRELParameters(PathBean.getRelParameterByDbpediaPath());
 		parameters.loadDictFromXML();
+		System.out.println("流行度词典大小:"+DictBean.getEntityByDbpeidaPopularityDict().size());
 //		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
 	}
 	

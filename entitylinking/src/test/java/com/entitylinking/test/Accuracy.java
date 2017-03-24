@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import com.entitylinking_dbpedia.utils.CommonUtils;
+
 public class Accuracy {
 
 	public static void main(String[] args) {
@@ -33,7 +35,8 @@ public class Accuracy {
 						sum++ ;
 						String[] tempstrArray = temp.split("\t");
 						if(tempstrArray.length == 4){
-							if(!(tempstrArray[1].equals(tempstrArray[2]))){
+							if(!(CommonUtils.replaceConnector(tempstrArray[1])
+									.equals(CommonUtils.replaceConnector(tempstrArray[2])))){
 								error++;					
 								filewriter.write(temp +"\t" +templist[i].getName()+"\n");
 							}

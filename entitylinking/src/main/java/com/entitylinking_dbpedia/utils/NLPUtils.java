@@ -89,11 +89,13 @@ public class NLPUtils {
         List<Mention> mentions = text.getEntityGraph().getMentions();
         Parameters parameters = new Parameters();
 //        DictBean dictBean = parameters.loadSurfaceFormDict();
-        DictBean dictBean = null;
         String mentionContextPath = PathBean.getMentionContextDirPath() + text.getTextName();
         String entityByDbpediaContextPath = PathBean.getEntityByDbpediaContextPath();
+        String entityCategoryPath = PathBean.getEntityCategoryPath();
         Map<String, HashSet<String>> mentionContextMap = parameters.loadMapDict(mentionContextPath);
+        Map<String, HashSet<String>> entityCategoryMap = parameters.loadMapDict(entityCategoryPath);
         DictBean.setEntityContextDict(parameters.loadMapDict(entityByDbpediaContextPath));
+        DictBean.setEntityCategoryDict(entityCategoryMap);
 
         String content;
         int mentionOffset;
@@ -103,7 +105,8 @@ public class NLPUtils {
         double tfidfValue;
         Map<String, Set<String>> additiveMentionContextDict = new HashMap<String, Set<String>>();
         Map<String, Set<String>> additiveEntityContextDict = new HashMap<String, Set<String>>();
-       
+        Map<String, Set<String>> additiveEntityCategoryDict = new HashMap<String, Set<String>>();
+        
         for(Mention mention:mentions){
         	logger.info("mention:"+mention.getMentionName());
         	//初始化mention tfidf
@@ -114,7 +117,8 @@ public class NLPUtils {
         	logger.info(mention.getMentionName()+"的tfidf值为:"+tfidfValue);
     		mention.setTfidfValue(tfidfValue);
     		//获取候选实体
-    		List<Entity> candidateEntity = mention.obtainCandidate(dictBean,additiveEntityContextDict);
+    		List<Entity> candidateEntity = mention.obtainCandidate(additiveEntityContextDict,
+    				additiveEntityCategoryDict);
     		mention.setCandidateEntity(candidateEntity);
     		
     		if(mentionContextMap.containsKey(mention.getMentionName())){
@@ -165,8 +169,14 @@ public class NLPUtils {
     		}
 
         }
+        //将词典持久化到本地
         parameters.pickleContextMap(mentionContextPath, additiveMentionContextDict);
         parameters.pickleContextMap(entityByDbpediaContextPath, additiveEntityContextDict);
+        parameters.pickleContextMap(entityCategoryPath, additiveEntityCategoryDict);
+        //清空词典
+        additiveMentionContextDict.clear();
+        additiveEntityContextDict.clear();
+        additiveEntityCategoryDict.clear();
         
         //对mention按照歧义性排序，歧义性按照候选实体个数来定义
         Collections.sort(mentions, new Comparator<Mention>() {
@@ -267,7 +277,7 @@ public class NLPUtils {
 	 * @param rpath
 	 * @param wpath
 	 */
-	public static void processShortAbstract(String rpath,String wpath){
+	public static void processAbstract(String rpath,String wpath){
 		BufferedWriter writer;
 		try {
 			File rfile = new File(rpath);

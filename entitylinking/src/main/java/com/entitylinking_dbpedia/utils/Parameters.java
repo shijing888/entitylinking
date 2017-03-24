@@ -50,6 +50,7 @@ public class Parameters {
 		DictBean.setPosDict(loadSetDict(PathBean.getPosDictPath()));
 		DictBean.setStopWordDict(loadSetDict(PathBean.getStopWordDictPath()));
 		DictBean.setDfDict(loadString2IntegerDict(PathBean.getDfDictPath()));
+		DictBean.setSpecialWordsDict(loadString2StringDict(PathBean.getSpecialWordsPath()));
 		DictBean.setMentionDict(loadMentionDict(PathBean.getMentionDictPath()));
 		DictBean.setEntityByDbpeidaPopularityDict(loadString2IntegerDict(
 				PathBean.getEntityByDbpeidaPopularityPath()));
@@ -118,14 +119,17 @@ public class Parameters {
 				PathBean.setPosDictPath(element.elementText("pos"));
 				PathBean.setStopWordDictPath(element.elementText("stopwords"));
 				PathBean.setDfDictPath(element.elementText("df"));
+				PathBean.setSpecialWordsPath(element.elementText("specialWords"));
 				PathBean.setMentionDictPath(element.elementText("mentionDict"));
 				PathBean.setEntityByDbpeidaPopularityPath(element.elementText("entityByDbpeidaPopularity"));
+				PathBean.setLabelNumPath(element.elementText("labelNum"));
 			}else if(element.getName().equals("relPath")){//robust 实体链接方法参数
 				PathBean.setRelParameterByDbpediaPath(element.elementText("relParameterByDbpediaPath"));
 				PathBean.setResultDirPath(element.elementText("resultDir"));
 				PathBean.setEntityContextPath(element.elementText("entityContextPath"));
 				PathBean.setEntityByDbpediaContextPath(element.elementText("entityByDbpediaContextPath"));
 				PathBean.setMentionContextDirPath(element.elementText("mentionContextDirPath"));
+				PathBean.setEntityCategoryPath(element.elementText("entityCategoryPath"));
 			}else if(element.getName().equals("indexDirPath")){//索引文件路径
 				PathBean.setShortAbstractTextPath(element.elementText("shortAbstractTextPath"));
 				PathBean.setEntityByDbpediaRelationPath(element.elementText("entityByDbpediaRelationPath"));
@@ -281,6 +285,99 @@ public class Parameters {
 		return dfMap;
 	}
 	
+	
+	public Map<Integer, String> loadInteger2StringDict(String path){
+		Map<Integer, String> map = new HashMap<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length==2){
+					map.put(Integer.parseInt(lineArray[0]),lineArray[1]);
+				}
+			}
+			
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
+	
+	/**
+	 * 加载键值对均为字符串的词典
+	 * @param path
+	 * @return
+	 */
+	public Map<String, String> loadString2StringDict(String path){
+		Map<String, String> map = new HashMap<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length==2){
+					map.put(lineArray[0], lineArray[1]);
+				}
+			}
+			
+			br.close();
+			return map;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
+	
+	/**
+	 * 加载实体出边集合词典
+	 * @param path
+	 * @return
+	 */
+	public Map<Integer, HashSet<Integer>> loadEntityOutMap(String path){
+		Map<Integer, HashSet<Integer>> map = new HashMap<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length==4){
+					if(!map.containsKey(lineArray[0])){
+						HashSet<Integer> set = new HashSet<>();
+						String[] outSet = lineArray[3].split("\t\\|\t");
+						for(String item:outSet){
+							set.add(Integer.parseInt(item));
+						}
+						map.put(Integer.parseInt(lineArray[0]), set);
+					}else{
+						HashSet<Integer> set = new HashSet<>();
+						String[] outSet = lineArray[3].split("\t\\|\t");
+						for(String item:outSet){
+							if(!set.contains(Integer.parseInt(item))){
+								set.add(Integer.parseInt(item));
+							}
+							
+						}
+					}
+					
+				}
+			}
+			
+			br.close();
+			return map;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
+	
 	//将df持久化到本地
 	public void pickleDf(String path){
 		try {
@@ -394,7 +491,14 @@ public class Parameters {
 							element.elementText("literalSimWeight")));
 					RELRWParameterBean.setSigmoidParameter(Double.parseDouble(
 							element.elementText("literalSigmoidParameter")));
-					RELRWParameterBean.setNilThres(Double.parseDouble(element.elementText("nilThres")));
+					RELRWParameterBean.setNilThres(Double.parseDouble(
+							element.elementText("nilThres")));
+					RELRWParameterBean.setPathAlpha(Double.parseDouble(
+							element.elementText("pathAlpha")));
+					RELRWParameterBean.setSkipNums(Integer.parseInt(
+							element.elementText("skipNums")));
+					RELRWParameterBean.setTopK(Integer.parseInt(
+							element.elementText("topK")));
 				}else if(element.getName().equals("indexFields")){
 					List<Element> subElements = element.elements();
 					for(Element subElement:subElements){

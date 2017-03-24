@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 //import org.apache.commons.lang.ArrayUtils;
 //import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.entitylinking_dbpedia.linking.bean.DictBean;
 import com.entitylinking_dbpedia.linking.bean.Entity;
 import com.entitylinking_dbpedia.linking.bean.EntityGraph;
 import com.entitylinking_dbpedia.linking.bean.Mention;
@@ -42,6 +45,13 @@ public class LinkingKB {
 		double literalSimWeight = RELRWParameterBean.getLiteralSimWeight();
 		
 		for(Mention mention:entityGraph.getMentions()){
+			if(DictBean.getSpecialWordsDict().containsKey(mention.getMentionName())){
+				Entity entity = new Entity();
+				entity.setEntityName(DictBean.getSpecialWordsDict().get(mention.getMentionName()));
+				entity.setScore(1);
+				mentionEntityMap.put(mention, entity);
+				continue;
+			}
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
 				Entity entity = new Entity();
 				entity.setEntityName(RELRWParameterBean.getNil());
@@ -49,6 +59,7 @@ public class LinkingKB {
 				entityGraph.setDisambiguationMap(mentionEntityMap);
 			}else if (mention.getCandidateEntity().size() == 1) {//候选实体为1
 				Entity entity = mention.getCandidateEntity().get(0);
+				entity.setScore(1);
 				mentionEntityMap.put(mention, entity);
 				entityGraph.setDisambiguationMap(mentionEntityMap);
 				entityGraph.updatePreferVectorOfDocument(mention, entity);
@@ -71,6 +82,8 @@ public class LinkingKB {
 					entityGraph.setPreferVectorOfEntity(entityGraph.getEntityIndex().get(entity.getEntityName()));
 					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
+					logger.info(entity.getEntityName()+"的语义签名:" + StringUtils.join(ArrayUtils.toObject(signatureOfEntity), "\t"));
+					logger.info("文档的语义签名:" + StringUtils.join(ArrayUtils.toObject(signatureOfDocument), "\t"));
 					semanticScores[i] = calSemanticSimilarity(signatureOfEntity, signatureOfDocument);
 					if(maxSemanticScore < semanticScores[i]){
 						maxSemanticScore = semanticScores[i];
@@ -133,10 +146,7 @@ public class LinkingKB {
 				if(maxScore < RELRWParameterBean.getNilThres()){
 					maxScoreEntity.setEntityName(RELRWParameterBean.getNil());
 				}
-				if(!mentionEntityMap.containsKey(mention) ||
-						mentionEntityMap.containsKey(mention) &&
-						!mentionEntityMap.get(mention).getEntityName()
-						.equals(maxScoreEntity.getEntityName())){
+				if(!mentionEntityMap.containsKey(mention)){
 					mentionEntityMap.put(mention, maxScoreEntity);
 					entityGraph.setDisambiguationMap(mentionEntityMap);
 					entityGraph.updatePreferVectorOfDocument(mention, maxScoreEntity);
@@ -159,7 +169,7 @@ public class LinkingKB {
 			if(signatureOfEntity[i] == 0){
 				continue;
 			}
-			if(signatureOfDocument[i] == 0){
+			if(signatureOfDocument[i] <= 0){
 				result += signatureOfEntity[i] * RELRWParameterBean.getGamma();
 			}else{
 				result += signatureOfEntity[i] * Math.log(signatureOfEntity[i] / signatureOfDocument[i]);

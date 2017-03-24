@@ -62,14 +62,14 @@ public class IndexFile {
 //		String[] fields1 = new String[]{"entity1","entity2","entityCoocurCount"};
 //		creatIndex(filePath1, indexDir1, fields1);
 		
-		//实体短文本摘要索引创建
-//		//索引文件夹
-//		String indexDir2 = "./index/short_abstractTextIndex";
-//		//需要创建索引的文件
-//		String filePath2 = "./data/dbpedia/short_abstracts_enText.ttl";
-//		//索引的字段
-//		String[] fields2 = new String[]{"entity","abstractText"};
-//		creatIndex(filePath2, indexDir2, fields2);
+		//实体文本摘要索引创建
+		//索引文件夹
+		String indexDir2 = "./index/abstractTextIndex";
+		//需要创建索引的文件
+		String filePath2 = "./data/dbpedia/abstracts_enText.ttl";
+		//索引的字段
+		String[] fields2 = new String[]{"entity","abstractText"};
+		creatIndex(filePath2, indexDir2, fields2);
 		
 //		//同义词典索引创建
 //		//索引文件夹
@@ -91,12 +91,12 @@ public class IndexFile {
 		
 //		//label实体标记索引创建
 //		//索引文件夹
-		String indexDir5 = "./index/labelIndex";
-		//需要创建索引的文件
-		String filePath5 = "./data/dbpedia/labels_enText.ttl";
-		//索引的字段
-		String[] fields5 = new String[]{"labelName"};
-		creatIndex(filePath5, indexDir5, fields5);
+//		String indexDir5 = "./index/labelIndex";
+//		//需要创建索引的文件
+//		String filePath5 = "./data/dbpedia/labels_enText.ttl";
+//		//索引的字段
+//		String[] fields5 = new String[]{"labelName"};
+//		creatIndex(filePath5, indexDir5, fields5);
 	}
 	
 	/**
@@ -247,10 +247,8 @@ public class IndexFile {
 			TopDocs topDocs = indexSearcher.search(query,RELRWParameterBean.getCandidateEntityNumThresh());
 			ScoreDoc[] scoreDocs = topDocs.scoreDocs;
 			for(ScoreDoc scoreDoc:scoreDocs){
-				entitySet.add(indexSearcher.doc(scoreDoc.doc)
-						.get(queryField));
-				System.out.println(indexSearcher.doc(scoreDoc.doc)
-						.get(queryField));
+				entitySet.add(indexSearcher.doc(scoreDoc.doc).get(queryField));
+//				System.out.println(indexSearcher.doc(scoreDoc.doc).get(queryField));
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -333,9 +331,16 @@ public class IndexFile {
 //		String[] querys1 = {"newfoundland_and_labrador","shawn_doyle"};
 //		String[] querys2 = {"shawn_doyle","newfoundland_and_labrador"};
 //		String indexDir = "./index/entityByDbpediaRelationIndex";
-//		String qString ="jerusalem";
-//		Document document = queryDocument(qString, "synonymsKey", "./index/synonymsIndex");
-//		System.out.println(document.get("synonymsItems"));
+		String qString ="northeast";
+//		queryCandidateLabel(qString, "labelName", "./index/labelIndex");
+//		Document document = queryDocument(qString, "ambiguationKey", "./index/ambiguationIndex");
+		Document document = queryDocument(qString, "entity", "./index/abstractTextIndex");
+		System.out.println(document.get("entity"));
+		System.out.println(document.get("abstractText"));
+		System.out.println("---------");
+		Document document2 = queryDocument(qString, "entity", "./index/short_abstractTextIndex");
+		System.out.println(document2.get("entity"));
+		System.out.println(document2.get("abstractText"));
 //		System.out.println("doc1:"+document.toString());
 //		qString ="china";
 //		document = queryDocument(qString, "ambiguationKey", "./index/ambiguationIndex");

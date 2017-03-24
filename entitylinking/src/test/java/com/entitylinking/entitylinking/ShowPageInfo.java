@@ -1,5 +1,6 @@
 package com.entitylinking.entitylinking;
 
+import de.tudarmstadt.ukp.wikipedia.api.Category;
 import de.tudarmstadt.ukp.wikipedia.api.DatabaseConfiguration;
 import de.tudarmstadt.ukp.wikipedia.api.Page;
 import de.tudarmstadt.ukp.wikipedia.api.Title;
@@ -60,6 +61,10 @@ public class ShowPageInfo {
         System.out.println("# of outgoing links  : " + page.getNumberOfOutlinks());
         // 该页面属于多少个类别
         System.out.println("# of categories      : " + page.getNumberOfCategories());
+        System.out.println("# of categories      : ");
+        for(Category item:page.getCategories()){
+        	System.out.println(item.getTitle());
+        }
 //        System.out.println("plainText"+"\t"+page.getPlainText());
 //       logger.info("Text"+"\t"+page.getText());
         

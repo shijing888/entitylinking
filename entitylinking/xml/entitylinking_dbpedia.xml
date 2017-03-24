@@ -8,7 +8,7 @@
 		<!-- 随机游走alpha -->
 		<alpha>0.85</alpha>
 		<!-- 收敛精度 -->
-		<convergencePrecise>0.01</convergencePrecise>
+		<convergencePrecise>0.001</convergencePrecise>
 		<!-- 散度gamma值 -->
 		<gamma>20</gamma>
 		<!-- 限制实体正文字符长度 -->
@@ -22,15 +22,21 @@
 		<!-- 语义相似性权值 -->
 		<semanticSimWeight>0.2</semanticSimWeight>
 		<!-- 上下文相似性权值 -->
-		<contextSimWeight>0.25</contextSimWeight>
+		<contextSimWeight>0.2</contextSimWeight>
 		<!-- 先验权值 -->
-		<popularityWeight>0.35</popularityWeight>
+		<popularityWeight>0.3</popularityWeight>
 		<!-- 字面量相似性权值 -->
-		<literalSimWeight>0.2</literalSimWeight>
+		<literalSimWeight>0.3</literalSimWeight>
 		<!-- 空值阈值 -->
 		<nilThres>0.05</nilThres>
 		<!-- 字面量sigmoid函数参数 -->
 		<literalSigmoidParameter>5</literalSigmoidParameter>
+		<!-- 基于路径的衰减系数 -->
+		<pathAlpha>0.5</pathAlpha>
+		<!-- 路径跳数 -->
+		<skipNums>1</skipNums>
+		<!-- 选取的最短路径跳数 -->
+		<topK>5</topK>
 	</paramenter>
 	<constant>
 		<!-- 空实体链接 -->

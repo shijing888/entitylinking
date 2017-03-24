@@ -12,6 +12,8 @@ public class PathBean {
 	private static String stopWordDictPath;
 	/**文档频率词典*/
 	private static String dfDictPath;
+	/**特殊词词典*/
+	private static String specialWordsPath;
 	/**基于dbpedia的参数xml路径*/
 	private static String relParameterByDbpediaPath;
 	/**entityByDbpediaRelationPath 索引文件夹路径*/
@@ -28,11 +30,21 @@ public class PathBean {
 	private static String mentionContextDirPath;
 	/**dbpedia实体上下文文件路径*/
 	private static String entityByDbpediaContextPath;
+	/**实体category文件路径*/
+	private static String entityCategoryPath;
 	/**dbpedia实体流行度文件路径*/
 	private static String entityByDbpeidaPopularityPath;
 	/**dbpedia实体标签*/
 	private static String dbpediaLabelNamePath;
+	/**实体标号词典路径*/
+	private static String labelNumPath;
 	
+	public static String getLabelNumPath() {
+		return labelNumPath;
+	}
+	public static void setLabelNumPath(String labelNumPath) {
+		PathBean.labelNumPath = labelNumPath;
+	}
 	public static String getDbpediaLabelNamePath() {
 		return dbpediaLabelNamePath;
 	}
@@ -81,6 +93,12 @@ public class PathBean {
 	public static void setMentionContextDirPath(String mentionContextDirPath) {
 		PathBean.mentionContextDirPath = mentionContextDirPath;
 	}
+	public static String getEntityCategoryPath() {
+		return entityCategoryPath;
+	}
+	public static void setEntityCategoryPath(String entityCategoryPath) {
+		PathBean.entityCategoryPath = entityCategoryPath;
+	}
 	public static String getSynonymsDictPath() {
 		return synonymsDictPath;
 	}
@@ -111,7 +129,12 @@ public class PathBean {
 	public static void setDfDictPath(String dfDictPath) {
 		PathBean.dfDictPath = dfDictPath;
 	}
-
+	public static String getSpecialWordsPath() {
+		return specialWordsPath;
+	}
+	public static void setSpecialWordsPath(String specialWordsPath) {
+		PathBean.specialWordsPath = specialWordsPath;
+	}
 	public static String getResultDirPath() {
 		return resultDirPath;
 	}

@@ -19,8 +19,10 @@ public class DictBean {
 	private static Set<String> posDict;
 	private static Set<String> stopWordDict;
 	private static Map<String, Integer> dfDict;
+	private static Map<String, String> specialWordsDict;
 	private static Map<String, List<Mention>> mentionDict;
 	private static Map<String, HashSet<String>> entityContextDict;
+	private static Map<String, HashSet<String>> entityCategoryDict;
 	private static Map<String, Integer> entityByDbpeidaPopularityDict;
 	
 	public static Map<String, Integer> getEntityByDbpeidaPopularityDict() {
@@ -34,6 +36,12 @@ public class DictBean {
 	}
 	public static void setEntityContextDict(Map<String, HashSet<String>> entityContextDict) {
 		DictBean.entityContextDict = entityContextDict;
+	}
+	public static Map<String, HashSet<String>> getEntityCategoryDict() {
+		return entityCategoryDict;
+	}
+	public static void setEntityCategoryDict(Map<String, HashSet<String>> entityCategoryDict) {
+		DictBean.entityCategoryDict = entityCategoryDict;
 	}
 	public Map<String, String> getSynonymsDict() {
 		return synonymsDict;
@@ -64,6 +72,12 @@ public class DictBean {
 	}
 	public static void setDfDict(Map<String, Integer> dfDict) {
 		DictBean.dfDict = dfDict;
+	}
+	public static Map<String, String> getSpecialWordsDict() {
+		return specialWordsDict;
+	}
+	public static void setSpecialWordsDict(Map<String, String> specialWordsDict) {
+		DictBean.specialWordsDict = specialWordsDict;
 	}
 	public static Map<String, List<Mention>> getMentionDict() {
 		return mentionDict;
