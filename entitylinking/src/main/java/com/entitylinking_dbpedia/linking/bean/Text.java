@@ -117,6 +117,8 @@ public class Text {
 //		this.entityGraph.calTransferMatrix();
 		//利用卡茨关联性计算转移矩阵
 		this.entityGraph.calTransferMatrixOfKatzPath();
+		//利用排他性计算转移矩阵
+//		this.entityGraph.calTransferMatrixOfExclusivityPath();
 		long time4 = System.currentTimeMillis();
 		logger.info("计算转移概率矩阵花费:"+(time4 - time3)/60000.0);
 	}

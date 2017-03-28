@@ -10,9 +10,12 @@ import java.util.Map;
 public class Result {
 
 	public static void main(String args[]){
-		String rpath1 = "data\\result_repository\\ace2004_dbpedia_2.28\\result.txt";
+		String rpath1 = "data\\result_repository\\ace2004_dbpedia_3.25\\result.txt";
 		String rpath2 = "data\\result\\result.txt";
+		System.out.println("在卡茨中错误但在排他性中正确的实体有:");
 		compareDiffer(rpath1, rpath2);
+		System.out.println("在排他性中错误但在卡茨中正确的实体有:");
+		compareDiffer(rpath2, rpath1);
 	}
 	
 	public static void compareDiffer(String rpath1,String rpath2){

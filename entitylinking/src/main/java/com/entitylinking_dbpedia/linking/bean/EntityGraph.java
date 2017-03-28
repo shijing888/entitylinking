@@ -1,5 +1,12 @@
 package com.entitylinking_dbpedia.linking.bean;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -334,8 +341,10 @@ public class EntityGraph {
 		double[] weights;
 		this.transferMatrix = new double[entityLen][entityLen];
 		Parameters parameters = new Parameters();
-		Map<String, Integer> labelMap = parameters.loadString2IntegerDict("./data/dbpedia/numLabels_enText.ttl");
-		Map<Integer, HashSet<Integer>> entityOutMap = parameters.loadEntityOutMap("./data/dbpedia/entity_edge.ttl");
+		Map<String, Integer> labelMap = parameters.loadString2IntegerDict(
+				"./data/dbpedia/numLabels_enText.ttl");
+		Map<Integer, HashSet<Integer>> entityOutMap = parameters.loadEntityOutMap(
+				"./data/dbpedia/entity_edge.ttl");
 		logger.info("labelmap size:"+labelMap.size());
 		logger.info("entityOutMap size:"+entityOutMap.size());
 		for(int i=0;i<candidateEntityLen;i++){
@@ -391,7 +400,7 @@ public class EntityGraph {
 		int label1 = labelMap.get(name1);
 		int label2 = labelMap.get(name2);
 	
-		getSkipPath(label1, label2, entityOutMap, pathList, RELRWParameterBean.getSkipNums());
+		getSkipKatzPath(label1, label2, entityOutMap, pathList, RELRWParameterBean.getSkipNums());
 	
 		if(pathList.size() > 0){
 			for(Integer item : pathList){
@@ -401,7 +410,8 @@ public class EntityGraph {
 		}
 		
 		weights[0] = weights[1] = score;
-		logger.info(name1+"\t"+name2+"的katz score:"+score);
+		if(score > 0)
+			logger.info(name1+"\t"+name2+"的katz score:"+score);
 		return weights;
 	}
 	
@@ -409,10 +419,10 @@ public class EntityGraph {
 	 * 获得两个实体经过若干条的路径
 	 * @param label
 	 * @param entityOutMap
-	 * @param pathList
+	 * @param pathList，存放的是路径长度
 	 * @param skipNum
 	 */
-	public void getSkipPath(Integer label1,Integer label2,Map<Integer, HashSet<Integer>> entityOutMap, 
+	public void getSkipKatzPath(Integer label1,Integer label2,Map<Integer, HashSet<Integer>> entityOutMap, 
 			List<Integer> pathList,int skipNum){
 		HashSet<Integer> set1 = entityOutMap.get(label1);
 		HashSet<Integer> set2 = entityOutMap.get(label2);
@@ -475,6 +485,355 @@ public class EntityGraph {
 		}
 		
 	}
+	
+	
+	/**
+	 * 计算基于排他性路径的权重矩阵
+	 */
+	public void calTransferMatrixOfExclusivityPath(){
+		double[] weights;
+		this.transferMatrix = new double[entityLen][entityLen];
+		Parameters parameters = new Parameters();
+		Map<String, Integer> labelMap = parameters.loadString2IntegerDict(
+				"./data/dbpedia/numLabels_enText.ttl");
+		Map<Integer, HashMap<Integer, HashSet<Integer>>> entityOutTypeMap = 
+				parameters.loadEntityOutTypeMap("./data/dbpedia/entity_edge.ttl");
+		Map<Integer, HashMap<Integer, HashSet<Integer>>> entityInTypeMap =
+				getEntityInMap(entityOutTypeMap);
+		pickleMap("./data/dbpedia/entityIn_edge.ttl", entityInTypeMap);
+		logger.info("labelmap size:"+labelMap.size());
+		logger.info("entityOutTypeMap size:"+entityOutTypeMap.size());
+		logger.info("entityInTypeMap size:"+entityInTypeMap.size());
+		for(int i=0;i<candidateEntityLen;i++){
+			logger.info("i = "+i);
+			for(int j=i;j<entityLen;j++){
+				weights = calEdgeWeightOfExclusivityPath(entities[i], entities[j],
+						labelMap,entityOutTypeMap,entityInTypeMap);
+				transferMatrix[i][j] = weights[0];
+				transferMatrix[j][i] = weights[1];
+			}
+		}
+		
+		//将转移概率做归一化处理
+		double[] sum = new double[entityLen];
+		for(int i=0;i<entityLen;i++){
+			for(int j=0;j<entityLen;j++){
+				sum[j] += transferMatrix[i][j];
+			}
+		}
+		for(int i=0;i<entityLen;i++){
+			for(int j=0;j<entityLen;j++){
+				if(sum[j] > 0){
+					transferMatrix[i][j] /= sum[j];
+				}else{
+					transferMatrix[i][j] = 0;
+				}
+				
+			}
+		}
+	}
+	
+	/**
+	 * 计算两个实体间的卡茨关联性
+	 * @param ent1
+	 * @param ent2
+	 * @param labelMap
+	 * @param entityOutMap
+	 * @return
+	 */
+	public double[] calEdgeWeightOfExclusivityPath(Entity ent1,Entity ent2,Map<String, Integer> labelMap,
+			Map<Integer, HashMap<Integer, HashSet<Integer>>> entityOutMap,
+			Map<Integer, HashMap<Integer, HashSet<Integer>>> entityInMap){
+		double score = 0;
+		double pathAlpha = RELRWParameterBean.getPathAlpha();
+		List<ArrayList<Double>> pathList = new ArrayList<ArrayList<Double>>();
+		double[] weights = new double[2];
+		
+		String name1 = ent1.getEntityName();
+		String name2 = ent2.getEntityName();
+		
+		if(!labelMap.containsKey(name1) || !labelMap.containsKey(name2)){
+			return weights;
+		}
+		
+		int label1 = labelMap.get(name1);
+		int label2 = labelMap.get(name2);
+	
+		getSkipExclusivityPath(label1, label2, entityOutMap,entityInMap, 
+				pathList, RELRWParameterBean.getSkipNums());
+	
+		if(pathList.size() > 0){
+			for(ArrayList<Double> item : pathList){
+				if(item.size() > 0){
+					double weight = 0;
+					for(double excluScore:item){
+						if(excluScore > 0){
+							weight += 1/ excluScore;
+						}
+					}
+					if(weight > 0){
+						weight = 1 / weight;
+					}
+					score += Math.pow(pathAlpha, item.size()) * weight;
+				}
+				
+			}
+			score /= pathList.size();
+		}
+		
+		weights[0] = weights[1] = score;
+		logger.info(name1+"\t"+name2+"的katz score:"+score);
+		return weights;
+	}
+	
+	
+	/**
+	 * 获得两个实体经过若干条的路径,采用排他性的方法
+	 * @param label
+	 * @param entityOutMap
+	 * @param pathList，存放的是路径长度
+	 * @param skipNum
+	 */
+	public void getSkipExclusivityPath(Integer label1,Integer label2,
+			Map<Integer, HashMap<Integer, HashSet<Integer>>>entityOutMap, 
+			Map<Integer, HashMap<Integer, HashSet<Integer>>> entityInMap,
+			List<ArrayList<Double>> pathList,int skipNum){
+		
+		HashMap<Integer, HashSet<Integer>> map1 = entityOutMap.get(label1);
+		HashMap<Integer, HashSet<Integer>> map2 = entityOutMap.get(label2);
+		
+		if(map1 == null && map2 == null){
+			return;
+		}
+		//直接相连
+		if(map1 != null){
+			for(Entry<Integer, HashSet<Integer>>entry: map1.entrySet()){
+				HashSet<Integer> set1 = entry.getValue();
+				int propertyType = entry.getKey();
+				if(set1 != null && set1.contains(label2)){
+					ArrayList<Double> typeExclusivity = new ArrayList<>();
+					double excluXY = getExcluScore(set1, entityInMap.get(label2).get(propertyType));
+					if(excluXY > 0){
+						typeExclusivity.add(excluXY);
+						pathList.add(typeExclusivity);
+					}
+					
+				}
+			}
+		
+		}
+		
+		if(map2 != null){
+			for(Entry<Integer, HashSet<Integer>>entry: map2.entrySet()){
+				HashSet<Integer> set2 = entry.getValue();
+				int propertyType = entry.getKey();
+				if(set2 != null && set2.contains(label1)){
+					ArrayList<Double> typeExclusivity = new ArrayList<>();
+					double excluXY = getExcluScore(set2, entityInMap.get(label1).get(propertyType));
+					if(excluXY > 0){
+						typeExclusivity.add(excluXY);
+						pathList.add(typeExclusivity);
+					}
+				}
+			}
+		}
+		
+		//直接相连则返回
+		if(skipNum == 0)
+			return;
+		
+		//考虑多跳情况
+		int i = 1;
+		while(i++ <= skipNum){
+			if(map1 != null && !map1.isEmpty()){
+				for(Entry<Integer, HashSet<Integer>>entry:map1.entrySet()){
+					int propertyType = entry.getKey();
+					HashSet<Integer> set1 = entry.getValue();
+					if(set1 != null && !set1.isEmpty()){
+						if(set1.contains(label2)){
+							set1.remove(label2);
+						}
+					}
+					
+					double excluScore = 0;
+					
+					for(Integer item:set1){
+						HashMap<Integer, HashSet<Integer>> typeMap = entityOutMap.get(item);
+						if(typeMap != null){
+							for(Entry<Integer, HashSet<Integer>>entry2:typeMap.entrySet()){
+								int typeLabel = entry2.getKey();
+								HashSet<Integer> typeSet = entry2.getValue();
+								if(typeSet.contains(label2)){
+									//这里将路径保存在typeExclusivity
+									ArrayList<Double>  typeExclusivity = new ArrayList<>();
+									excluScore = getExcluScore(set1, 
+											entityInMap.get(item).get(propertyType));
+									typeExclusivity.add(excluScore);
+									excluScore = getExcluScore(typeSet, 
+											entityInMap.get(label2).get(typeLabel));
+									typeExclusivity.add(excluScore);
+									pathList.add(typeExclusivity);
+								}
+							}
+							
+						}
+						
+					}
+				}
+				
+				
+			}
+			
+			if(map2 != null && !map2.isEmpty()){
+				for(Entry<Integer, HashSet<Integer>>entry:map2.entrySet()){
+					int propertyType = entry.getKey();
+					HashSet<Integer> set2 = entry.getValue();
+					if(set2 != null && !set2.isEmpty()){
+						if(set2.contains(label1)){
+							set2.remove(label1);
+						}
+					}
+					
+					double excluScore = 0;
+					
+					
+					for(Integer item:set2){
+						HashMap<Integer, HashSet<Integer>> typeMap = entityOutMap.get(item);
+						if(typeMap != null){
+							for(Entry<Integer, HashSet<Integer>>entry2:typeMap.entrySet()){
+								int typeLabel = entry2.getKey();
+								HashSet<Integer> typeSet = entry2.getValue();
+								if(typeSet.contains(label1)){
+									//这里将路径保存在typeExclusivity
+									ArrayList<Double>  typeExclusivity = new ArrayList<>();
+									excluScore = getExcluScore(set2, 
+											entityInMap.get(item).get(propertyType));
+									typeExclusivity.add(excluScore);
+									excluScore = getExcluScore(typeSet, 
+											entityInMap.get(label1).get(typeLabel));
+									typeExclusivity.add(excluScore);
+									pathList.add(typeExclusivity);
+								}
+							}
+							
+						}
+						
+					}
+				}
+				
+				
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * 计算两个相连实体间的排他性得分
+	 * @param set1
+	 * @param set2
+	 * @return
+	 */
+	public double getExcluScore(HashSet<Integer>set1, HashSet<Integer>set2){
+		int xToAny,anyToY;
+		try {
+			xToAny = set1.size();
+			anyToY = set2.size();
+		} catch (Exception e) {
+			// TODO: handle exception
+			anyToY = 0;
+			xToAny = 0;
+			return 0;
+		}
+		double excluXY = xToAny + anyToY -1;
+		if(excluXY > 0)
+			excluXY = 1 / excluXY;
+
+		return excluXY;
+	}
+	
+	
+	/**
+	 * 从实体出边词典中获得入边信息词典
+	 * @param entityOutMap
+	 * @return
+	 */
+	public Map<Integer, HashMap<Integer, HashSet<Integer>>> getEntityInMap (
+			Map<Integer, HashMap<Integer, HashSet<Integer>>> entityOutMap){
+		Map<Integer, HashMap<Integer, HashSet<Integer>>> entityInMap = new HashMap<>();
+		
+		for(Entry<Integer, HashMap<Integer, HashSet<Integer>>> entry:entityOutMap.entrySet()){
+			Map<Integer, HashSet<Integer>> typeMap = entry.getValue();
+			int label = entry.getKey();
+			for(Entry<Integer, HashSet<Integer>>entry2:typeMap.entrySet()){
+				HashSet<Integer> set = entry2.getValue();
+				int typeLabel = entry2.getKey();
+				for(Integer item:set){
+					if(!entityInMap.containsKey(item)){
+						HashMap<Integer, HashSet<Integer>> inTypeMap = new HashMap<>();
+						HashSet<Integer> inSet = new HashSet<>();
+						inSet.add(label);
+						inTypeMap.put(typeLabel, inSet);
+						entityInMap.put(item, inTypeMap);
+					}else{
+						HashMap<Integer, HashSet<Integer>> inTypeMap = entityInMap.get(item);
+						if(!inTypeMap.containsKey(typeLabel)){
+							HashSet<Integer> inSet = new HashSet<>();
+							inSet.add(label);
+							inTypeMap.put(typeLabel, inSet);
+						}else{
+							HashSet<Integer> inSet = inTypeMap.get(typeLabel);
+							if(!inSet.contains(label)){
+								inSet.add(label);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return entityInMap;
+	}
+	
+	/**
+	 * 将map持久化到本地
+	 * @param wpath
+	 * @param entityInMap
+	 */
+	public void pickleMap(String wpath,Map<Integer, HashMap<Integer, HashSet<Integer>>>entityInMap){
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			StringBuilder builder = new StringBuilder();
+			for(Entry<Integer, HashMap<Integer, HashSet<Integer>>> entry:entityInMap.entrySet()){
+				Map<Integer, HashSet<Integer>> typeMap = entry.getValue();
+				int label = entry.getKey();
+				for(Entry<Integer, HashSet<Integer>>entry2:typeMap.entrySet()){
+					HashSet<Integer> set = entry2.getValue();
+					int typeLabel = entry2.getKey();
+					builder.delete(0, builder.length());
+					builder.append(label).append("\t||\t").append(typeLabel).append("\t||\t")
+							.append(set.size()).append("\t||\t").append(StringUtils.join(set,"\t|\t"));
+					builder.append("\n");
+					writer.write(builder.toString());
+					
+				}
+			}
+			
+			writer.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	
 	/**
 	 * 带重启的随机游走计算语义签名

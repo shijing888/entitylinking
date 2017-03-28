@@ -348,7 +348,8 @@ public class Parameters {
 			while((line = br.readLine())!=null){
 				String[] lineArray = line.split("\t\\|\\|\t");
 				if(lineArray.length==4){
-					if(!map.containsKey(lineArray[0])){
+					int label = Integer.parseInt(lineArray[0]);
+					if(!map.containsKey(label)){
 						HashSet<Integer> set = new HashSet<>();
 						String[] outSet = lineArray[3].split("\t\\|\t");
 						for(String item:outSet){
@@ -356,7 +357,7 @@ public class Parameters {
 						}
 						map.put(Integer.parseInt(lineArray[0]), set);
 					}else{
-						HashSet<Integer> set = new HashSet<>();
+						HashSet<Integer> set = map.get(label);
 						String[] outSet = lineArray[3].split("\t\\|\t");
 						for(String item:outSet){
 							if(!set.contains(Integer.parseInt(item))){
@@ -364,6 +365,68 @@ public class Parameters {
 							}
 							
 						}
+					}
+					
+				}
+			}
+			
+			br.close();
+			return map;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
+	
+	
+	/**
+	 * 加载实体出边类型及出边集合词典
+	 * @param path
+	 * @return
+	 */
+	public Map<Integer, HashMap<Integer, HashSet<Integer>>> loadEntityOutTypeMap(String path){
+		Map<Integer, HashMap<Integer, HashSet<Integer>>>map = new HashMap<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length==4){
+					int label = Integer.parseInt(lineArray[0]);
+					if(!map.containsKey(label)){
+						int edgeType = Integer.parseInt(lineArray[1]);
+						HashSet<Integer> set = new HashSet<>();
+						String[] outSet = lineArray[3].split("\t\\|\t");
+						for(String item:outSet){
+							set.add(Integer.parseInt(item));
+						}
+						HashMap<Integer, HashSet<Integer>> typeMap = new HashMap<>();
+						typeMap.put(edgeType, set);
+						map.put(label, typeMap);
+					}else{
+						HashMap<Integer, HashSet<Integer>> typeMap = map.get(label);
+						int edgeType = Integer.parseInt(lineArray[1]);
+						if(!typeMap.containsKey(edgeType)){
+							HashSet<Integer> set = new HashSet<>();
+							String[] outSet = lineArray[3].split("\t\\|\t");
+							for(String item:outSet){
+								set.add(Integer.parseInt(item));
+							}
+							typeMap.put(edgeType, set);
+						}else{
+							HashSet<Integer> set = typeMap.get(edgeType);
+							String[] outSet = lineArray[3].split("\t\\|\t");
+							for(String item:outSet){
+								if(!set.contains(Integer.parseInt(item))){
+									set.add(Integer.parseInt(item));
+								}
+								
+							}
+						}
+						
+						
 					}
 					
 				}

@@ -34,7 +34,7 @@
 		<!-- 基于路径的衰减系数 -->
 		<pathAlpha>0.5</pathAlpha>
 		<!-- 路径跳数 -->
-		<skipNums>1</skipNums>
+		<skipNums>0</skipNums>
 		<!-- 选取的最短路径跳数 -->
 		<topK>5</topK>
 	</paramenter>
