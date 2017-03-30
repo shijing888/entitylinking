@@ -32,7 +32,7 @@
 		<!-- 字面量sigmoid函数参数 -->
 		<literalSigmoidParameter>5</literalSigmoidParameter>
 		<!-- 基于路径的衰减系数 -->
-		<pathAlpha>0.5</pathAlpha>
+		<pathAlpha>0.25</pathAlpha>
 		<!-- 路径跳数 -->
 		<skipNums>0</skipNums>
 		<!-- 选取的最短路径跳数 -->

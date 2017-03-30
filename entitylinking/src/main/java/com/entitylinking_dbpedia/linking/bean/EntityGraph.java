@@ -434,7 +434,8 @@ public class EntityGraph {
 		if(set1 != null && set1.contains(label2)){
 			pathList.add(1);
 		}
-		
+		if(pathList.size() > RELRWParameterBean.getTopK())
+			return;
 		if(set2 != null && set2.contains(label1)){
 			pathList.add(1);
 		}
@@ -454,7 +455,10 @@ public class EntityGraph {
 				for(Integer item:set1){
 					if(entityOutMap.get(item) != null){
 						if(entityOutMap.get(item).contains(label2)){
-							pathList.add(i);
+							if(pathList.size() < RELRWParameterBean.getTopK())
+								pathList.add(i);
+							else
+								return;
 						}
 						tempSet1.addAll(entityOutMap.get(item));
 					}
@@ -472,7 +476,10 @@ public class EntityGraph {
 				for(Integer item:set2){
 					if(entityOutMap.get(item) != null){
 						if(entityOutMap.get(item).contains(label1)){
-							pathList.add(i);
+							if(pathList.size() < RELRWParameterBean.getTopK())
+								pathList.add(i);
+							else
+								return;
 						}
 						tempSet2.addAll(entityOutMap.get(item));
 					}
@@ -498,9 +505,11 @@ public class EntityGraph {
 				"./data/dbpedia/numLabels_enText.ttl");
 		Map<Integer, HashMap<Integer, HashSet<Integer>>> entityOutTypeMap = 
 				parameters.loadEntityOutTypeMap("./data/dbpedia/entity_edge.ttl");
-		Map<Integer, HashMap<Integer, HashSet<Integer>>> entityInTypeMap =
-				getEntityInMap(entityOutTypeMap);
-		pickleMap("./data/dbpedia/entityIn_edge.ttl", entityInTypeMap);
+		Map<Integer, HashMap<Integer, HashSet<Integer>>> entityInTypeMap = 
+				parameters.loadEntityOutTypeMap("./data/dbpedia/entityIn_edge.ttl");
+//		Map<Integer, HashMap<Integer, HashSet<Integer>>> entityInTypeMap =
+//				getEntityInMap(entityOutTypeMap);
+//		pickleMap("./data/dbpedia/entityIn_edge.ttl", entityInTypeMap);
 		logger.info("labelmap size:"+labelMap.size());
 		logger.info("entityOutTypeMap size:"+entityOutTypeMap.size());
 		logger.info("entityInTypeMap size:"+entityInTypeMap.size());
@@ -615,7 +624,10 @@ public class EntityGraph {
 					double excluXY = getExcluScore(set1, entityInMap.get(label2).get(propertyType));
 					if(excluXY > 0){
 						typeExclusivity.add(excluXY);
-						pathList.add(typeExclusivity);
+						if(pathList.size() < RELRWParameterBean.getTopK())
+							pathList.add(typeExclusivity);
+						else
+							return;
 					}
 					
 				}
@@ -632,7 +644,10 @@ public class EntityGraph {
 					double excluXY = getExcluScore(set2, entityInMap.get(label1).get(propertyType));
 					if(excluXY > 0){
 						typeExclusivity.add(excluXY);
-						pathList.add(typeExclusivity);
+						if(pathList.size() < RELRWParameterBean.getTopK())
+							pathList.add(typeExclusivity);
+						else
+							return;
 					}
 				}
 			}
@@ -672,7 +687,10 @@ public class EntityGraph {
 									excluScore = getExcluScore(typeSet, 
 											entityInMap.get(label2).get(typeLabel));
 									typeExclusivity.add(excluScore);
-									pathList.add(typeExclusivity);
+									if(pathList.size() < RELRWParameterBean.getTopK())
+										pathList.add(typeExclusivity);
+									else
+										return;
 								}
 							}
 							
@@ -712,7 +730,10 @@ public class EntityGraph {
 									excluScore = getExcluScore(typeSet, 
 											entityInMap.get(label1).get(typeLabel));
 									typeExclusivity.add(excluScore);
-									pathList.add(typeExclusivity);
+									if(pathList.size() < RELRWParameterBean.getTopK())
+										pathList.add(typeExclusivity);
+									else
+										return;
 								}
 							}
 							
