@@ -126,9 +126,14 @@ public class DBPedia {
 //		inverseMap(rpath2, wpath2);
 		
 		//获取实体-边的信息
-		String rpath = "./data/dbpedia/infobox_properties_enEntity.ttl";
-		String wpath = "./data/dbpedia/entity_edge.ttl";
-		getEntityEdgeInfo(rpath, wpath);
+//		String rpath = "./data/dbpedia/infobox_properties_enEntity.ttl";
+//		String wpath = "./data/dbpedia/entity_edge.ttl";
+//		getEntityEdgeInfo(rpath, wpath);
+		
+		//获取类型出现的频率
+		String rpath = "./data/dbpedia/entity_edge.ttl";
+		String wpath = "./data/dbpedia/typeFrequency.ttl";
+		pickleTypeFrequencyMap(rpath, wpath);
 	}
 	
 	/**
@@ -822,6 +827,56 @@ public class DBPedia {
 				}
 				entityEdgeMap.clear();
 			}
+			writer.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	/**
+	 * 将map持久化到本地
+	 * @param wpath
+	 * @param entityInMap
+	 */
+	public static void pickleTypeFrequencyMap(String rpath,String wpath){
+		try {
+			Map<Integer, Integer> typeFrequency = new HashMap<>();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(rpath)), "utf-8"));
+			String line;
+			while((line = reader.readLine()) != null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length == 4){
+					int type = Integer.parseInt(lineArray[1]);
+					if(typeFrequency.containsKey(type)){
+						typeFrequency.put(type, typeFrequency.get(type) +1);
+					}else{
+						typeFrequency.put(type, 1);
+					}
+				}
+			}
+			
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			StringBuilder builder = new StringBuilder();
+			for(Entry<Integer, Integer> entry:typeFrequency.entrySet()){
+				int label = entry.getKey();
+				int frequency = entry.getValue();
+				builder.delete(0, builder.length());		
+				builder.append(label).append("\t||\t").append(frequency).append("\n");
+				writer.write(builder.toString());
+				
+			}
+			
+			reader.close();
 			writer.close();
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block

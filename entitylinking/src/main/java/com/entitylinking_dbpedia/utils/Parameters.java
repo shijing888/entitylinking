@@ -307,6 +307,27 @@ public class Parameters {
 		return map;
 	}
 	
+	public Map<Integer, Integer> loadInteger2IntegerDict(String path){
+		Map<Integer, Integer> map = new HashMap<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length==2){
+					map.put(Integer.parseInt(lineArray[0]),Integer.parseInt(lineArray[1]));
+				}
+			}
+			
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
+	
 	/**
 	 * 加载键值对均为字符串的词典
 	 * @param path
