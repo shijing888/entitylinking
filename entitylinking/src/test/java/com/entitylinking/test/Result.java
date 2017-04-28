@@ -10,11 +10,11 @@ import java.util.Map;
 public class Result {
 
 	public static void main(String args[]){
-		String rpath1 = "data\\result_repository\\ace2004_dbpedia_3.25\\result.txt";
+		String rpath1 = "data\\result_repository\\ace2004_dbpedia_4.19\\result.txt";
 		String rpath2 = "data\\result\\result.txt";
-		System.out.println("在卡茨中错误但在排他性中正确的实体有:");
+		System.out.println("在加无歧义词典后新出现的错误有:");
 		compareDiffer(rpath1, rpath2);
-		System.out.println("在排他性中错误但在卡茨中正确的实体有:");
+		System.out.println("在加无歧义词典后修正的错误有:");
 		compareDiffer(rpath2, rpath1);
 	}
 	

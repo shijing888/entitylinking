@@ -62,7 +62,10 @@ public class EntityGraph {
 	private double[][] edgesWeights;
 	/*mention-entity pair*/
 	private Map<Mention, Entity> disambiguationMap;
-	
+	/*无歧义实体集合*/
+	private HashSet<String>unAmbiguaSet;
+	/*mention的平均tfidf大小*/
+	public double averageTfidf;
 	public EntityGraph(){
 		this.disambiguationMap = new HashMap<Mention, Entity>();
 		this.semantitcSignatureOfDocument = new double[this.entityLen];
@@ -71,7 +74,12 @@ public class EntityGraph {
 	public Map<String, Integer> getEntityIndex() {
 		return entityIndex;
 	}
-
+	public HashSet<String> getUnAmbiguaSet() {
+		return unAmbiguaSet;
+	}
+	public void setUnAmbiguaSet(HashSet<String> unAmbiguaSet) {
+		this.unAmbiguaSet = unAmbiguaSet;
+	}
 	public List<Mention> getMentions() {
 		return mentions;
 	}
@@ -84,6 +92,12 @@ public class EntityGraph {
 		return entityLen;
 	}
 
+	public double getAverageTfidf() {
+		return averageTfidf;
+	}
+	public void setAverageTfidf(double averageTfidf) {
+		this.averageTfidf = averageTfidf;
+	}
 	public void setEntityLen(int len) {
 		this.entityLen = len;
 	}
@@ -129,6 +143,7 @@ public class EntityGraph {
 	public double[] getPreferVectorOfDocument() {
 		return preferVectorOfDocument;
 	}
+	
 
 	/**
 	 * 设置文档的偏好向量
@@ -149,7 +164,19 @@ public class EntityGraph {
 //					polularity = 1;
 					index = this.entityIndex.get(entry.getValue().getEntityName());
 					this.preferVectorOfDocument[index] = important;
+					logger.info(entry.getKey().getMentionName()+"的tfidf值为:"+important);
 				}
+			}
+			
+			for(String str:unAmbiguaSet){
+				if(this.entityIndex.containsKey(str)){
+					index = this.entityIndex.get(str);
+					if(this.preferVectorOfDocument[index] == 0){
+//						this.preferVectorOfDocument[index] = this.averageTfidf / 2;
+						this.preferVectorOfDocument[index] =  0.1;
+					}
+				}
+				
 			}
 		}else{
 			for(Entry<Mention, Entity>entry:this.disambiguationMap.entrySet()){
@@ -168,7 +195,7 @@ public class EntityGraph {
 				}
 			}
 		}
-		logger.info("important:"+important);
+		
 		logger.info("文档的偏好向量为:" + StringUtils.join(ArrayUtils.toObject(preferVectorOfDocument), "\t"));
 	}
 
@@ -229,17 +256,18 @@ public class EntityGraph {
 				this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
 			}
 		}
+		
 		//若没有无歧义对，则将歧义性最低的给加入到map中
-		if(this.disambiguationMap.size() == 0){
-			isDisAmbiguation = false;
-			for(Mention mention:this.mentions){
-				if(!mention.getCandidateEntity().isEmpty()){
-					this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
-					return isDisAmbiguation;
-				}
-			}
-			
-		}
+//		if(this.disambiguationMap.size() == 0){
+//			isDisAmbiguation = false;
+//			for(Mention mention:this.mentions){
+//				if(!mention.getCandidateEntity().isEmpty()){
+//					this.disambiguationMap.put(mention, mention.getCandidateEntity().get(0));
+//					return isDisAmbiguation;
+//				}
+//			}
+//			
+//		}
 		
 		return isDisAmbiguation;
 	}

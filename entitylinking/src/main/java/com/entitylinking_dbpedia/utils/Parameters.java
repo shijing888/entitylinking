@@ -54,6 +54,7 @@ public class Parameters {
 		DictBean.setMentionDict(loadMentionDict(PathBean.getMentionDictPath()));
 		DictBean.setEntityByDbpeidaPopularityDict(loadString2IntegerDict(
 				PathBean.getEntityByDbpeidaPopularityPath()));
+		DictBean.setUnAmbiguaDict(loadMapDict(PathBean.getUnAmbiguationDictPath()));
 	}
 	
 	/**
@@ -121,18 +122,25 @@ public class Parameters {
 				PathBean.setDfDictPath(element.elementText("df"));
 				PathBean.setSpecialWordsPath(element.elementText("specialWords"));
 				PathBean.setMentionDictPath(element.elementText("mentionDict"));
-				PathBean.setEntityByDbpeidaPopularityPath(element.elementText("entityByDbpeidaPopularity"));
+				PathBean.setEntityByDbpeidaPopularityPath(
+						element.elementText("entityByDbpeidaPopularity"));
 				PathBean.setLabelNumPath(element.elementText("labelNum"));
+				PathBean.setUnAmbiguationDictPath(element.elementText("unAmbiguaDict"));
 			}else if(element.getName().equals("relPath")){//robust 实体链接方法参数
-				PathBean.setRelParameterByDbpediaPath(element.elementText("relParameterByDbpediaPath"));
+				PathBean.setRelParameterByDbpediaPath(
+						element.elementText("relParameterByDbpediaPath"));
 				PathBean.setResultDirPath(element.elementText("resultDir"));
 				PathBean.setEntityContextPath(element.elementText("entityContextPath"));
-				PathBean.setEntityByDbpediaContextPath(element.elementText("entityByDbpediaContextPath"));
-				PathBean.setMentionContextDirPath(element.elementText("mentionContextDirPath"));
-				PathBean.setEntityCategoryPath(element.elementText("entityCategoryPath"));
+				PathBean.setEntityByDbpediaContextPath(
+						element.elementText("entityByDbpediaContextPath"));
+				PathBean.setMentionContextDirPath(
+						element.elementText("mentionContextDirPath"));
+				PathBean.setEntityCategoryPath(
+						element.elementText("entityCategoryPath"));
 			}else if(element.getName().equals("indexDirPath")){//索引文件路径
 				PathBean.setShortAbstractTextPath(element.elementText("shortAbstractTextPath"));
-				PathBean.setEntityByDbpediaRelationPath(element.elementText("entityByDbpediaRelationPath"));
+				PathBean.setEntityByDbpediaRelationPath(
+						element.elementText("entityByDbpediaRelationPath"));
 				PathBean.setSynonymsDictPath(element.elementText("synonymsDictPath"));
 				PathBean.setAmbiguationDictPath(element.elementText("ambiguationDictPath"));
 				PathBean.setDbpediaLabelNamePath(element.elementText("dbpediaLabelName"));

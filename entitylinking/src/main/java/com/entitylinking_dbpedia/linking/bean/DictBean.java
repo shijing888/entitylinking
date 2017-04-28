@@ -24,7 +24,14 @@ public class DictBean {
 	private static Map<String, HashSet<String>> entityContextDict;
 	private static Map<String, HashSet<String>> entityCategoryDict;
 	private static Map<String, Integer> entityByDbpeidaPopularityDict;
+	private static Map<String, HashSet<String>> unAmbiguaDict;
 	
+	public static Map<String, HashSet<String>> getUnAmbiguaDict() {
+		return unAmbiguaDict;
+	}
+	public static void setUnAmbiguaDict(Map<String, HashSet<String>> unAmbiguaDict) {
+		DictBean.unAmbiguaDict = unAmbiguaDict;
+	}
 	public static Map<String, Integer> getEntityByDbpeidaPopularityDict() {
 		return entityByDbpeidaPopularityDict;
 	}

@@ -9,6 +9,7 @@
 		<df>./dict/df.txt</df>
 		<specialWords>./dict/specialWords.txt</specialWords>
 		<mentionDict>./data/ace2004/ace2004_new.xml</mentionDict>
+		<unAmbiguaDict>./dict/disAmbiguationMention.txt</unAmbiguaDict>
 		<labelNum>./data/dbpedia/numLabels_enText.ttl</labelNum>
 		<entityByDbpeidaPopularity>./data/dbpedia/entity_popularity.ttl</entityByDbpeidaPopularity>
 	</dictPath>

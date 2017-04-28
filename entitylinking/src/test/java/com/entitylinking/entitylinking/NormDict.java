@@ -13,13 +13,19 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.entitylinking.config.WikiConfig;
 import com.entitylinking.utils.NormalizeMention;
+import com.entitylinking_dbpedia.utils.FileUtils;
+import com.entitylinking_dbpedia.utils.Parameters;
 
+import de.tudarmstadt.ukp.wikipedia.api.Page;
+import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
 import difflib.StringUtills;
 
 public class NormDict {
@@ -33,9 +39,25 @@ public class NormDict {
 //		String rpath2 = "./dict/ambiguationDict.txt";
 //		String wpath2 = "./dict/ambiguationDict2.txt";
 //		processDict(rpath, wpath, rpath2,wpath2);
-		String rpath = "./dict/entityRelation.txt";
-		String wpath = "./dict/entityRelation2.txt";
-		filterDict(rpath, wpath);
+		
+//		String rpath = "./dict/entityRelation.txt";
+//		String wpath = "./dict/entityRelation2.txt";
+//		filterDict(rpath, wpath);
+		
+//		String rpath1 = "./dict/synonymsDict.txt";
+//		String wpath = "./dict/unAmbiguaDict.txt";
+//		String rpath2 = "./dict/ambiguationDict.txt";
+//		unambiguationDict(rpath1, rpath2, wpath);
+		
+//		String rpath1 = "./dict/unAmbiguaDict.txt";
+//		String wpath = "./dict/unAmbiguaMentionOfText.txt";
+//		String rpath2 = "./data/ace2004/RawTexts";
+//		getUnambiguaOfText(rpath1, rpath2, wpath);
+		
+		String rpath = "./dict/disAmbiguationMention.txt";
+		String mapPath = "./data/dbpedia/entity_popularity.ttl";
+		String wpath = "./dict/disAmbiguationMention3.txt";
+		filterUnambiguationDict(rpath,mapPath, wpath);
 	}
 	
 public static void processDict(String rpath,String wpath, String rpath2,String wpath2){
@@ -217,5 +239,153 @@ public static Map<String, HashSet<String>> loadDisambiguationDict(String path){
 			}
 		}
 	}
+	
+	public static void unambiguationDict(String rpath1,String rpath2,String wpath){
+		Parameters parameters = new Parameters();
+		Map<String, String> synDict = parameters.loadSynonymsDict(rpath1);
+		Map<String, HashSet<String>> ambiguaDict = parameters.loadMapDict(rpath2);
+		Map<String, String> map = new HashMap<>();
+		System.out.println(synDict.size());
+		System.out.println(ambiguaDict.size());
+		
+		for(Entry<String, String>entry:synDict.entrySet()){
+			if(!ambiguaDict.containsKey(entry.getKey())){
+				map.put(entry.getKey(), entry.getValue());
+			}
+		}
+		
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			StringBuilder builder = new StringBuilder();
+			for(Entry<String, String>entry:map.entrySet()){
+				builder.delete(0, builder.length());
+				builder.append(entry.getKey()).append("\t||\t").append(entry.getValue());
+				builder.append("\n");
+				writer.write(builder.toString());
+			}
+			writer.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
+	public static void getUnambiguaOfText(String rpath1,String rpath2,String wpath){
+		Parameters parameters = new Parameters();
+		Map<String, String> map = parameters.loadSynonymsDict(rpath1);
+		Map<String,HashSet<String>> result = new HashMap<>();
+		File fileDir = new File(rpath2);
+		if(fileDir.isDirectory()){
+			File[] fileList = fileDir.listFiles();
+			String textContent;
+			for(File file:fileList){
+				String filePath = file.getAbsolutePath();
+				textContent = FileUtils.readFileContent(filePath);
+				textContent = textContent.replaceAll("\\s+", "_");
+				textContent = textContent.toLowerCase();
+				HashSet<String>set;
+				if(result.containsKey(file.getName())){
+					set = result.get(file.getName());
+				}else{
+					set = new HashSet<>();
+				}
+				for(Entry<String, String>entry:map.entrySet()){
+					if(entry.getValue().length()<3 || entry.getValue().matches(".*\\d+.*"))
+						continue;
+					if(textContent.contains(entry.getKey())){
+						set.add(entry.getValue());
+					}
+				}
+				if(set.size()>0)
+					result.put(file.getName(), set);
+			}
+		}
+		
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			StringBuilder builder = new StringBuilder();
+			for(Entry<String, HashSet<String>>entry:result.entrySet()){
+				builder.delete(0, builder.length());
+				builder.append(entry.getKey()).append("\t||\t")
+						.append(StringUtils.join(entry.getValue(), "\t|\t"));
+				builder.append("\n");
+				writer.write(builder.toString());
+			}
+			writer.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void filterUnambiguationDict(String rpath,String mapPath,String wpath){
+		Parameters parameters = new Parameters();
+		Map<String, HashSet<String>>map = parameters.loadMapDict(rpath);
+		Map<String,Integer> entityMap = parameters.loadString2IntegerDict(mapPath);
+		Wikipedia wiki = WikiConfig.getWiki();
+		Page page;
+		int countAll = 0;
+		for(Entry<String, HashSet<String>>entry:map.entrySet()){
+			HashSet<String>set = entry.getValue();
+			HashSet<String>newSet = new HashSet<>();
+			Iterator<String>iterator = set.iterator();
+			while(iterator.hasNext()){
+				String str = iterator.next();
+				try {
+					page = wiki.getPage(str);
+					int num = page.getNumberOfInlinks() + page.getNumberOfOutlinks();
+					System.out.println(str+"的流行度是:"+num);
+					System.out.println(str+"是否是消歧页:"+page.isDisambiguation());
+					if(num < 100 || page.isDisambiguation()){
+						continue;
+					}
+					String name = page.getTitle().getWikiStyleTitle().toLowerCase();
+					if(entityMap.containsKey(name))
+						newSet.add(name);
+				}catch (Exception e) {
+					// TODO: handle exception
+					iterator.remove();
+				}
+			}
+			countAll += newSet.size();
+			map.put(entry.getKey(), newSet);
+		}
+		System.out.println("平均长度为："+countAll/map.size());
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			StringBuilder builder = new StringBuilder();
+			for(Entry<String, HashSet<String>>entry:map.entrySet()){
+				builder.delete(0, builder.length());
+				builder.append(entry.getKey()).append("\t||\t")
+						.append(StringUtils.join(entry.getValue(), "\t|\t"));
+				builder.append("\n");
+				writer.write(builder.toString());
+			}
+			writer.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

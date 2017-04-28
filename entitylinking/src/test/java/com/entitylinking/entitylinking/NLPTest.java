@@ -1,8 +1,13 @@
 package com.entitylinking.entitylinking;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.junit.Test;
 
 import com.entitylinking.utils.FileUtils;
@@ -50,17 +55,23 @@ public class NLPTest {
 		String content = FileUtils.readFileContent(path);
 //		Properties props = new Properties();
 //		props.setProperty("annotators", "pos, lemma, ner");
-		System.out.println("cc");
-		StanfordCoreNLP pipline = new StanfordCoreNLP(PropertiesUtils.asProperties("annotators", "pos, lemma, ner",
+		StanfordCoreNLP pipline = new StanfordCoreNLP(PropertiesUtils.asProperties("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref",
 				"pos.model","edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"));System.out.println("ee");
 		Annotation document = new Annotation(content);System.out.println("ff");
 		pipline.annotate(document);
 		System.out.println("dd");
 		List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-
+		
+		String[] strs = new String[]{"PERSON","ORGANIZATION","LOCATION"};
+		Set<String> set = new HashSet<>(Arrays.asList(strs));
+		
+		List<String> list = new ArrayList<String>();
 		for(CoreMap sentence: sentences) {
 		  // traversing the words in the current sentence
 		  // a CoreLabel is a CoreMap with additional token-specific methods
+			System.out.println(sentence.toString());
+			String entity = null;
+			String type = null;
 		  for (CoreLabel token: sentence.get(CoreAnnotations.TokensAnnotation.class)) {
 		    // this is the text of the token
 		    String word = token.get(CoreAnnotations.TextAnnotation.class);
@@ -71,7 +82,30 @@ public class NLPTest {
 		    // this is the lemma of the token
 		    String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
 		    System.out.println(word+"\t"+pos+"\t"+ne+"\t"+lemma);
+		    if(set.contains(ne)){
+		    	if(type == null){
+		    		type = ne;
+		    		entity = lemma;
+		    	}else{
+		    		if(type != ne){
+		    			list.add(type+" || "+entity);
+		    			type = ne;
+		    			entity = lemma;
+		    		}else{
+		    			entity += "_" + lemma;
+		    		}
+		    	}
+		    }else{
+		    	if(type != null && entity != null){
+		    		list.add(type+" || "+entity);
+		    		type = null;
+			    	entity = null;
+		    	}
+		    	
+		    }
 		  }
 		}
+		for(String item:list)
+			System.out.println(item);
 	}
 }

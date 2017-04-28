@@ -150,6 +150,7 @@ public class IndexFile {
 			initIndexSearcher(indexDir);
 			singleQueryParserOfEntityCoocurence(queryField);
 			//6. 解析查询字符串获取查询对象
+			queryString = QueryParser.escape(queryString);;
 			Query query = singleQueryParser.parse(queryString);
 			TopDocs topDocs = indexSearcher.search(query,1);
 			//7. 处理查询结果
@@ -209,6 +210,9 @@ public class IndexFile {
 		try {
 			initAnalyzer();
 			initIndexSearcher(indexDir);
+			for(int i=0;i<querys.length;i++){
+				querys[i] = QueryParser.escape(querys[i]);
+			}
 			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
 			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXCoocurence).scoreDocs;
 			for(ScoreDoc scoreDoc:scoreDocs){

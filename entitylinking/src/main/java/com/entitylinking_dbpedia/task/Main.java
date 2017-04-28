@@ -25,6 +25,7 @@ import com.entitylinking_dbpedia.linking.bean.PathBean;
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
 import com.entitylinking_dbpedia.linking.bean.Text;
 import com.entitylinking_dbpedia.utils.FileUtils;
+//import com.entitylinking_dbpedia.utils.NLPUtils;
 import com.entitylinking_dbpedia.utils.Parameters;
 
 /**
@@ -50,6 +51,14 @@ public class Main {
 		main.init();
 		main.linkingMainProcess();
 
+//		String fileDir = "./data/ace2004/RawTexts";
+//		String wpath = "./dict/disAmbiguationMention.txt";
+//		try {
+//			NLPUtils.disambiguationMention(fileDir, wpath);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 	
 	/**
@@ -134,7 +143,7 @@ public class Main {
 		parameters.loadPath("./xml/path.xml");
 		parameters.loadRELParameters(PathBean.getRelParameterByDbpediaPath());
 		parameters.loadDictFromXML();
-//		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df.txt");
+//		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df2.txt");
 	}
 	
 	/**

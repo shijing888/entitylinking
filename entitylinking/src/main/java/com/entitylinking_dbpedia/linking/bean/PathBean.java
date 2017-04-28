@@ -26,6 +26,8 @@ public class PathBean {
 	private static String resultDirPath;
 	/**实体上下文文件路径*/
 	private static String entityContextPath;
+	/**无歧义mention对应实体路径*/
+	private static String UnAmbiguationDictPath;
 	/**mention上下文文件夹路径*/
 	private static String mentionContextDirPath;
 	/**dbpedia实体上下文文件路径*/
@@ -39,6 +41,12 @@ public class PathBean {
 	/**实体标号词典路径*/
 	private static String labelNumPath;
 	
+	public static String getUnAmbiguationDictPath() {
+		return UnAmbiguationDictPath;
+	}
+	public static void setUnAmbiguationDictPath(String unAmbiguationDictPath) {
+		UnAmbiguationDictPath = unAmbiguationDictPath;
+	}
 	public static String getLabelNumPath() {
 		return labelNumPath;
 	}

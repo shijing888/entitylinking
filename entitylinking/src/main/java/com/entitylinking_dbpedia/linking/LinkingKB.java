@@ -110,10 +110,6 @@ public class LinkingKB {
 						semanticScore = semanticSimWeight * (semanticScores[i] / maxSemanticScore);
 						score += semanticScore;
 					}
-					if(maxContextScore > 0){
-						contextScore = contextSimWeight * (contextScores[i] / maxContextScore);
-						score += contextScore;
-					}
 					if(maxPopularityScore > 0){
 						popularityScore = popularityWeight * (popularityScores[i] / maxPopularityScore);
 						score += popularityScore;
@@ -122,6 +118,11 @@ public class LinkingKB {
 						literalScore = literalSimWeight * (literalScores[i] / maxLiteralScore);
 						score += literalScore;
 					}
+					if(maxContextScore > 0){
+						contextScore = contextSimWeight * (contextScores[i] / maxContextScore);
+						score += contextScore;
+					}
+					
 //					//若候选实体与mention字面量完全一致且score大于阈值则认为其是目标实体
 //					if(candidateList.get(i).getEntityName().equals(mention.getMentionName())){
 //						if(score >= RELRWParameterBean.getNilThres()){

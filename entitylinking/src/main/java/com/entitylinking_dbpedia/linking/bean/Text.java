@@ -72,11 +72,12 @@ public class Text {
 		Map<String, Integer> entityIndex = new HashMap<String, Integer>();
 		List<Entity> candidateEntity;
 		String entityName;
+		double averageTfidfOfMentions = 0;
 		//获得候选实体list
 		for(Mention mention:this.entityGraph.getMentions()){
 			candidateEntity = mention.getCandidateEntity();
 			mention.setTotalPopularity();
-			
+			averageTfidfOfMentions += mention.getTfidfValue();
 			for(int i=0;i<candidateEntity.size();i++){
 				entityName = candidateEntity.get(i).getEntityName();
 				if(!entityNameSet.contains(entityName)){
@@ -86,41 +87,49 @@ public class Text {
 			}
 			
 		}
-		
+		int mentionsLen =  this.getEntityGraph().getMentions().size();
+		if(mentionsLen>0)
+			averageTfidfOfMentions /= mentionsLen;
+		else
+			averageTfidfOfMentions = 0;
+		this.entityGraph.setAverageTfidf(averageTfidfOfMentions);
 		logger.info("before extending entityList size:"+entityList.size());
-		int candidateEntityLen = entityList.size();
 		//对候选实体进行扩展，构成实体图
-		int extendEntityLen = extendEntity(entityList,entityNameSet);
-		this.entityGraph.setEntityLen(extendEntityLen);
-		this.entityGraph.setCandidateEntityLen(candidateEntityLen);
-		Entity[] entities = new Entity[extendEntityLen];
+		HashSet<String> unAmbiguaSet = DictBean.getUnAmbiguaDict().get(textName);
+		if(unAmbiguaSet==null)
+			unAmbiguaSet = new HashSet<>();
+		int[] lens = extendEntity(unAmbiguaSet,entityList,entityNameSet);
+		this.entityGraph.setEntityLen(lens[1]);
+		this.entityGraph.setCandidateEntityLen(lens[0]);
+		this.entityGraph.setUnAmbiguaSet(unAmbiguaSet);
+		Entity[] entities = new Entity[lens[1]];
 		//将list转化成数组保存实体
-		for(int i=0;i<extendEntityLen;i++){
-			if(i<candidateEntityLen){
+		for(int i=0;i<lens[1];i++){
+			if(i<lens[0]){
 				entityIndex.put(entityList.get(i).getEntityName(), i);
 			}
 			entities[i] = entityList.get(i);
 		}
 		
-		logger.info("after extending entities size:"+extendEntityLen);
+		logger.info("after extending entities size:"+lens[1]);
 		logger.info("init entityGraph eitities");
 		//初始化实体图
 		this.entityGraph.setEntities(entities);
 		this.entityGraph.setEntityIndex(entityIndex);
 		logger.info("init entityGraph disambiguationMap");
-		boolean isDisAmbiguation = this.entityGraph.initDisambiguationMap();
-		this.entityGraph.setPreferVectorOfDocument(isDisAmbiguation);
+		this.entityGraph.initDisambiguationMap();
+		this.entityGraph.setPreferVectorOfDocument(true);
 		long time3 = System.currentTimeMillis();
 		logger.info("初始化实体、实体索引、初始mention-entityMap、文档偏好向量共花费:"+(time3 - time2)/60000.0);
 		logger.info("init entityGraph transferMatrix");
 		//利用共现计算转移矩阵
-//		this.entityGraph.calTransferMatrix();
+		this.entityGraph.calTransferMatrix();
 		//利用卡茨关联性计算转移矩阵
 //		this.entityGraph.calTransferMatrixOfKatzPath();
 		//利用排他性计算转移矩阵
 //		this.entityGraph.calTransferMatrixOfExclusivityPath();
 		//利用流行度计算转移矩阵
-		this.entityGraph.calTransferMatrixOfPopularityPath();
+//		this.entityGraph.calTransferMatrixOfPopularityPath();
 		long time4 = System.currentTimeMillis();
 		logger.info("计算转移概率矩阵花费:"+(time4 - time3)/60000.0);
 	}
@@ -130,13 +139,25 @@ public class Text {
 	 * @param entities
 	 * @return
 	 */
-	public int extendEntity(List<Entity>entities,Set<String>entityNameSet){
+	public int[] extendEntity(HashSet<String> unAmbiguaSet,List<Entity>entities,Set<String>entityNameSet){
+		int lens[] = new int[2];
 		int len = entities.size();
-		if(len <= 1){
-			return len;
-		}
 		List<Entity> entityList = new ArrayList<Entity>(entities);
-		BooleanClause.Occur[] flags=new BooleanClause.Occur[]{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
+		//140-148用于扩展从文本中发现的无歧义实体
+		for(String str:unAmbiguaSet){
+			if(str == null)
+				continue;
+			if(!entityNameSet.contains(str)){
+				Entity entity = new Entity();
+				entity.setEntityName(str);
+				entities.add(entity);
+				entityNameSet.add(str);
+			}
+		}
+		
+		lens[0] = entities.size();
+		BooleanClause.Occur[] flags=new BooleanClause.Occur[]{
+				BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
 		String[] queryFields = {RELRWParameterBean.getEntityRelationField1(),
 				RELRWParameterBean.getEntityRelationField2()};
 		String indexDir = PathBean.getEntityByDbpediaRelationPath();
@@ -179,7 +200,8 @@ public class Text {
 		}
 		time2 = System.currentTimeMillis();
 		logger.info("扩展实体花费时间:" + (time2 - time1)/60000.0);
-		return entities.size();
+		lens[1] = entities.size();
+		return lens;
 	}
 	
 }

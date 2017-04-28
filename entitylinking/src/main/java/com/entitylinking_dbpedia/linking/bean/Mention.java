@@ -124,6 +124,7 @@ public class Mention {
 	public void setMentionContext(Set<String> mentionContext) {
 		this.mentionContext = mentionContext;
 	}
+	
 	/**
 	 * 查找mention对应的候选实体
 	 * @param mention
