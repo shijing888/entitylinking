@@ -38,7 +38,7 @@ public class TestMathUserage {
 //      double[] values = new double[] { 0.33, 1.33, 0.27333, 0.3, 0.501,  
 //              0.444, 0.44, 0.34496, 0.33, 0.3, 0.292, 0.667 };  
 //      double[] values = new double[]{0.13282149884807953,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-    double[] values = new double[]{1,0,0,0,0};
+    double[] values = new double[]{1,0,0};
     double[] val = values;
     val[1] = 1;
     System.out.println(Arrays.toString(values));
@@ -92,8 +92,21 @@ public class TestMathUserage {
       RealMatrix m = new Array2DRowRealMatrix(data1);  
       RealMatrix n = new Array2DRowRealMatrix(data2);    
       RealMatrix p = m.multiply(n);  
-    System.out.println("p:"+p);  
+      
+      System.out.println("m:"+m);
+      System.out.println("n:"+n);
+      System.out.println("p:"+p);  
     
+      double[] realMatrix = n.preMultiply(values);
+      ArrayRealVector realVector = new ArrayRealVector(realMatrix);
+		realVector = (ArrayRealVector) realVector.mapMultiply(2);
+		realVector = realVector.add(realVector.mapMultiply(0.5));
+      System.out.println(StringUtils.join(ArrayUtils.toObject(realVector.getDataRef()), " "));
+      
+      realVector = new ArrayRealVector(values);
+      realVector = (ArrayRealVector) realVector.mapMultiply(2);
+      double[] vec = n.preMultiply(realVector.getDataRef());
+      System.out.println(StringUtils.join(ArrayUtils.toObject(vec), " "));
 //    calSignature(values);
     
 //      double[][] matrixData = { {1d,2d,3d}, {2d,5d,3d}};  

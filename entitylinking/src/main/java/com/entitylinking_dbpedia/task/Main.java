@@ -39,6 +39,14 @@ public class Main {
 	static{
 		PropertyConfigurator.configure("./log4j.properties");
 	}
+	
+	
+	//统计候选覆盖率
+	public static int mentionCounts = 0;
+	public static int containEntityCounts = 0;
+	
+	
+	
 	public static void main(String args[]) {
 		/**
 		 *1.加载文件
@@ -51,14 +59,6 @@ public class Main {
 		main.init();
 		main.linkingMainProcess();
 
-//		String fileDir = "./data/ace2004/RawTexts";
-//		String wpath = "./dict/disAmbiguationMention.txt";
-//		try {
-//			NLPUtils.disambiguationMention(fileDir, wpath);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 	}
 	
 	/**
@@ -85,7 +85,10 @@ public class Main {
 				//生成该文档的密度子图
 				text.generateDensityGraph();
 				logger.info("entity graph finish!");
-//				texts.add(text);
+				
+//				if(true)
+//				continue;
+				
 				//链接知识库过程
 				LinkingKB linkingKB = new LinkingKB();
 				linkingKB.obtainmentionEntityPairs(text);
@@ -126,6 +129,11 @@ public class Main {
 				}
 			}
 			
+//			System.out.println("候选数目为"+RELRWParameterBean.getCandidateEntityNumThresh()
+//				+"时的覆盖率为:"+(double)containEntityCounts/mentionCounts);
+//			logger.info("候选数目为"+RELRWParameterBean.getCandidateEntityNumThresh()
+//				+"时的覆盖率为:"+containEntityCounts+","+mentionCounts+","+(double)containEntityCounts/mentionCounts);
+		
 			//将df持久化到本地
 //			Parameters parameters = new Parameters();
 //			parameters.pickleDf(PathBean.getDfDictPath());
@@ -140,10 +148,17 @@ public class Main {
 	 */
 	public void init(){
 		Parameters parameters = new Parameters();
-		parameters.loadPath("./xml/path.xml");
+		parameters.loadPath("./xml/path_aquaint.xml");
 		parameters.loadRELParameters(PathBean.getRelParameterByDbpediaPath());
 		parameters.loadDictFromXML();
-//		NLPUtils.countDF("./data/ace2004/RawTexts", "./dict/df2.txt");
+		
+		/**计算df
+		String dirPath = "./data/msnbc/RawTexts";
+		String wpath = "./dict/msnbc/df.txt";
+		NLPUtils.countDF(dirPath, wpath);
+		String xmlPath = "./data/msnbc/msnbc_new.xml";
+		parameters.getMentionDf(wpath, xmlPath);
+		*/
 	}
 	
 	/**

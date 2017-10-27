@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import com.entitylinking.config.WikiConfig;
 import com.entitylinking.wikidictionary.ExtractPageEntity;
 import com.entitylinking.wikidictionary.GenerateDictionary;
+import com.entitylinking_dbpedia.utils.Parameters;
 
 import de.tudarmstadt.ukp.wikipedia.api.Page;
 import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
@@ -46,12 +48,21 @@ public class EntityTest {
 	
 	@Test
 	public void test(){
-		int a[] = {1,2,3,4,5,6,7,8,9};
-		List<Integer> list = Arrays.asList(ArrayUtils.toObject(a));
-		test1(list);
-		for(int i: list){
-		System.out.print(i+"\t");
-	}
+		Parameters parameters = new Parameters();
+//		Map<String, Integer>entityOutNumMap = parameters.loadString2IntegerDict(
+//				"./data/dbpedia/entity_outEdgeNum.ttl");
+//		System.out.println(entityOutNumMap.get("f.c._copenhagen_reserves_and_youth_team"));
+
+		Map<String, Integer>entityCooccurMap = parameters.loadEntityCoocurDict(
+				"./data/dbpedia/infobox_properties_enCoccurence.ttl");
+		String entity1 = "neoconservatism_(america)";
+		String entity2 = "yellowknife";
+		int count = 0;
+		String cooccurKey = entity1 + "\t||\t" + entity2;
+		count += entityCooccurMap.get(cooccurKey)==null?0:entityCooccurMap.get(cooccurKey);
+		cooccurKey = entity2 + "\t||\t" + entity1;
+		count += entityCooccurMap.get(cooccurKey)==null?0:entityCooccurMap.get(cooccurKey);
+		System.out.println(count);
 	}
 	public  void test1(List<Integer> list){
 //		int a[] = {1,2,3,4,5,6,7,8,9};

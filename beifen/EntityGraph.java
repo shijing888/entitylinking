@@ -206,7 +206,6 @@ public class EntityGraph {
 	 */
 	public void updatePreferVectorOfDocument(Mention mention, Entity entity){
 		if(entity!=null && !entity.getEntityName().equals(RELRWParameterBean.getNil())){
-			logger.info("更新的实体名称为："+entity.getEntityName());
 			int index = this.entityIndex.get(entity.getEntityName());
 //			double important = mention.getTfidfValue();
 			this.preferVectorOfDocument[index] = 1;
@@ -279,20 +278,18 @@ public class EntityGraph {
 		double[] weights;
 		this.transferMatrix = new double[entityLen][entityLen];
 		Parameters parameters = new Parameters();
-//		Map<String, Integer>entityOutNumMap = parameters.loadString2IntegerDict(
-//				"./data/dbpedia/entity_outEdgeNum.ttl"); 
+		Map<String, Integer>entityOutNumMap = parameters.loadString2IntegerDict(
+				"./data/dbpedia/entity_outEdgeNum.ttl"); 
 		Map<String, Integer>entityCooccurMap = parameters.loadEntityCoocurDict(
 				"./data/dbpedia/infobox_properties_enCoccurence.ttl");
-		
 		//下面两行执行时跳过计算用于跑局部特征实验
 //		if(true)
 //			return;
-		
 		for(int i=0;i<entityLen-1;i++){
 			logger.info("i = "+i);
 			for(int j=i+1;j<entityLen;j++){
 				weights = calEdgeWeight(entities[i], entities[j], 
-						PathBean.getEntityByDbpediaRelationPath(),entityCooccurMap);
+						PathBean.getEntityByDbpediaRelationPath(),entityOutNumMap,entityCooccurMap);
 				transferMatrix[i][j] = weights[0];
 				transferMatrix[j][i] = weights[1];
 			}
@@ -329,11 +326,53 @@ public class EntityGraph {
 	 * @return
 	 */
 	public double[] calEdgeWeight(Entity ent1,Entity ent2, String indexDir,
-			Map<String, Integer>entityCooccurMap){
+			Map<String, Integer>entityOutNumMap,Map<String, Integer>entityCooccurMap){
 		String entity1 = ent1.getEntityName();
 		String entity2 = ent2.getEntityName();
 		double[] weights = new double[2];
 		try {
+//			String[] querys = new String[]{entity1,entity2};
+//			int count = IndexFile.entityCoocurCounts(querys,indexDir);
+//			querys[0] = entity2;
+//			querys[1] = entity1;
+//			count += IndexFile.entityCoocurCounts(querys,indexDir);
+			int count = 0;
+			String cooccurKey = entity1 + "\t||\t" + entity2;
+			count += entityCooccurMap.get(cooccurKey)==null?0:entityCooccurMap.get(cooccurKey);
+			cooccurKey = entity2 + "\t||\t" + entity1;
+			count += entityCooccurMap.get(cooccurKey)==null?0:entityCooccurMap.get(cooccurKey);
+//			double similary = CommonUtils.jaccardOfSet(ent1.getCategory(), ent2.getCategory());
+			int singleCountOfEntity1 = entityOutNumMap.get(entity1)==null?0:entityOutNumMap.get(entity1);
+			int singleCountOfEntity2 = entityOutNumMap.get(entity2)==null?0:entityOutNumMap.get(entity2);
+			if(count>0){
+				logger.info("实体"+entity1+"与实体"+entity2+" 共现次数:"+count);
+				logger.info("实体"+entity1+" 出边个数:"+singleCountOfEntity1);
+				logger.info("实体"+entity2+" 出边个数:"+singleCountOfEntity2);
+			}
+			
+			
+			if(count <= RELRWParameterBean.getCooccurenceThresh()){
+				weights[0] = 0;
+				weights[1] = 0;
+				return weights;
+			}else{
+				 if(singleCountOfEntity1 == 0){
+					 weights[0] = 0;
+				 }else{
+					 weights[0] =  count / (double)singleCountOfEntity1;
+				 }
+				 if(singleCountOfEntity2 == 0){
+					 weights[1] = 0;
+				 }else{
+					 weights[1] =  count / (double)singleCountOfEntity2;
+				 }
+							
+			}
+						
+			return weights;
+		} catch (Exception e) {
+			// TODO: handle exception
+			/*
 			int count1 = 0;
 			int count2 = 0;
 			String cooccurKey = entity1 + "\t||\t" + entity2;
@@ -351,14 +390,11 @@ public class EntityGraph {
 			
 			
 			weights[0] = count1;
-			weights[1] = count2;
-						
-			return weights;
-		} catch (Exception e) {
-			// TODO: handle exception
-
+			weights[1] = count2;*/
 		}
+		
 		return weights;
+		
 	}
 	
 	
@@ -375,9 +411,9 @@ public class EntityGraph {
 				"./data/dbpedia/entity_edge.ttl");
 		logger.info("labelmap size:"+labelMap.size());
 		logger.info("entityOutMap size:"+entityOutMap.size());
-		for(int i=0;i<entityLen-1;i++){
+		for(int i=0;i<candidateEntityLen;i++){
 			logger.info("i = "+i);
-			for(int j=i+1;j<entityLen;j++){
+			for(int j=i;j<entityLen;j++){
 				weights = calEdgeWeightOfKatzPath(entities[i], entities[j],labelMap,entityOutMap);
 				transferMatrix[i][j] = weights[0];
 				transferMatrix[j][i] = weights[1];
@@ -388,21 +424,18 @@ public class EntityGraph {
 		double[] sum = new double[entityLen];
 		for(int i=0;i<entityLen;i++){
 			for(int j=0;j<entityLen;j++){
-				sum[i] += transferMatrix[i][j];
+				sum[j] += transferMatrix[i][j];
 			}
 		}
 		for(int i=0;i<entityLen;i++){
-			if(sum[i] > 0){
-				for(int j=0;j<entityLen;j++){
-					if(transferMatrix[i][j] > 0){
-						transferMatrix[i][j] /= sum[i];
-						logger.info(i+"\t"+entities[i].getEntityName()+"\t"+j+"\t"+entities[j].getEntityName()
-								+"\t转移权重:"+transferMatrix[i][j]);
-					}
+			for(int j=0;j<entityLen;j++){
+				if(sum[j] > 0){
+					transferMatrix[i][j] /= sum[j];
+				}else{
+					transferMatrix[i][j] = 0;
 				}
 				
 			}
-			
 		}
 	}
 	
@@ -544,7 +577,7 @@ public class EntityGraph {
 		logger.info("labelmap size:"+labelMap.size());
 		logger.info("entityOutTypeMap size:"+entityOutTypeMap.size());
 		logger.info("entityInTypeMap size:"+entityInTypeMap.size());
-		for(int i=0;i<entityLen;i++){
+		for(int i=0;i<candidateEntityLen;i++){
 			logger.info("i = "+i);
 			for(int j=i;j<entityLen;j++){
 				weights = calEdgeWeightOfExclusivityPath(entities[i], entities[j],
@@ -1236,14 +1269,14 @@ public class EntityGraph {
 	}
 	
 	/**
-	 * 对向量做归一化处理,sum一定要用double
+	 * 对向量做归一化处理
 	 * @param vector
 	 * @return
 	 */
 	public double[] vectorNormalization(double[] vector){
 		if(vector==null || vector.length==0)
 			return vector;
-		double sum = 0;
+		int sum = 0;
 		for(int i=0;i<vector.length;i++){
 			sum += vector[i];
 		}

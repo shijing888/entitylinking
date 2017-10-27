@@ -47,13 +47,20 @@ public class Parameters {
 	 * @return
 	 */
 	public void loadDictFromXML(){
+		//加载词性词典
 		DictBean.setPosDict(loadSetDict(PathBean.getPosDictPath()));
+		//加载停用词词典
 		DictBean.setStopWordDict(loadSetDict(PathBean.getStopWordDictPath()));
+		//加载df词典
 		DictBean.setDfDict(loadString2IntegerDict(PathBean.getDfDictPath()));
+		//加载特殊处理词词典
 		DictBean.setSpecialWordsDict(loadString2StringDict(PathBean.getSpecialWordsPath()));
+		//加载指称词典
 		DictBean.setMentionDict(loadMentionDict(PathBean.getMentionDictPath()));
+		//加载实体流行度词典
 		DictBean.setEntityByDbpeidaPopularityDict(loadString2IntegerDict(
 				PathBean.getEntityByDbpeidaPopularityPath()));
+		//加载无歧义词典
 		DictBean.setUnAmbiguaDict(loadMapDict(PathBean.getUnAmbiguationDictPath()));
 	}
 	
@@ -211,19 +218,25 @@ public class Parameters {
 		for(Element element:elements){
 			String docuName = element.attributeValue("docName");
 			List<Mention> mentions = new ArrayList<>();
+			Set<String> mentionSet = new HashSet<>();
 			List<Element> subElements = element.elements();
 			for(Element subElement:subElements){
-				Mention mention = new Mention(NormalizeMention.getNormalizeMention(
-						subElement.elementText("mention"), true));
-				mention.setWikiObjectEntity(NormalizeMention.getNormalizeMention(
-						subElement.elementText("wikiName"),true));
-				mention.setDbpediaObjectEntity(NormalizeMention.getNormalizeMention(
-						subElement.elementText("dbpediaName"),true));
-				mention.setYagoObjectEntity(NormalizeMention.getNormalizeMention(
-						subElement.elementText("yagoName"),true));
-				mention.setMentionOffset(Integer.parseInt(subElement.elementText("offset")));
-				mention.setOccurCounts(Integer.parseInt(subElement.elementText("length")));
-				mentions.add(mention);
+				String mentionStr = NormalizeMention.getNormalizeMention(
+						subElement.elementText("mention"), true);
+				if(!mentionSet.contains(mentionStr)){
+					mentionSet.add(mentionStr);
+					Mention mention = new Mention(mentionStr);
+					mention.setWikiObjectEntity(NormalizeMention.getNormalizeMention(
+							subElement.elementText("wikiName"),true));
+					mention.setDbpediaObjectEntity(NormalizeMention.getNormalizeMention(
+							subElement.elementText("dbpediaName"),true));
+					mention.setYagoObjectEntity(NormalizeMention.getNormalizeMention(
+							subElement.elementText("yagoName"),true));
+					mention.setMentionOffset(Integer.parseInt(subElement.elementText("offset")));
+					mention.setOccurCounts(Integer.parseInt(subElement.elementText("length")));
+					mentions.add(mention);
+				}
+				
 			}
 			mentionDict.put(docuName, mentions);
 		}
@@ -288,11 +301,33 @@ public class Parameters {
 			return dfMap;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
 		return dfMap;
 	}
 	
+	public Map<String, Integer> loadEntityCoocurDict(String path){
+		Map<String, Integer> map = new HashMap<>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(path)),"UTF-8"));
+			String line;
+			while((line = br.readLine())!=null){
+				String[] lineArray = line.split("\t\\|\\|\t");
+				if(lineArray.length==3){
+					map.put(lineArray[0]+"\t||\t"+lineArray[1], Integer.parseInt(lineArray[2]));
+				}
+			}
+			
+			br.close();
+			return map;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
 	
 	public Map<Integer, String> loadInteger2StringDict(String path){
 		Map<Integer, String> map = new HashMap<>();
@@ -635,9 +670,6 @@ public class Parameters {
 	}
 	
 	public static void main(String args[]){
-		Parameters parameters = new Parameters();
-		String wpath = "./dict/df.txt";
-		String xmlPath = "./data/ace2004/ace2004.xml";
-		parameters.getMentionDf(wpath, xmlPath);
+		
 	}
 }

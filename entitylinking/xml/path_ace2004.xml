@@ -6,10 +6,10 @@
 		<ambiguation>./dict/ambiguationDict.txt</ambiguation>
 		<pos>./dict/pos.txt</pos>
 		<stopwords>./dict/stopword_en.txt</stopwords>
-		<df>./dict/df.txt</df>
-		<specialWords>./dict/specialWords.txt</specialWords>
+		<df>./dict/ace2004/df.txt</df>
+		<specialWords>./dict/ace2004/specialWords.txt</specialWords>
 		<mentionDict>./data/ace2004/ace2004_new.xml</mentionDict>
-		<unAmbiguaDict>./dict/disAmbiguationMention.txt</unAmbiguaDict>
+		<unAmbiguaDict>./dict/ace2004/disAmbiguationMention.txt</unAmbiguaDict>
 		<labelNum>./data/dbpedia/numLabels_enText.ttl</labelNum>
 		<entityByDbpeidaPopularity>./data/dbpedia/entity_popularity.ttl</entityByDbpeidaPopularity>
 	</dictPath>

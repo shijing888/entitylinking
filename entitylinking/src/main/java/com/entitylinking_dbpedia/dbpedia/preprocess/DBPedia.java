@@ -29,6 +29,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.sparql.pfunction.library.str;
 import org.apache.log4j.Logger;
 
 import com.entitylinking_dbpedia.task.Main;
@@ -52,8 +53,12 @@ public class DBPedia {
 		
 		//处理共现关系
 //		String rpath = "./data/dbpedia/infobox_properties_enEntity.ttl";
-//		String wpath = "./data/dbpedia/infobox_properties_enCoccurence.ttl";
+//		String wpath = "./data/dbpedia/infobox_properties_enCoccurence2.ttl";
 //		processInfoboxCoocurence(rpath, wpath);
+		
+//		String rpath = "./data/dbpedia/infobox_properties_enEntity.ttl";
+//		String wpath = "./data/dbpedia/infobox_properties_enCoccurence2.ttl";
+//		processInfoboxCoocurence2(rpath, wpath);
 		
 		//处理文本上下文
 //		String rpath = "./data/dbpedia/short_abstracts_en";
@@ -129,11 +134,20 @@ public class DBPedia {
 //		String rpath = "./data/dbpedia/infobox_properties_enEntity.ttl";
 //		String wpath = "./data/dbpedia/entity_edge.ttl";
 //		getEntityEdgeInfo(rpath, wpath);
+//		String rpath = "./data/dbpedia/infobox_properties_enEntity.ttl";
+//		String wpath = "./data/dbpedia/entity_edge2.ttl";
+//		getEntityEdgeInfo2(rpath, wpath);
+		
+		//获取实体-出边数目的信息
+//		String rpath1 = "./data/dbpedia/labelsNum_enText.ttl";
+//		String rpath2 = "./data/dbpedia/entity_edge.ttl";
+//		String wpath = "./data/dbpedia/entity_outEdgeNum.ttl";
+//		getEntityOutEdgeNums(rpath1, rpath2, wpath);
 		
 		//获取类型出现的频率
-		String rpath = "./data/dbpedia/entity_edge.ttl";
-		String wpath = "./data/dbpedia/typeFrequency.ttl";
-		pickleTypeFrequencyMap(rpath, wpath);
+//		String rpath = "./data/dbpedia/entity_edge.ttl";
+//		String wpath = "./data/dbpedia/typeFrequency.ttl";
+//		pickleTypeFrequencyMap(rpath, wpath);
 	}
 	
 	/**
@@ -568,6 +582,8 @@ public class DBPedia {
 				    writer.flush();
 				} catch (Exception e) {
 					// TODO: handle exception
+					System.out.println(statement.toString());
+					System.out.println(e.getMessage());
 				}
 			   
 			}
@@ -586,6 +602,72 @@ public class DBPedia {
 			
 
 	}
+	
+	/**
+	 * 使用jena解析三元组容易出现bad IRI的情况，这里直接读文件进行解析
+	 * @param rpath
+	 * @param wpath
+	 */
+	public static void processInfoboxCoocurence2(String rpath,String wpath){
+		
+		BufferedWriter writer;
+		try {
+			
+			String line;
+			String sub="",obj="";
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(rpath)), "utf-8"));
+			writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			StringBuilder stringBuilder = new StringBuilder();
+
+			int count = 1;
+			while((line = reader.readLine())!=null){
+				String[] lineArray = line.split(" ");
+				int length = lineArray.length;
+				if(length==4){
+					String tempSub = lineArray[0].substring(lineArray[0]
+							.lastIndexOf("/")+1,lineArray[0].length()-1);
+					String tempObj = lineArray[2].substring(lineArray[2]
+							.lastIndexOf("/")+1,lineArray[2].length()-1);
+					if(tempSub.equals(sub) && tempObj.equals(obj)){
+						count++;
+					}else{
+						if(!sub.equals("") && !obj.equals("")){
+							stringBuilder.delete(0, stringBuilder.length());
+							stringBuilder.append(sub).append("\t||\t").append(obj)
+								.append("\t||\t").append(count).append("\n");
+//							System.out.println(stringBuilder.toString());
+							writer.write(stringBuilder.toString());
+							count = 1;
+						}
+						
+						
+					}
+					sub = tempSub;
+					obj = tempObj;
+				}else{
+					System.out.println(line);
+				}
+				
+			}
+			
+	
+//			writer.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+
+	}
+	
 	
 	/**
 	 * 查询模型，返回结果集
@@ -657,33 +739,32 @@ public class DBPedia {
 	 * @param wpath
 	 */
 	public static void typeNumberMapping(String rpath,String wpath){
-		BufferedWriter writer;
 		try {
-			StringBuilder stringBuilder = new StringBuilder();
-			Model model = ModelFactory.createDefaultModel();
-			model.read(rpath);
-
-			Set<String> propertySet = new HashSet<>();
-			StmtIterator stmtIterator = model.listStatements();
-			String property;
-			int i = 0;
-			writer = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(new File(wpath)), "utf-8"));
-			while(stmtIterator.hasNext()){
-				Statement statement = stmtIterator.next();
-				property = statement.getPredicate().getLocalName();
-				if(!propertySet.contains(property)){
-					propertySet.add(property);
-					stringBuilder.delete(0, stringBuilder.length());
-					stringBuilder.append(i).append("\t||\t").append(property).append("\n");
-					writer.write(stringBuilder.toString());
-					i++;
+			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(rpath)), "utf-8"));
+			 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(
+					 new FileOutputStream(new File(wpath)), "utf-8"));
+			 int i = 0;
+			 String line;
+			 String propertyPrefix = "http://dbpedia.org/property/";
+			 StringBuilder stringBuilder = new StringBuilder();
+			 Set<String> propertySet = new HashSet<>();
+			 while((line = bufferedReader.readLine()) != null){
+				 String property = line.substring(
+						 line.lastIndexOf(propertyPrefix)+propertyPrefix.length());
+				 property = property.substring(0,property.indexOf(">"));
+				 System.out.println(property);
+				 if(!propertySet.contains(property)){
+						propertySet.add(property);
+						stringBuilder.delete(0, stringBuilder.length());
+						stringBuilder.append(i).append("\t||\t").append(property).append("\n");
+						bufferedWriter.write(stringBuilder.toString().toLowerCase());
+						i++;
 				}
-				
-			   
-			}
+			 }
+			 bufferedReader.close();
+			 bufferedWriter.close();
 			
-			writer.close();
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -840,6 +921,160 @@ public class DBPedia {
 		}
 	}
 	
+	
+	public static void getEntityEdgeInfo2(String rpath,String wpath){
+		BufferedWriter writer;
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					new FileInputStream(new File(rpath)), "utf-8"));
+			writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(new File(wpath)), "utf-8"));
+			Parameters parameters = new Parameters();
+			Map<String, Integer>  numProperties = parameters.loadString2IntegerDict(
+					"./data/dbpedia/numProperties_en.ttl");
+			Map<String, Integer> numLabels = parameters.loadString2IntegerDict(
+					"./data/dbpedia/numLabels_enText.ttl");
+			Map<Integer, Map<Integer,EdgeType>> entityEdgeMap = new HashMap<>();
+			StringBuilder stringBuilder = new StringBuilder();
+			String line;
+			String subject, property, object;
+			
+			while((line=reader.readLine())!=null){
+				String[] lineArray = line.split(" ");
+				if(lineArray.length==4){
+					subject = lineArray[0].substring(lineArray[0]
+							.lastIndexOf("/")+1,lineArray[0].length()-1);
+					subject = subject.replace("-", "_");
+					property = lineArray[1].substring(lineArray[1]
+							.lastIndexOf("/")+1,lineArray[1].length()-1);
+					property = property.replace("-", "_");
+					object = lineArray[2].substring(lineArray[2]
+							.lastIndexOf("/")+1,lineArray[2].length()-1);
+					object = object.replace("-", "_");
+					if(!numLabels.containsKey(subject) ){
+						System.out.println(subject+"未在数字词典中");
+						continue;
+					}
+					if(!numProperties.containsKey(property) ){
+						System.out.println(property+"未在数字词典中");
+						continue;
+					}
+					if(!numLabels.containsKey(object) ){
+						System.out.println(object+"未在数字词典中");
+						continue;
+					}
+					int labelNum = numLabels.get(subject);
+					int typeNum = numProperties.get(property);
+					int objNum = numLabels.get(object);
+//					System.out.println("sub:"+subject+"\tnum:"+labelNum);
+//					System.out.println("obj:"+object+"\tnum:"+objNum);
+//					System.out.println("pro:"+property+"\tnum:"+typeNum);
+					//若map中不包含该实体,则创建该实体的边关系bean
+					if(!entityEdgeMap.containsKey(labelNum)){
+						if(entityEdgeMap.size() > 0){
+							for(Entry<Integer, Map<Integer, EdgeType>>entry:entityEdgeMap.entrySet()){
+								Map<Integer, EdgeType> edgeTypes = entry.getValue();
+								for(Entry<Integer, EdgeType>entry2:edgeTypes.entrySet()){
+									stringBuilder.delete(0, stringBuilder.length());
+									stringBuilder.append(entry.getKey()).append("\t||\t").append(entry2.getKey())
+									.append("\t||\t").append(entry2.getValue().getOutEdgeNumber()).append("\t||\t")
+									.append(StringUtils.join(entry2.getValue().getOutEdgeEntity(), "\t|\t")).append("\n");
+									writer.write(stringBuilder.toString());
+								}
+								
+							}
+							entityEdgeMap.clear();
+						}
+						
+						EdgeType edgeType = new EdgeType();
+						edgeType.setTypeNumber(typeNum);
+						edgeType.setOutEdgeNumber(1);
+						Set<Integer> set = new HashSet<>();
+						set.add(objNum);
+						edgeType.setOutEdgeEntity(set);
+						Map<Integer,EdgeType> edgeMap = new HashMap<>();
+						edgeMap.put(typeNum, edgeType);
+						entityEdgeMap.put(labelNum, edgeMap);
+					}else{
+						Map<Integer,EdgeType> edgeMap = entityEdgeMap.get(labelNum);
+						//若该条边未存在在map中，则添加进去
+						if(!edgeMap.containsKey(typeNum)){
+							EdgeType edgeType = new EdgeType();
+							edgeType.setTypeNumber(typeNum);
+							edgeType.setOutEdgeNumber(1);
+							Set<Integer> set = new HashSet<>();
+							set.add(objNum);
+							edgeType.setOutEdgeEntity(set);
+							edgeMap.put(typeNum, edgeType);
+						}else{
+							//若该条边已经存在，则判断宾语是否在集合中，若不在则添加到集合中
+							EdgeType edgeType = edgeMap.get(typeNum);
+							Set<Integer> outSet = edgeType.getOutEdgeEntity();
+							if(!outSet.contains(objNum)){
+								outSet.add(objNum);
+								edgeType.setOutEdgeNumber(outSet.size());
+							}
+						}
+						
+					}
+					
+				}
+			}
+			
+			//将map中未保存的实体-边信息保存下来
+			if(entityEdgeMap.size() > 0){
+				for(Entry<Integer, Map<Integer, EdgeType>>entry:entityEdgeMap.entrySet()){
+					Map<Integer, EdgeType> edgeTypes = entry.getValue();
+					for(Entry<Integer, EdgeType>entry2:edgeTypes.entrySet()){
+						stringBuilder.delete(0, stringBuilder.length());
+						stringBuilder.append(entry.getKey()).append("\t||\t").append(entry2.getKey())
+						.append("\t||\t").append(entry2.getValue().getOutEdgeNumber()).append("\t||\t")
+						.append(StringUtils.join(entry2.getValue().getOutEdgeEntity(), "\t|\t")).append("\n");
+						writer.write(stringBuilder.toString());
+					}
+					
+				}
+				entityEdgeMap.clear();
+			}	
+			reader.close();
+			writer.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void getEntityOutEdgeNums(String rpath1,String rpath2,String wpath){
+		Parameters parameters = new Parameters();
+		Map<Integer, String> numLabels = parameters.loadInteger2StringDict(
+				rpath1);
+		Map<Integer, HashSet<Integer>> entityOutMap = parameters.loadEntityOutMap(
+				rpath2);
+
+		try {
+			BufferedWriter writer = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(new File(wpath)), "utf-8"));
+			StringBuilder builder = new StringBuilder();
+			for(Entry<Integer, HashSet<Integer>>entry:entityOutMap.entrySet()){
+				if(numLabels.containsKey(entry.getKey())){
+					builder.delete(0, builder.length());
+					builder.append(numLabels.get(entry.getKey())).append("\t||\t")
+					.append(entry.getValue().size()).append("\n");
+					writer.write(builder.toString());
+				}
+			}
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	/**
 	 * 将map持久化到本地

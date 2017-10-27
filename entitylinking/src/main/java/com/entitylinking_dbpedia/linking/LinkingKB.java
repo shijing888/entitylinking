@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 //import org.apache.commons.lang.ArrayUtils;
 //import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.junit.Test;
 
 import com.entitylinking_dbpedia.linking.bean.DictBean;
 import com.entitylinking_dbpedia.linking.bean.Entity;
@@ -18,7 +19,7 @@ import com.entitylinking_dbpedia.linking.bean.Mention;
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
 import com.entitylinking_dbpedia.linking.bean.Text;
 import com.entitylinking_dbpedia.utils.CommonUtils;
-import com.entitylinking_dbpedia.utils.EditDistance;
+import com.entitylinking_dbpedia.utils.StringDistance;
 
 /**
  * 实体链接到知识库的操作
@@ -50,6 +51,8 @@ public class LinkingKB {
 				entity.setEntityName(DictBean.getSpecialWordsDict().get(mention.getMentionName()));
 				entity.setScore(1);
 				mentionEntityMap.put(mention, entity);
+				entityGraph.setDisambiguationMap(mentionEntityMap);
+				entityGraph.updatePreferVectorOfDocument(mention, entity);
 				continue;
 			}
 			if(mention.getCandidateEntity().size() == 0){//无候选实体
@@ -82,8 +85,8 @@ public class LinkingKB {
 					entityGraph.setPreferVectorOfEntity(entityGraph.getEntityIndex().get(entity.getEntityName()));
 					preferEntityVector = entityGraph.getPreferVectorOfEntity();
 					signatureOfEntity = entityGraph.calSignature(preferEntityVector);
-					logger.info(entity.getEntityName()+"的语义签名:" + StringUtils.join(ArrayUtils.toObject(signatureOfEntity), "\t"));
-					logger.info("文档的语义签名:" + StringUtils.join(ArrayUtils.toObject(signatureOfDocument), "\t"));
+//					logger.info(entity.getEntityName()+"的语义签名:" + StringUtils.join(ArrayUtils.toObject(signatureOfEntity), "\t"));
+//					logger.info("文档的语义签名:" + StringUtils.join(ArrayUtils.toObject(signatureOfDocument), "\t"));
 					semanticScores[i] = calSemanticSimilarity(signatureOfEntity, signatureOfDocument);
 					if(maxSemanticScore < semanticScores[i]){
 						maxSemanticScore = semanticScores[i];
@@ -98,11 +101,15 @@ public class LinkingKB {
 					}
 					literalScores[i] = calLiteralScore(mention.getMentionName(), 
 							entity.getEntityName(), RELRWParameterBean.getSigmoidParameter());
+//					literalScores[i] = calLiteralScore(mention.getMentionName(), 
+//							entity.getEntityName());
+//					literalScores[i] = calLiteralScore(mention.getMentionName(), 
+//							entity.getEntityName(), RELRWParameterBean.getSigmoidParameter(),"averge of ed and lcs");
 					if(maxLiteralScore < literalScores[i]){
 						maxLiteralScore = literalScores[i];
 					}
 				}
-				logger.info("maxSemanticScore:"+maxSemanticScore+"\tmaxContextScore:"+maxContextScore+
+				logger.error("maxSemanticScore:"+maxSemanticScore+"\tmaxContextScore:"+maxContextScore+
 						"\tmaxPopularityScore:"+maxPopularityScore+"\tmaxLiteralScore:"+maxLiteralScore);
 				for(int i=0;i<len;i++){
 					score = 0;
@@ -123,17 +130,11 @@ public class LinkingKB {
 						score += contextScore;
 					}
 					
-//					//若候选实体与mention字面量完全一致且score大于阈值则认为其是目标实体
-//					if(candidateList.get(i).getEntityName().equals(mention.getMentionName())){
-//						if(score >= RELRWParameterBean.getNilThres()){
-//							score = 1;
-//						}
-//					}
 					candidateList.get(i).setScore(score);
-					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()
+					logger.error(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()
 							+"的四项得分归一化前各为:"+semanticScores[i]+"\t"+contextScores[i]+"\t"
 							+popularityScores[i]+"\t"+literalScores[i]);
-					logger.info(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()
+					logger.error(mention.getMentionName()+"的候选实体"+candidateList.get(i).getEntityName()
 							+"的四项得分归一化后各为:"+semanticScore+"\t"+contextScore+"\t"+popularityScore+"\t"
 							+literalScore);
 					logger.info(candidateList.get(i).getEntityName()+" 加权总得分为:"+score);
@@ -146,8 +147,8 @@ public class LinkingKB {
 				Entity maxScoreEntity = candidateList.get(maxScoreIndex);
 				if(maxScore < RELRWParameterBean.getNilThres()){
 					maxScoreEntity.setEntityName(RELRWParameterBean.getNil());
-				}
-				if(!mentionEntityMap.containsKey(mention)){
+					mentionEntityMap.put(mention, maxScoreEntity);
+				}else {
 					mentionEntityMap.put(mention, maxScoreEntity);
 					entityGraph.setDisambiguationMap(mentionEntityMap);
 					entityGraph.updatePreferVectorOfDocument(mention, maxScoreEntity);
@@ -166,14 +167,20 @@ public class LinkingKB {
 	 */
 	public double calSemanticSimilarity(double[] signatureOfEntity, double[]signatureOfDocument){
 		double result = 0;
+//		logger.error("-----------------------------------------------------------------------");
 		for(int i=0;i<signatureOfEntity.length;i++){
 			if(signatureOfEntity[i] == 0){
 				continue;
 			}
-			if(signatureOfDocument[i] <= 0){
+			if(signatureOfDocument[i] == 0){
 				result += signatureOfEntity[i] * RELRWParameterBean.getGamma();
+//				logger.error("result:"+result);
 			}else{
-				result += signatureOfEntity[i] * Math.log(signatureOfEntity[i] / signatureOfDocument[i]);
+				double log = Math.log(signatureOfEntity[i] / signatureOfDocument[i]);
+				double res = signatureOfEntity[i] * log;
+				result += res;
+//				logger.error("语义签名计算:"+result+"\t"+signatureOfEntity[i]+"\t"+signatureOfDocument[i]
+//						+"\t"+log +"\t"+ res);
 			}
 		}
 		
@@ -217,14 +224,62 @@ public class LinkingKB {
 
 	/**
 	 * 计算字面量得分
+	 * 编辑距离
+	 * 最长公共子序列
+	 * 编辑距离+最长公共子序列
 	 * @param s1
 	 * @param s2
 	 * @param a
 	 * @return
 	 */
 	public double calLiteralScore(String s1,String s2,double a){
-		int dis = EditDistance.getEditDistance(s1, s2);
-		return 1 /(1+(Math.exp(dis - 3)));
+		int dis = StringDistance.getEditDistance(s1, s2);
+		return 1 /(1+(Math.exp(dis - a)));
 	}
 	
+	public double calLiteralScore(String s1,String s2){
+		int dis = StringDistance.getLCSDistance(s1, s2);
+		return (double)dis / s2.length();
+	}
+	
+	public double calLiteralScore(String s1,String s2,double a,String category){
+		double score1 = calLiteralScore(s1, s2, a);
+		double score2 = calLiteralScore(s1, s2);
+		return (score1 + score2) / 2;
+	}
+	
+//	@Test
+//	public void test(){
+//		double[] d1 = {0.00000000000000001,0,0,0,0,0,0,0.000000000000000000000008};
+//		double[] d2 = {8,7,6,5,4,3,2,1};
+//		System.out.println(StringUtils.join(ArrayUtils.toObject(d1)," "));
+//		d1 = vectorNormalization(d1);
+//		System.out.println(StringUtils.join(ArrayUtils.toObject(d1)," "));
+//		System.out.println(StringUtils.join(ArrayUtils.toObject(d2)," "));
+//		d2 = vectorNormalization(d2);
+//		System.out.println(StringUtils.join(ArrayUtils.toObject(d2)," "));
+//		double res = calSemanticSimilarity(d1, d2);
+//		System.out.println(res);
+//	}
+//	/**
+//	 * 对向量做归一化处理
+//	 * @param vector
+//	 * @return
+//	 */
+//	public double[] vectorNormalization(double[] vector){
+//		if(vector==null || vector.length==0)
+//			return vector;
+//		double sum = 0;
+//		for(int i=0;i<vector.length;i++){
+//			sum += vector[i];
+//		}
+//		if(sum > 0){
+//			for(int i=0;i<vector.length;i++){
+//				vector[i] /= sum;
+//			}
+//			return vector;
+//		}
+//		return vector;
+//				
+//	}
 }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Paths>
+	<!-- 词典路径 -->
+	<dictPath>
+		<synonyms>./dict/synonymsDict.txt</synonyms>
+		<ambiguation>./dict/ambiguationDict.txt</ambiguation>
+		<pos>./dict/pos.txt</pos>
+		<stopwords>./dict/stopword_en.txt</stopwords>
+		<df>./dict/aquaint/df.txt</df>
+		<specialWords>./dict/aquaint/specialWords.txt</specialWords>
+		<mentionDict>./data/aquaint/aquaint_new.xml</mentionDict>
+		<unAmbiguaDict>./dict/aquaint/disAmbiguationMention.txt</unAmbiguaDict>
+		<labelNum>./data/dbpedia/numLabels_enText.ttl</labelNum>
+		<entityByDbpeidaPopularity>./data/dbpedia/entity_popularity.ttl</entityByDbpeidaPopularity>
+	</dictPath>
+	<!-- 文件路径 -->
+	<relPath>
+		<resultDir>./data/result/aquaint_dbpedia</resultDir>
+		<relParameterByDbpediaPath>./xml/entitylinking_dbpedia.xml</relParameterByDbpediaPath>
+		<entityContextPath>./data/aquaint/context/entity/entityContext</entityContextPath>
+		<entityByDbpediaContextPath>./data/aquaint/context/entity/entityByDbpediaContext</entityByDbpediaContextPath>
+		<mentionContextDirPath>./data/aquaint/context/mention/</mentionContextDirPath>
+		<entityCategoryPath>./data/aquaint/context/category/category</entityCategoryPath>
+	</relPath>
+	<!-- 索引文件夹路径 -->
+	<indexDirPath>
+		<shortAbstractTextPath>./index/abstractTextIndex</shortAbstractTextPath>
+		<entityByDbpediaRelationPath>./index/entityByDbpediaRelationIndex</entityByDbpediaRelationPath>
+		<synonymsDictPath>./index/synonymsIndex</synonymsDictPath>
+		<ambiguationDictPath>./index/ambiguationIndex</ambiguationDictPath>
+		<dbpediaLabelName>./index/labelIndex</dbpediaLabelName>
+	</indexDirPath>
+</Paths>

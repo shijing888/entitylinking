@@ -13,6 +13,7 @@ import org.apache.lucene.search.BooleanClause;
 import com.entitylinking_dbpedia.lucene.IndexFile;
 import com.entitylinking_dbpedia.task.Main;
 import com.entitylinking_dbpedia.utils.NLPUtils;
+import com.entitylinking_dbpedia.utils.Parameters;
 
 /**
  * 文本的数据结构
@@ -59,6 +60,7 @@ public class Text {
 	/**
 	 * 构造关于该篇文档的密度子图
 	 * @return
+	 * @throws InterruptedException 
 	 */
 	public void generateDensityGraph(){
 		long time1 = System.currentTimeMillis();
@@ -87,6 +89,16 @@ public class Text {
 			}
 			
 		}
+		
+		
+		//用于统计候选实体的覆盖率的
+//		if(true)
+//			return;
+		
+		
+		
+		
+		
 		int mentionsLen =  this.getEntityGraph().getMentions().size();
 		if(mentionsLen>0)
 			averageTfidfOfMentions /= mentionsLen;
@@ -94,31 +106,42 @@ public class Text {
 			averageTfidfOfMentions = 0;
 		this.entityGraph.setAverageTfidf(averageTfidfOfMentions);
 		logger.info("before extending entityList size:"+entityList.size());
-		//对候选实体进行扩展，构成实体图
+		
+		
+		
+		
+//		对候选实体进行扩展，构成实体图
 		HashSet<String> unAmbiguaSet = DictBean.getUnAmbiguaDict().get(textName);
+//		HashSet<String> unAmbiguaSet = null;
 		if(unAmbiguaSet==null)
 			unAmbiguaSet = new HashSet<>();
+		
+		
+		
+		
 		int[] lens = extendEntity(unAmbiguaSet,entityList,entityNameSet);
-		this.entityGraph.setEntityLen(lens[1]);
+		this.entityGraph.setEntityLen(lens[2]);
 		this.entityGraph.setCandidateEntityLen(lens[0]);
 		this.entityGraph.setUnAmbiguaSet(unAmbiguaSet);
-		Entity[] entities = new Entity[lens[1]];
+		Entity[] entities = new Entity[lens[2]];
 		//将list转化成数组保存实体
-		for(int i=0;i<lens[1];i++){
-			if(i<lens[0]){
+		for(int i=0;i<lens[2];i++){
+			if(i<lens[1]){
 				entityIndex.put(entityList.get(i).getEntityName(), i);
 			}
 			entities[i] = entityList.get(i);
 		}
 		
-		logger.info("after extending entities size:"+lens[1]);
+		
+		logger.info("after extending entities size:"+lens[2]);
 		logger.info("init entityGraph eitities");
 		//初始化实体图
 		this.entityGraph.setEntities(entities);
 		this.entityGraph.setEntityIndex(entityIndex);
 		logger.info("init entityGraph disambiguationMap");
-		this.entityGraph.initDisambiguationMap();
-		this.entityGraph.setPreferVectorOfDocument(true);
+		boolean isDisambiguation = this.entityGraph.initDisambiguationMap();
+		logger.info(this.textName+"是否有无歧义mention："+isDisambiguation);
+		this.entityGraph.setPreferVectorOfDocument(isDisambiguation);
 		long time3 = System.currentTimeMillis();
 		logger.info("初始化实体、实体索引、初始mention-entityMap、文档偏好向量共花费:"+(time3 - time2)/60000.0);
 		logger.info("init entityGraph transferMatrix");
@@ -140,9 +163,11 @@ public class Text {
 	 * @return
 	 */
 	public int[] extendEntity(HashSet<String> unAmbiguaSet,List<Entity>entities,Set<String>entityNameSet){
-		int lens[] = new int[2];
+		int lens[] = new int[3];
 		int len = entities.size();
 		List<Entity> entityList = new ArrayList<Entity>(entities);
+		//所有提及的候选实体数目
+		lens[0] = len;
 		//140-148用于扩展从文本中发现的无歧义实体
 		for(String str:unAmbiguaSet){
 			if(str == null)
@@ -155,10 +180,14 @@ public class Text {
 			}
 		}
 		
-		lens[0] = entities.size();
+		//增加无歧义实体后的实体数目
+		lens[1] = entities.size();
+		/*
 		BooleanClause.Occur[] flags=new BooleanClause.Occur[]{
 				BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
 		String[] queryFields = {RELRWParameterBean.getEntityRelationField1(),
+				RELRWParameterBean.getEntityRelationField1()};
+		String[] queryFields2 = {RELRWParameterBean.getEntityRelationField2(),
 				RELRWParameterBean.getEntityRelationField2()};
 		String indexDir = PathBean.getEntityByDbpediaRelationPath();
 		int popularityThresh = RELRWParameterBean.getPopularityThresh();
@@ -166,41 +195,46 @@ public class Text {
 		time1 = System.currentTimeMillis();
 		
 		for(int i=0;i<len-1;i++){
+			String[] querys = new String[]{entityList.get(i).getEntityName(),
+					entityList.get(i).getEntityName()};
+			Set<String> set = IndexFile.coocurenceEntities(querys, queryFields,"entity2", flags, indexDir);
+			set.addAll(IndexFile.coocurenceEntities(querys, queryFields2,"entity1", flags, indexDir));
 			for(int j=i+1;j<len;j++){
-				String[] querys = new String[]{entityList.get(i).getEntityName(),
+				String[] querys2 = new String[]{entityList.get(j).getEntityName(),
 						entityList.get(j).getEntityName()};
-				Set<String> set = IndexFile.coocurenceEntities(querys, queryFields, flags, indexDir);
-				querys[0] = entityList.get(j).getEntityName();
-				querys[1] = entityList.get(i).getEntityName();
-				set.addAll(IndexFile.coocurenceEntities(querys, queryFields, flags, indexDir));
-//				logger.info(i+"\t"+j+"\t的共现实体有:"+set.size());
-				for(String item:set){
-					String[] itemArray = item.split("\t");
-					if(itemArray.length == 2 ){
-						try {
-							if(!entityNameSet.contains(itemArray[0])){
-								if(Integer.parseInt(itemArray[1]) >= popularityThresh){
-									Entity entity = new Entity();
-									entity.setEntityName(itemArray[0]);
-									entities.add(entity);
-								}
+				Set<String> set2 = IndexFile.coocurenceEntities(querys2, queryFields,"entity2", flags, indexDir);
+				set2.addAll(IndexFile.coocurenceEntities(querys2, queryFields2,"entity1", flags, indexDir));
+				
+				Set<String> reSet = new HashSet<>();
+				reSet.addAll(set);
+				reSet.retainAll(set2);
+				
+				for(String item:reSet){
+					try {
+						if(!entityNameSet.contains(item)){
+							int popularity = DictBean.getEntityByDbpeidaPopularityDict().get(item);
+							if(popularity >= popularityThresh){
+								Entity entity = new Entity();
+								entity.setEntityName(item);
+								entities.add(entity);
 							}
-							entityNameSet.add(itemArray[0]);
-						} catch (Exception e) {
-							// TODO: handle exception
-							logger.info("实体格式错误:"+item);
 						}
-						
+						entityNameSet.add(item);
+					} catch (Exception e) {
+						// TODO: handle exception
+						logger.info(item + "\t不在流行度词典中");
 					}
 				}
 			}
 			
-			
-			logger.info("i = "+i + "扩展后实体总数:" + entities.size());
+		
 		}
+		
 		time2 = System.currentTimeMillis();
 		logger.info("扩展实体花费时间:" + (time2 - time1)/60000.0);
-		lens[1] = entities.size();
+		*/
+		//扩展邻居后的实体数目
+		lens[2] = entities.size();
 		return lens;
 	}
 	

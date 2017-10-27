@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
 
 import com.entitylinking_dbpedia.lucene.IndexFile;
+import com.entitylinking_dbpedia.task.Main;
 import com.entitylinking_dbpedia.linking.bean.Entity;
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
 import com.entitylinking_dbpedia.utils.CommonUtils;
@@ -196,7 +197,7 @@ public class Mention {
 					continue;
 				}
 				entity.setScore(CommonUtils.commonWords(this, entity));
-				logger.info("entity title:"+normEntityName);
+//				logger.info("entity title:"+normEntityName);
 				candidateEntitySet.add(normEntityName);
 				entities.add(entity);
 			} catch (Exception e) {
@@ -256,6 +257,18 @@ public class Mention {
 			}
 			
 		}
+		
+		//统计候选覆盖率
+//		logger.info(this.mentionName+"的目标实体为："+this.dbpediaObjectEntity);
+//		if(!this.dbpediaObjectEntity.equals("nil")){
+//			if(tempSet.contains(this.dbpediaObjectEntity)){
+//				Main.containEntityCounts++;
+//			}
+//			Main.mentionCounts++;
+//		}
+			
+		
+		
 		logger.info(mentionStr+"的candidateList size:"+entities3.size());		
 		for(Entity entity:entities3){
 			logger.info(mentionStr+"的candidate:"+ entity.getEntityName());

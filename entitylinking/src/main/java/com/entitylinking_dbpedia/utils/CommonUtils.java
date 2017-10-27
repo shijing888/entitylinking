@@ -65,7 +65,7 @@ public class CommonUtils {
 		String entityName;
 		for(int i=0;i<len;i++){
 			entityName = list.get(i).getEntityName();
-			editDistance = EditDistance.getEditDistance(str, entityName);
+			editDistance = StringDistance.getEditDistance(str, entityName);
 			editDistanceMap.put(entityName, editDistance);
 //			System.out.println(entityName+"的编辑距离为:"+editDistance);
 		}

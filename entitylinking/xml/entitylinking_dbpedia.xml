@@ -2,13 +2,13 @@
 <EL>
 	<paramenter>
 		<!-- 数据集文件夹路径 -->
-		<fileDirPath>./data/ace2004/RawTexts</fileDirPath>
+		<fileDirPath>./data/aquaint/RawTexts</fileDirPath>
 		<!-- 上下文窗口 -->
 		<contextWindow>500</contextWindow>
 		<!-- 随机游走alpha -->
 		<alpha>0.85</alpha>
 		<!-- 收敛精度 -->
-		<convergencePrecise>0.001</convergencePrecise>
+		<convergencePrecise>0.00001</convergencePrecise>
 		<!-- 散度gamma值 -->
 		<gamma>20</gamma>
 		<!-- 限制实体正文字符长度 -->
@@ -16,15 +16,15 @@
 		<!-- 候选实体剪枝阈值 -->
 		<candidateEntityNumThresh>40</candidateEntityNumThresh>
 		<!-- 流行度阈值 -->
-		<popularityThresh>1</popularityThresh>
+		<popularityThresh>500</popularityThresh>
 		<!-- 实体共现次数阈值 -->
-		<cooccurenceThresh>5</cooccurenceThresh>
+		<cooccurenceThresh>0</cooccurenceThresh>
 		<!-- 语义相似性权值 -->
 		<semanticSimWeight>0.2</semanticSimWeight>
 		<!-- 上下文相似性权值 -->
 		<contextSimWeight>0.2</contextSimWeight>
 		<!-- 先验权值 -->
-		<popularityWeight>0.3</popularityWeight>
+		<popularityWeight>0.30</popularityWeight>
 		<!-- 字面量相似性权值 -->
 		<literalSimWeight>0.3</literalSimWeight>
 		<!-- 空值阈值 -->
@@ -34,7 +34,7 @@
 		<!-- 基于路径的衰减系数 -->
 		<pathAlpha>0.25</pathAlpha>
 		<!-- 路径跳数 -->
-		<skipNums>0</skipNums>
+		<skipNums>1</skipNums>
 		<!-- 选取的最短路径跳数 -->
 		<topK>5</topK>
 	</paramenter>

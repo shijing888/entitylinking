@@ -8,8 +8,13 @@ import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
+import org.apache.lucene.queryparser.classic.ParseException;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -32,6 +37,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.junit.Test;
 
 import com.entitylinking_dbpedia.linking.bean.RELRWParameterBean;
+import com.entitylinking_dbpedia.utils.Parameters;
 
 /**
  * 文件索引操作
@@ -47,29 +53,29 @@ public class IndexFile {
 	private static QueryParser singleQueryParser;
 	private static IndexSearcher indexSearcher;
 
-	private static String[] entityCoocurCountsFields = new String[]{RELRWParameterBean.getEntityRelationField1(),
-													RELRWParameterBean.getEntityRelationField2()};
-//	private static String[] entityCoocurCountsFields = new String[]{"entity1","entity2"};
+//	private static String[] entityCoocurCountsFields = new String[]{RELRWParameterBean.getEntityRelationField1(),
+//													RELRWParameterBean.getEntityRelationField2()};
+	private static String[] entityCoocurCountsFields = new String[]{"entity1","entity2"};
 	private static BooleanClause.Occur[] flags = new BooleanClause.Occur[]
 													{BooleanClause.Occur.MUST,BooleanClause.Occur.MUST};
 	public static void main(String args[]){
 		//实体共现关系索引创建
 //		//索引文件夹
-//		String indexDir1 = "./index/entityByDbpediaRelationIndex";
-//		//需要创建索引的文件
-//		String filePath1 = "./data/dbpedia/infobox_properties_enCoccurence.ttl";
-//		//索引的字段
-//		String[] fields1 = new String[]{"entity1","entity2","entityCoocurCount"};
-//		creatIndex(filePath1, indexDir1, fields1);
+		String indexDir1 = "./index/entityByDbpediaRelationIndex";
+		//需要创建索引的文件
+		String filePath1 = "./data/dbpedia/infobox_properties_enCoccurence.ttl";
+		//索引的字段
+		String[] fields1 = new String[]{"entity1","entity2","entityCoocurCount"};
+		creatIndex(filePath1, indexDir1, fields1);
 		
 		//实体文本摘要索引创建
 		//索引文件夹
-		String indexDir2 = "./index/abstractTextIndex";
-		//需要创建索引的文件
-		String filePath2 = "./data/dbpedia/abstracts_enText.ttl";
-		//索引的字段
-		String[] fields2 = new String[]{"entity","abstractText"};
-		creatIndex(filePath2, indexDir2, fields2);
+//		String indexDir2 = "./index/abstractTextIndex";
+//		//需要创建索引的文件
+//		String filePath2 = "./data/dbpedia/abstracts_enText.ttl";
+//		//索引的字段
+//		String[] fields2 = new String[]{"entity","abstractText"};
+//		creatIndex(filePath2, indexDir2, fields2);
 		
 //		//同义词典索引创建
 //		//索引文件夹
@@ -158,7 +164,9 @@ public class IndexFile {
 				return indexSearcher.doc(topDocs.scoreDocs[0].doc);
 			}
 			
-		} catch (Exception e) {
+		}catch (ParseException e2) {
+			// TODO: handle exception
+		}catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -168,6 +176,7 @@ public class IndexFile {
 	
 	/**
 	 * 查询两个实体之间成边的次数
+	 * 查询共现的时候，分词器会按照逗号把词给分开，转义会对括号转义
 	 * @param querys
 	 * @param indexDir
 	 * @return
@@ -183,10 +192,11 @@ public class IndexFile {
 			initIndexSearcher(indexDir);
 			//5. 创建查询解析器，解析query
 			Query query = MultiFieldQueryParser.parse(querys, entityCoocurCountsFields, flags,analyzer);
-			TopDocs topDocs  = indexSearcher.search(query, 1);
-			if(topDocs.scoreDocs.length > 0){
-				Document document = indexSearcher.doc(topDocs.scoreDocs[0].doc);
-				count = Integer.parseInt(document.get(RELRWParameterBean.getEntityRelationField3()));
+			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXCoocurence).scoreDocs;
+			if(scoreDocs.length > 0){
+				Document document = indexSearcher.doc(scoreDocs[0].doc);
+//				count = Integer.parseInt(document.get(RELRWParameterBean.getEntityRelationField3()));
+				count = Integer.parseInt(document.get("entityCoocurCount"));
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -204,7 +214,7 @@ public class IndexFile {
 	 * @param indexDir
 	 * @return
 	 */
-	public static Set<String> coocurenceEntities(String[] querys,String[] queryFields, 
+	public static Set<String> coocurenceEntities(String[] querys,String[] queryFields, String queryInex,
 			BooleanClause.Occur[] flags,String indexDir){
 		Set<String> entitySet = new HashSet<>();
 		try {
@@ -216,8 +226,9 @@ public class IndexFile {
 			Query query = MultiFieldQueryParser.parse(querys, queryFields, flags,analyzer);
 			ScoreDoc[] scoreDocs = indexSearcher.search(query, MAXCoocurence).scoreDocs;
 			for(ScoreDoc scoreDoc:scoreDocs){
-				entitySet.addAll(Arrays.asList(indexSearcher.doc(scoreDoc.doc)
-						.get(queryFields[0]).split("\t\\|\t")));
+				Document document = indexSearcher.doc(scoreDoc.doc);
+				String arr[] = document.get(queryInex).split("\t\\|\t");
+				entitySet.addAll(Arrays.asList(arr));
 			}
 			for(String str:querys){
 				if(entitySet.contains(str)){
@@ -332,26 +343,32 @@ public class IndexFile {
 	
 	@Test
 	public void test(){
-//		String[] querys1 = {"newfoundland_and_labrador","shawn_doyle"};
-//		String[] querys2 = {"shawn_doyle","newfoundland_and_labrador"};
-//		String indexDir = "./index/entityByDbpediaRelationIndex";
-		String qString ="northeast";
+		String[] querys = {"america,_oklahoma","u.s._northeast"};
+		String[] querys1 = {"neoconservatism_(america)","america/yellowknife"};
+		String indexDir = "./index/entityByDbpediaRelationIndex";
+//		String[] queryFields = new String[]{"entity1","entity1"};
+//		String[] queryFields2 = new String[]{"entity2","entity2"};
+		
+//		String qString ="northeast";
 //		queryCandidateLabel(qString, "labelName", "./index/labelIndex");
 //		Document document = queryDocument(qString, "ambiguationKey", "./index/ambiguationIndex");
-		Document document = queryDocument(qString, "entity", "./index/abstractTextIndex");
-		System.out.println(document.get("entity"));
-		System.out.println(document.get("abstractText"));
-		System.out.println("---------");
-		Document document2 = queryDocument(qString, "entity", "./index/short_abstractTextIndex");
-		System.out.println(document2.get("entity"));
-		System.out.println(document2.get("abstractText"));
+//		Document document = queryDocument(qString, "entity", "./index/abstractTextIndex");
+//		System.out.println(document.get("entity"));
+//		System.out.println(document.get("abstractText"));
+//		System.out.println("---------");
+//		Document document2 = queryDocument(qString, "entity", "./index/short_abstractTextIndex");
+//		System.out.println(document2.get("entity"));
+//		System.out.println(document2.get("abstractText"));
 //		System.out.println("doc1:"+document.toString());
 //		qString ="china";
 //		document = queryDocument(qString, "ambiguationKey", "./index/ambiguationIndex");
 //		System.out.println(document.get("ambiguationKey"));
 //		System.out.println("doc2:"+document.toString());
-//		coocurenceEntities(querys, queryFields,flags, indexDir);
-//		int count = entityCoocurCounts(querys1, indexDir);
+//		Set<String> set = coocurenceEntities(querys1, queryFields,"entity2",flags, indexDir);
+//		System.out.println(StringUtils.join(set, " "));
+//		Set<String> set2 = coocurenceEntities(querys1, queryFields2,"entity1",flags, indexDir);
+		int count = entityCoocurCounts(querys1, indexDir);
+		System.out.println(count);
 //		count += entityCoocurCounts(querys2, indexDir);
 //		int count = countSingleOccurence(qString, indexDir);
 //		System.out.println(count);

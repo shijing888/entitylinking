@@ -23,8 +23,8 @@ public class NormalizeMention {
 	public static void main(String args[]){
 		
 //		System.out.println(NormalizeMention.getNormalizeMention("michael jeffy jordan ()",false));
-		String rpath = "./data/ace2004/ace2004new.xml";
-		String wpath = "./data/ace2004/ace2004_new.xml";
+		String rpath = "./data/msnbc/msnbc_new.xml";
+		String wpath = "./data/msnbc/msnbc_new2.xml";
 		normMentionOfDataset(rpath, wpath);
 		
 	}

@@ -82,8 +82,8 @@ public class NLPUtils {
 //		String content = FileUtils.readFileContent(path);
 //        processTextTask(new Text(content));
 
-		String dirPath = "./data/ace2004/RawTexts";
-		String wpath = "./dict/disAmbiguationMention.txt";
+		String dirPath = "./data/msnbc/RawTexts";
+		String wpath = "./dict/msnbc/disAmbiguationMention.txt";
 		try {
 			disambiguationMention(dirPath,wpath);
 		} catch (IOException e) {
@@ -104,6 +104,7 @@ public class NLPUtils {
 //        DictBean dictBean = parameters.loadSurfaceFormDict();
         String mentionContextPath = PathBean.getMentionContextDirPath() + text.getTextName();
         String entityByDbpediaContextPath = PathBean.getEntityByDbpediaContextPath();
+//        String entityContextPath = PathBean.getEntityContextPath();
         String entityCategoryPath = PathBean.getEntityCategoryPath();
         Map<String, HashSet<String>> mentionContextMap = parameters.loadMapDict(mentionContextPath);
         Map<String, HashSet<String>> entityCategoryMap = parameters.loadMapDict(entityCategoryPath);

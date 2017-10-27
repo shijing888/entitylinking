@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
+import org.sweble.wikitext.lazy.utils.ParserShouldNotBeHereException;
 
 import com.entitylinking_dbpedia.config.WikiConfig;
 import com.entitylinking_dbpedia.linking.bean.DictBean;
@@ -17,6 +18,7 @@ import de.tudarmstadt.ukp.wikipedia.api.Category;
 import de.tudarmstadt.ukp.wikipedia.api.Page;
 import de.tudarmstadt.ukp.wikipedia.api.Wikipedia;
 import de.tudarmstadt.ukp.wikipedia.api.exception.WikiApiException;
+import de.tudarmstadt.ukp.wikipedia.api.exception.WikiPageNotFoundException;
 
 /**
  * 实体的数据结构
@@ -104,13 +106,15 @@ public class Entity {
 		return categorySet;
 	}
 	
+	
+	
+	
 	/**
      * 获取实体信息，名称、上下文、流行度、类型
      * @param title
      */
     public Entity getEntityPageInfo(String title,Map<String, Set<String>> additiveEntityContextDict,
     							Map<String, Set<String>> additiveEntityCategoryDict){
-		
         //初始化title
         entityName = title;
         //初始化流行度
@@ -137,7 +141,7 @@ public class Entity {
 	        if(document != null){
 	        	String name = document.get(RELRWParameterBean.getShortAbstractField1());
 	        	if(!title.equals(name)){
-	        		logger.info(title+"无摘要内容,查询出的实体为:\t"+name);
+//	        		logger.info(title+"无摘要内容,查询出的实体为:\t"+name);
 	        		return this;
 	        	}
 	        	String content = document.get(RELRWParameterBean.getShortAbstractField2());
@@ -150,12 +154,64 @@ public class Entity {
 				entityContext = new HashSet<>();
 			}
 	        
-	        logger.info(entityName+"不在实体上下文词典中");
+//	        logger.info(entityName+"不在实体上下文词典中");
 	        additiveEntityContextDict.put(entityName, entityContext);
 	       
         }
 	       
         return this;
+
+    	
+    }
+   
+
+	/**
+	 * 从维基中获取上下文、流行度
+	 */
+    public Entity getEntityPageInfoOfWiki(String title,Map<String, Set<String>> additiveEntityContextDict,
+    							Map<String, Set<String>> additiveEntityCategoryDict){
+    	 //初始化title
+        entityName = title;
+		//初始化上下文
+        if(DictBean.getEntityContextDict().containsKey(entityName)){
+        	entityContext = DictBean.getEntityContextDict().get(entityName);
+        }else{
+        	
+        	try {
+        		Page page = wikipedia.getPage(title);
+    			//初始化流行度
+    	        popularity = page.getNumberOfInlinks();
+    	        //初始化title
+    	        entityName = page.getTitle().getWikiStyleTitle().toLowerCase();
+    	        if(DictBean.getEntityContextDict().containsKey(entityName)){
+    	        	entityContext = DictBean.getEntityContextDict().get(entityName);
+    	        }else{
+    	        	//初始化上下文
+    		        String content = page.getPlainText();
+    		        if(content.length() > RELRWParameterBean.getEntityContentLen()){
+    		        	content = content.substring(0,RELRWParameterBean.getEntityContentLen());
+    		        }
+    		        entityContext = NLPUtils.getEntityContext(content);
+    		        logger.info(entityName+"不在实体上下文词典中");
+    		        additiveEntityContextDict.put(entityName, entityContext);
+    	        }
+    	       
+    		}catch (WikiPageNotFoundException e) {
+     			// TODO Auto-generated catch block
+     			logger.info(title +" is not found!");
+     			e.printStackTrace();
+     		}catch (WikiApiException e) {
+     			// TODO Auto-generated catch block
+     			logger.info(title +" is not an entity!");
+     			e.printStackTrace();
+     		}catch (ParserShouldNotBeHereException e) {
+    			// TODO: handle exception
+    		}
+        	
+        }
+	       
+        return this;
+    	
     }
     
 }
